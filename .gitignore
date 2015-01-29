@@ -26,3 +26,11 @@
 *.exe
 *.out
 *.app
+/RenderWindow/Debug
+/packages
+/ipch/renderwindow-30bfc081
+/Debug
+/packages
+/ipch/renderwindow-30bfc081
+/Debug
+/RenderWindow/Debug
