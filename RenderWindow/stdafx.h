@@ -14,6 +14,10 @@
 #include <tchar.h>
 #include <iostream>
 #include <vector>
+#include <tuple>
 #include <string>
+
+#define _USE_MATH_DEFINES
+#include <math.h>
 
 #include <GL/glut.h>
