@@ -97,6 +97,7 @@ public:
 
     void draw();
     std::tuple<float, float, float> map(const double theta, const double phi);
+    std::tuple<float, float, float> getColor(const double x, const double y);
 
     ~EnvMap() { if(_data != nullptr) delete _data; }
 private:

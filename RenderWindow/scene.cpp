@@ -61,11 +61,16 @@ void EnvMap::draw()
 {
 }
 
-std::tuple<float, float, float> EnvMap::map(double theta, double phi)
+std::tuple<float, float, float> EnvMap::map(const double theta, const double phi)
 {
-    double x = theta / M_PI + _width;
-    double y = phi / M_PI;
+    const double x = theta / M_PI + _width;
+    const double y = phi / M_PI;
 
+    return getColor(x, y);
+}
+
+std::tuple<float, float, float> EnvMap::getColor(const double x, const double y)
+{
     float red = _bilinearInterpolate(&_data[0], x, y);
     float green = _bilinearInterpolate(&_data[1], x, y);
     float blue = _bilinearInterpolate(&_data[2], x, y);
@@ -78,20 +83,20 @@ float EnvMap::_bilinearInterpolate(const float * _colors, const double x, const 
     int px = (int) x;
     int py = (int) y;
 
-    const float p0 = _colors[px + py*_width];
-    const float p1 = _colors[(px+1) + py*_width];
-    const float p2 = _colors[px + (py+1)*_width];
-    const float p3 = _colors[(px+1)+ (py+1) *_width];
+    const float p0 = _colors[3*(px + py*_width)];
+    const float p1 = _colors[3*((px+1) + py*_width)];
+    const float p2 = _colors[3*(px + (py+1)*_width)];
+    const float p3 = _colors[3*((px+1)+ (py+1) *_width)];
 
-    double fx = x - px;
-    double fy = y - py;
-    double fx1 = 1 - fx;
-    double fy1 = 1 - fy;
+    double fx1 = x + 1 - px;
+    double fy1 = y + 1 - py;
+    double fx2 = x - px;
+    double fy2 = y - py;
 
-    return static_cast<float>( (p0 * fx * fy)
-        + (p1 * fx1 * fy)
-        + (p2 * fx * fy1)
-        + (p3 * fx1 * fy1) );
+    return static_cast<float>( (p0 * fx1 * fy1)
+        + (p1 * fx2 * fy1)
+        + (p2 * fx1 * fy2)
+        + (p3 * fx2 * fy2) );
 }
 
 

@@ -37,10 +37,31 @@ int main(int argc, char* argv[])
     gridYZ->setTx(-5);
     */
 
+    Scene::EnvMap * envMap = new Scene::EnvMap();
+    std::tuple<float, float, float> color;
+    color = envMap->getColor(0.0, 0.0);
+    std::cout << "0.0, 0.0:" << std::endl;
+    std::cout << std::get<0>(color) << ", ";
+    std::cout << std::get<1>(color) << ", ";
+    std::cout << std::get<2>(color) << std::endl;
+    std::cout << "====================================================" << std::endl;
+    color = envMap->getColor(854.0, 424.0);
+    std::cout << "854, 424:" << std::endl;
+    std::cout << std::get<0>(color) << ", ";
+    std::cout << std::get<1>(color) << ", ";
+    std::cout << std::get<2>(color) << std::endl;
+    std::cout << "====================================================" << std::endl;
+    color = envMap->getColor(2246.0, 254.0);
+    std::cout << "2246, 254:" << std::endl;
+    std::cout << std::get<0>(color) << ", ";
+    std::cout << std::get<1>(color) << ", ";
+    std::cout << std::get<2>(color) << std::endl;
+    std::cout << "====================================================" << std::endl;
+
+
     mainPanel.setWorld(&world);
     mainPanel.setCamera(new Scene::Camera());
     GlutUI::Controls::Mouse(mainPanel.getCamera());
-
 
     /* New window test*/
     //GlutUI::Window & renderWindow = MANAGER.createWindow(320,480, "RenderWindow");
