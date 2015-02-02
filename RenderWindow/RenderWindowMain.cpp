@@ -10,7 +10,6 @@ int main(int argc, char* argv[])
 {
     MANAGER.init(argc, argv);
 
-
     GlutUI::Window & mainWindow = MANAGER.createWindow(640,480, "TestWindow");
     GlutUI::Panel & mainPanel = MANAGER.createPanel(mainWindow, 640,480, "TestPanel");
     Scene::World world = Scene::createWorld();
@@ -37,10 +36,24 @@ int main(int argc, char* argv[])
     gridYZ->setTx(-5);
     */
 
+    Scene::Camera * cam = new Scene::Camera();
+    cam->setRoty(-45);
+    cam->setRotx(45);
+    cam->setTx(0);
+    cam->setTy(0);
+    cam->setTz(20);
+
+    Scene::Sphere * sphere = new Scene::Sphere();
+    world.addObject(sphere);
+
+    //MANAGER.setShaders("tonemap.vert","tonemap.frag");
     Scene::EnvMap * envMap = new Scene::EnvMap();
+    world.addObject(envMap);
+    envMap->setRotx(90);
+    //MANAGER.deleteShaders();
 
     mainPanel.setWorld(&world);
-    mainPanel.setCamera(new Scene::Camera());
+    mainPanel.setCamera(cam);
     GlutUI::Controls::Mouse(mainPanel.getCamera());
 
     /* New window test*/
@@ -53,5 +66,5 @@ int main(int argc, char* argv[])
     //GlutUI::Button & renderButton = MANAGER.createButton(renderPanel, 80, 20, 10, 10, "RenderButton");
 
     MANAGER.drawElements();
-	return 0;
+    return 0;
 }

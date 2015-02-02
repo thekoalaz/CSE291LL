@@ -24,24 +24,27 @@
     <ClCompile Include="RenderWindowMain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\..\..\OneDrive\Documents\UCSD\Wi15\CSE291\Project\HDR\rgbe.c">
+    <ClCompile Include="scene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="scene.cpp">
+    <ClCompile Include="rgbe.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="tonemap.frag">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="tonemap.vert">
+      <Filter>Source Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GlutDraw.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GlutUI.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\..\..\OneDrive\Documents\UCSD\Wi15\CSE291\Project\HDR\rgbe.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="scene.h">
@@ -51,6 +54,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="targetver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="rgbe.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

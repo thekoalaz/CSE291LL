@@ -48,6 +48,3 @@ int RGBE_ReadPixels_RLE(FILE *fp, float *data, int scanline_width,
 			int num_scanlines);
 
 #endif /* _H_RGBE */
-
-
-

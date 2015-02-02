@@ -20,3 +20,19 @@ void GlutDraw::drawRectangle(double x, double y,
         glVertex2d(x, y + height);
     glEnd();
 }
+
+void GlutDraw::drawSphere(double r,double n, double m/*, float* outR, float* outG, float* outB*/)
+{
+    for (int i = 0; i < n; i++){
+        for (int j = 0; j < m; j++){
+            //glColor3f(outR[i][j], outG[i][j], outB[i][j]);
+            glColor3f(cos(M_PI*i / n), cos(M_PI*i / n), cos(M_PI*i / n));
+            glBegin(GL_QUADS);
+                glVertex3d(r*sin(M_PI*i / n)*cos(2 * M_PI*j / m), r*sin(M_PI*i / n)*sin(2 * M_PI*j / m), r*cos(M_PI*i / n));
+                glVertex3d(r*sin(M_PI*i / n)*cos(2 * M_PI*(j + 1) / m), r*sin(M_PI*i / n)*sin(2 * M_PI*(j + 1) / m), r*cos(M_PI*i / n));
+                glVertex3d(r*sin(M_PI*(i + 1) / n)*cos(2 * M_PI*(j + 1) / m), r*sin(M_PI*(i + 1) / n)*sin(2 * M_PI*(j + 1) / m), r*cos(M_PI*(i + 1) / n));
+                glVertex3d(r*sin(M_PI*(i + 1) / n)*cos(2 * M_PI*j / m), r*sin(M_PI*(i + 1) / n)*sin(2 * M_PI*j / m), r*cos(M_PI*(i + 1) / n));
+            glEnd();
+        }
+    }
+}

@@ -66,19 +66,21 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\..\..\OneDrive\Documents\UCSD\Wi15\CSE291\Project\HDR\rgbe.c" />
     <ClCompile Include="GlutDraw.cpp" />
     <ClCompile Include="GlutUI.cpp" />
     <ClCompile Include="RenderWindowMain.cpp" />
+    <ClCompile Include="rgbe.c" />
     <ClCompile Include="scene.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="tonemap.frag" />
+    <None Include="tonemap.vert" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\..\..\..\OneDrive\Documents\UCSD\Wi15\CSE291\Project\HDR\rgbe.h" />
     <ClInclude Include="GlutDraw.h" />
     <ClInclude Include="GlutUI.h" />
+    <ClInclude Include="rgbe.h" />
     <ClInclude Include="scene.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
