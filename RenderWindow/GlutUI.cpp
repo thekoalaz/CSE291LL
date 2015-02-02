@@ -26,6 +26,7 @@ void Manager::init(int argc, char* argv[])
     glutInitDisplayMode( GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH );
      
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_COLOR_MATERIAL);
 }
 
 void Manager::drawElements()
@@ -156,7 +157,7 @@ void Panel::draw()
         glPushMatrix();
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
-        gluPerspective(45,(float)getWidth()/getHeight(),0.1,100);
+        gluPerspective(45,(float)getWidth()/getHeight(),0.01,1000000);
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
         glTranslated(0., 0., -_camera->getTz());

@@ -38,6 +38,8 @@ int main(int argc, char* argv[])
     */
 
     Scene::EnvMap * envMap = new Scene::EnvMap();
+    world.addObject(envMap);
+    envMap->setRotx(90);
 
     mainPanel.setWorld(&world);
     mainPanel.setCamera(new Scene::Camera());

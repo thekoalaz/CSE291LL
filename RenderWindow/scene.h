@@ -100,10 +100,12 @@ public:
     std::tuple<float, float, float> getColor(const double x, const double y);
 
     ~EnvMap() { if(_data != nullptr) delete _data; }
+
 private:
     std::string _fileName;
     int _width, _height;
     float * _data;
+    GLuint _textureID;
 
     void _readMap();
     float _bilinearInterpolate(const float * _colors, const double x, const double y);

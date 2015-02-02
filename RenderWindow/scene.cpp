@@ -15,9 +15,9 @@ void World::draw()
 
 void Object::draw()
 {
-	glTranslated(_tx, _ty, _tz);
-	glRotated(_rotx,1,0,0);
-	glRotated(_roty,0,1,0);
+    glTranslated(_tx, _ty, _tz);
+    glRotated(_rotx,1,0,0);
+    glRotated(_roty,0,1,0);
     glRotated(_rotz,0,0,1);
 }
 
@@ -55,10 +55,32 @@ void EnvMap::_readMap()
         _data = new float[3 * _width*_height];
         RGBE_ReadPixels_RLE(hdrfile, _data, _width, _height);
     }
+
+    glGenTextures(1, &_textureID);
+    glBindTexture(GL_TEXTURE_2D, _textureID);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, _width, _height, 0, GL_RGB, GL_FLOAT, _data);
 }
 
 void EnvMap::draw()
 {
+    GLUquadric* quad = gluNewQuadric(); 
+
+    glPushMatrix();
+    Object::draw();
+
+    glColor3f(1.0f,1.0f,1.0f);
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D , _textureID);
+
+    gluQuadricTexture(quad,GL_TRUE); 
+    gluSphere(quad,10000,20,20);
+
+    glDisable(GL_TEXTURE_2D);
+    glPopMatrix();
 }
 
 std::tuple<float, float, float> EnvMap::map(const double theta, const double phi)
