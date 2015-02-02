@@ -66,6 +66,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\..\..\..\OneDrive\Documents\UCSD\Wi15\CSE291\Project\HDR\rgbe.c" />
     <ClCompile Include="GlutDraw.cpp" />
     <ClCompile Include="GlutUI.cpp" />
     <ClCompile Include="RenderWindowMain.cpp" />
@@ -75,6 +76,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\..\..\..\OneDrive\Documents\UCSD\Wi15\CSE291\Project\HDR\rgbe.h" />
     <ClInclude Include="GlutDraw.h" />
     <ClInclude Include="GlutUI.h" />
     <ClInclude Include="scene.h" />

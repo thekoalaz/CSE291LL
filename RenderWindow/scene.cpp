@@ -21,6 +21,7 @@ void Object::draw()
     glRotated(_rotz,0,0,1);
 }
 
+
 void Camera::draw()
 {
 }
@@ -41,6 +42,63 @@ void Grid::draw()
     }
     glPopMatrix();
 }
+
+void EnvMap::_readMap()
+{
+    FILE* hdrfile;
+    fopen_s(&hdrfile, _fileName.c_str(), "rb");
+    if (hdrfile != nullptr)
+    {
+        // Read header
+        RGBE_ReadHeader(hdrfile, &_width, &_height, NULL);
+        // Read data
+        _data = new float[3 * _width*_height];
+        RGBE_ReadPixels_RLE(hdrfile, _data, _width, _height);
+    }
+}
+
+void EnvMap::draw()
+{
+}
+
+std::tuple<float, float, float> EnvMap::map(const double theta, const double phi)
+{
+    const double x = theta / M_PI + _width;
+    const double y = phi / M_PI;
+
+    return getColor(x, y);
+}
+
+std::tuple<float, float, float> EnvMap::getColor(const double x, const double y)
+{
+    float red = _bilinearInterpolate(&_data[0], x, y);
+    float green = _bilinearInterpolate(&_data[1], x, y);
+    float blue = _bilinearInterpolate(&_data[2], x, y);
+
+    return std::tuple<float, float, float>(red, green, blue);
+}
+
+float EnvMap::_bilinearInterpolate(const float * _colors, const double x, const double y)
+{
+    int px = (int) x;
+    int py = (int) y;
+
+    const float p0 = _colors[3*(px + py*_width)];
+    const float p1 = _colors[3*((px+1) + py*_width)];
+    const float p2 = _colors[3*(px + (py+1)*_width)];
+    const float p3 = _colors[3*((px+1)+ (py+1) *_width)];
+
+    double fx1 = x + 1 - px;
+    double fy1 = y + 1 - py;
+    double fx2 = x - px;
+    double fy2 = y - py;
+
+    return static_cast<float>( (p0 * fx1 * fy1)
+        + (p1 * fx2 * fy1)
+        + (p2 * fx1 * fy2)
+        + (p3 * fx2 * fy2) );
+}
+
 
 World & Scene::createWorld()
 {
