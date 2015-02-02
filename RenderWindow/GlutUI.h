@@ -39,7 +39,8 @@ public:
     void init(int argc, char* argv[]);
     void display();
     void drawElements();
-    void Manager::setShaders(std::string vertfile, std::string fragfile);
+    void setShaders(std::string vertfile, std::string fragfile);
+    void deleteShaders();
 
     Window & createWindow(int width, int height);
     Window & createWindow(int width, int height, std::string name);
@@ -53,6 +54,7 @@ public:
 private:
     std::vector<Window *> _windows;
     std::vector<UIElement *> _elements;
+    GLuint v, f, p;
 };
 
 /** UIElement Class **/

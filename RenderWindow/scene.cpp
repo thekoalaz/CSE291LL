@@ -72,7 +72,6 @@ void EnvMap::draw()
     glPushMatrix();
     Object::draw();
 
-    glColor3f(1.0f,1.0f,1.0f);
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D , _textureID);
 
@@ -130,8 +129,8 @@ World & Scene::createWorld()
 
 void Sphere::draw()
 {
-	glPushMatrix();
-	Object::draw();
-	GlutDraw::drawSphere(_r,_n,_m);
-	glPopMatrix();
+    glPushMatrix();
+    Object::draw();
+    GlutDraw::drawSphere(_r,_n,_m);
+    glPopMatrix();
 }

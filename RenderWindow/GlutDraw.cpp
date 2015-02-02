@@ -1,8 +1,5 @@
 #include "GlutDraw.h"
 
-#define _USE_MATH_DEFINES
-#include <math.h>
-
 void GlutDraw::drawLine(double x1, double y1, double z1,
         double x2, double y2, double z2)
 {
@@ -26,17 +23,16 @@ void GlutDraw::drawRectangle(double x, double y,
 
 void GlutDraw::drawSphere(double r,double n, double m/*, float* outR, float* outG, float* outB*/)
 {
-	glEnable(GL_DEPTH_TEST);
-	for (int i = 0; i < n; i++){
-		for (int j = 0; j < m; j++){
-			//glColor3f(outR[i][j], outG[i][j], outB[i][j]);
-			glColor3f(cos(M_PI*i / n), cos(M_PI*i / n), cos(M_PI*i / n));
-			glBegin(GL_QUADS);
-			glVertex3d(r*sin(M_PI*i / n)*cos(2 * M_PI*j / m), r*sin(M_PI*i / n)*sin(2 * M_PI*j / m), r*cos(M_PI*i / n));
-			glVertex3d(r*sin(M_PI*i / n)*cos(2 * M_PI*(j + 1) / m), r*sin(M_PI*i / n)*sin(2 * M_PI*(j + 1) / m), r*cos(M_PI*i / n));
-			glVertex3d(r*sin(M_PI*(i + 1) / n)*cos(2 * M_PI*(j + 1) / m), r*sin(M_PI*(i + 1) / n)*sin(2 * M_PI*(j + 1) / m), r*cos(M_PI*(i + 1) / n));
-			glVertex3d(r*sin(M_PI*(i + 1) / n)*cos(2 * M_PI*j / m), r*sin(M_PI*(i + 1) / n)*sin(2 * M_PI*j / m), r*cos(M_PI*(i + 1) / n));
-			glEnd();
-		}
-	}
+    for (int i = 0; i < n; i++){
+        for (int j = 0; j < m; j++){
+            //glColor3f(outR[i][j], outG[i][j], outB[i][j]);
+            glColor3f(cos(M_PI*i / n), cos(M_PI*i / n), cos(M_PI*i / n));
+            glBegin(GL_QUADS);
+                glVertex3d(r*sin(M_PI*i / n)*cos(2 * M_PI*j / m), r*sin(M_PI*i / n)*sin(2 * M_PI*j / m), r*cos(M_PI*i / n));
+                glVertex3d(r*sin(M_PI*i / n)*cos(2 * M_PI*(j + 1) / m), r*sin(M_PI*i / n)*sin(2 * M_PI*(j + 1) / m), r*cos(M_PI*i / n));
+                glVertex3d(r*sin(M_PI*(i + 1) / n)*cos(2 * M_PI*(j + 1) / m), r*sin(M_PI*(i + 1) / n)*sin(2 * M_PI*(j + 1) / m), r*cos(M_PI*(i + 1) / n));
+                glVertex3d(r*sin(M_PI*(i + 1) / n)*cos(2 * M_PI*j / m), r*sin(M_PI*(i + 1) / n)*sin(2 * M_PI*j / m), r*cos(M_PI*(i + 1) / n));
+            glEnd();
+        }
+    }
 }

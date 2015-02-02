@@ -17,7 +17,6 @@ int main(int argc, char* argv[])
     std::cout << std::string((char *) glGetString(GL_RENDERER)) << std::endl;
     std::cout << "OpenGL " << std::string((char *) glGetString(GL_VERSION)) << std::endl;
     std::cout << "====================================================" << std::endl;
-    MANAGER.setShaders("tonemap.vert","tonemap.frag");
 
     GlutUI::Button & testButton = MANAGER.createButton(mainPanel, 40, 20, 10, 10, "TestButton");
 
@@ -35,28 +34,26 @@ int main(int argc, char* argv[])
     world.addObject(gridYZ);
     gridYZ->setRotz(90);
     gridYZ->setTx(-5);
-	
-	Scene::Sphere * sphere = new Scene::Sphere();
-	world.addObject(sphere);
-	sphere->setTx(0);
-	sphere->setTy(0);
-	sphere->setTz(0);
-	
-	Scene::Camera * cam = new Scene::Camera();
-	cam->setRoty(-45);
-	cam->setRotx(45);
-	cam->setTx(0);
-	cam->setTy(0);
-	cam->setTz(20);
-	
     */
 
+    Scene::Camera * cam = new Scene::Camera();
+    cam->setRoty(-45);
+    cam->setRotx(45);
+    cam->setTx(0);
+    cam->setTy(0);
+    cam->setTz(20);
+
+    Scene::Sphere * sphere = new Scene::Sphere();
+    world.addObject(sphere);
+
+    //MANAGER.setShaders("tonemap.vert","tonemap.frag");
     Scene::EnvMap * envMap = new Scene::EnvMap();
     world.addObject(envMap);
     envMap->setRotx(90);
+    //MANAGER.deleteShaders();
 
     mainPanel.setWorld(&world);
-	mainPanel.setCamera(cam);
+    mainPanel.setCamera(cam);
     GlutUI::Controls::Mouse(mainPanel.getCamera());
 
     /* New window test*/
@@ -69,5 +66,5 @@ int main(int argc, char* argv[])
     //GlutUI::Button & renderButton = MANAGER.createButton(renderPanel, 80, 20, 10, 10, "RenderButton");
 
     MANAGER.drawElements();
-	return 0;
+    return 0;
 }
