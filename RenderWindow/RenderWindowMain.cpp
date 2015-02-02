@@ -10,7 +10,6 @@ int main(int argc, char* argv[])
 {
     MANAGER.init(argc, argv);
 
-
     GlutUI::Window & mainWindow = MANAGER.createWindow(640,480, "TestWindow");
     GlutUI::Panel & mainPanel = MANAGER.createPanel(mainWindow, 640,480, "TestPanel");
     Scene::World world = Scene::createWorld();
@@ -18,6 +17,7 @@ int main(int argc, char* argv[])
     std::cout << std::string((char *) glGetString(GL_RENDERER)) << std::endl;
     std::cout << "OpenGL " << std::string((char *) glGetString(GL_VERSION)) << std::endl;
     std::cout << "====================================================" << std::endl;
+    MANAGER.setShaders("tonemap.vert","tonemap.frag");
 
     GlutUI::Button & testButton = MANAGER.createButton(mainPanel, 40, 20, 10, 10, "TestButton");
 

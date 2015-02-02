@@ -74,6 +74,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="tonemap.frag" />
+    <None Include="tonemap.vert" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\..\..\OneDrive\Documents\UCSD\Wi15\CSE291\Project\HDR\rgbe.h" />

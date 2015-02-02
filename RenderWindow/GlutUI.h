@@ -39,6 +39,7 @@ public:
     void init(int argc, char* argv[]);
     void display();
     void drawElements();
+    void Manager::setShaders(std::string vertfile, std::string fragfile);
 
     Window & createWindow(int width, int height);
     Window & createWindow(int width, int height, std::string name);
@@ -53,20 +54,6 @@ private:
     std::vector<Window *> _windows;
     std::vector<UIElement *> _elements;
 };
-
-/** Display Functor Class **/
-/** 
- *
-**/
-//class Display_Class
-//{
-//public:
-//    Display_Class(Manager * manager) : _manager(manager) { }
-//
-//    void operator() () const { _manager->drawElements(); }
-//private:
-//    Manager * _manager;
-//};
 
 /** UIElement Class **/
 /** Abstract class that defines the basic properties of an UI element

@@ -13,6 +13,8 @@ int UIElement::NEXTID = 0;
 Window * mainWindow;
 Controls::Mouse * mainMouse;
 
+char * textFileRead(const char * fn);
+
 /** Method Definitions **/
 
 /** Manager Class **/
@@ -25,13 +27,52 @@ void Manager::init(int argc, char* argv[])
     glutInit(&argc, argv);
     glutInitDisplayMode( GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH );
      
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_COLOR_MATERIAL);
 }
 
 void Manager::drawElements()
 {
     glutMainLoop();
+}
+
+void Manager::setShaders(const std::string vertfile, const std::string fragfile)
+{
+    GLint GlewInitResult = glewInit();
+    if (GLEW_OK != GlewInitResult)
+    {
+        printf("ERROR: %s\n", glewGetErrorString(GlewInitResult));
+        exit(EXIT_FAILURE);
+    }
+
+    GLuint v, f, p;
+    char *vs,*fs;
+
+    if (vertfile == "" && fragfile == ""){ return;  }
+    p = glCreateProgram();
+
+    if (vertfile != "")
+    {
+        v = glCreateShader(GL_VERTEX_SHADER);
+        vs = textFileRead(vertfile.c_str());
+        const char * vv = vs;
+        glShaderSource(v, 1, &vv,NULL);
+        free(vs);
+        glCompileShader(v);
+        glAttachShader(p,v);
+    }
+
+    if (fragfile != "")
+    {
+        f = glCreateShader(GL_FRAGMENT_SHADER);
+        fs = textFileRead(fragfile.c_str());
+        const char * ff = fs;
+        glShaderSource(f, 1, &ff, NULL);
+        free(fs);
+        glCompileShader(f);
+        glAttachShader(p, f);
+    }
+
+    glLinkProgram(p);
+    glUseProgram(p);
 }
 
 Window & Manager::createWindow(int width, int height)
@@ -98,7 +139,7 @@ void Window::init()
     glutInitWindowPosition(getXPos(), getYPos());
     glutCreateWindow(getName().c_str());
     glutDisplayFunc(Window::displayFuncWrapper);
-	glutReshapeFunc(Window::reshapeFuncWrapper);
+    glutReshapeFunc(Window::reshapeFuncWrapper);
 }
 
 void Window::displayFuncWrapper()
@@ -115,8 +156,11 @@ void Window::draw()
 {    
     //std::cout << "Creating Window: " << getWidth() << " by " << getHeight() << "." << std::endl;
 
-    glClearColor(0.2f, 0.2f, 0.2f, 0.0f); 
+    glClearColor(0.2f, 0.2f, 0.2f, 0.0f);
+    glClearDepth(1.0f);
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_COLOR_MATERIAL);
 
     for(std::vector<UIElement *>::const_iterator child = getChildren().begin() ;
         child < getChildren().end() ; child++)
@@ -124,24 +168,24 @@ void Window::draw()
         (*child)->draw();
     }
     
-	glutSwapBuffers();
+    glutSwapBuffers();
 }
 
 void Window::reshape(int w, int h)
 {
     std::cout << "New size: " << w << " by " << h << std::endl;
-	// prevent divide by 0 error when minimised
-	if(w==0) 
-		h = 1;
+    // prevent divide by 0 error when minimized
+    if(w==0) 
+        h = 1;
 
     setWidth(w);
     setHeight(h);
-	glViewport(0,0,w,h);
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	gluPerspective(45,(float)w/h,0.1,100);
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
+    glViewport(0,0,w,h);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective(45,(float)w/h,0.1,100);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
 }
 
 
@@ -161,9 +205,9 @@ void Panel::draw()
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
         glTranslated(0., 0., -_camera->getTz());
-	    glTranslated(_camera->getTx(),_camera->getTy(),0.);
-	    glRotated(_camera->getRotx(),1,0,0);
-	    glRotated(_camera->getRoty(),0,1,0);
+        glTranslated(_camera->getTx(),_camera->getTy(),0.);
+        glRotated(_camera->getRotx(),1,0,0);
+        glRotated(_camera->getRoty(),0,1,0);
         
         _world->draw();
 
@@ -217,53 +261,53 @@ void Controls::Mouse::init()
 void Controls::Mouse::mouse(int button, int state, int x, int y)
 {
     _lastx=x;
-	_lasty=y;
-	switch(button)
-	{
-	case GLUT_LEFT_BUTTON:
-		_buttons[0] = ((GLUT_DOWN==state)? true : false);
+    _lasty=y;
+    switch(button)
+    {
+    case GLUT_LEFT_BUTTON:
+        _buttons[0] = ((GLUT_DOWN==state)? true : false);
         std::cout << "Left button pressed." << x << ", " << y << std::endl;
-		break;
+        break;
 
-	case GLUT_MIDDLE_BUTTON:
-		_buttons[1] = ((GLUT_DOWN==state)? true : false);
+    case GLUT_MIDDLE_BUTTON:
+        _buttons[1] = ((GLUT_DOWN==state)? true : false);
         std::cout << "Middle button pressed." << x << ", " << y << std::endl;
-		break;
+        break;
 
-	case GLUT_RIGHT_BUTTON:
-		_buttons[2] = ((GLUT_DOWN==state)? true : false);
+    case GLUT_RIGHT_BUTTON:
+        _buttons[2] = ((GLUT_DOWN==state)? true : false);
         std::cout << "Right button pressed." << x << ", " << y << std::endl;
-		break;
+        break;
 
-	default:
-		break;
-	}
+    default:
+        break;
+    }
 
-	glutPostRedisplay();
+    glutPostRedisplay();
 }
 
 void Controls::Mouse::motion(int x, int y)
 {
     int diffx=x-_lastx;
-	int diffy=y-_lasty;
-	_lastx=x;
-	_lasty=y;
+    int diffy=y-_lasty;
+    _lastx=x;
+    _lasty=y;
 
-	if(_buttons[0])
-	{
+    if(_buttons[0])
+    {
         _camera->setRotx(_camera->getRotx() + (float) 0.5f * diffy);
-		_camera->setRoty(_camera->getRoty() + (float) 0.5f * diffx);
-	}
-	else if(_buttons[2])
-	{
+        _camera->setRoty(_camera->getRoty() + (float) 0.5f * diffx);
+    }
+    else if(_buttons[2])
+    {
         _camera->setTz( _camera->getTz() - (float) 0.05f * diffx);
-	}
-	else if(_buttons[1])
-	{
+    }
+    else if(_buttons[1])
+    {
         _camera->setTx(_camera->getTx() + (float) 0.05f * diffx);
         _camera->setTy(_camera->getTy() - (float) 0.05f * diffy);
-	}
-	glutPostRedisplay();
+    }
+    glutPostRedisplay();
 }
 
 void Controls::Mouse::mouseFuncWrapper(int button, int state, int x, int y)
@@ -277,3 +321,30 @@ void Controls::Mouse::motionFuncWrapper(int x, int y)
 }
 
 //TODO Keyboard functions
+
+
+char * textFileRead(const char * fn)
+{
+    FILE * fp;
+    char * content = nullptr;
+
+    int count = 0;
+    if (fn != nullptr)
+    {
+        fopen_s(&fp, fn, "rt");
+        if (fp != nullptr)
+        {
+            fseek(fp, 0, SEEK_END);
+            count = ftell(fp);
+            rewind(fp);
+            if (count > 0)
+            {
+                content = (char *) malloc(sizeof(char) * (count + 1));
+                count = fread(content, sizeof(char), count, fp);
+                content[count] = '\0';
+            }
+            fclose(fp);
+        }
+    }
+    return content;
+}

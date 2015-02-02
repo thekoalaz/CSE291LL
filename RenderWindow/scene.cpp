@@ -77,7 +77,7 @@ void EnvMap::draw()
     glBindTexture(GL_TEXTURE_2D , _textureID);
 
     gluQuadricTexture(quad,GL_TRUE); 
-    gluSphere(quad,10000,20,20);
+    gluSphere(quad,1000,20,20);
 
     glDisable(GL_TEXTURE_2D);
     glPopMatrix();

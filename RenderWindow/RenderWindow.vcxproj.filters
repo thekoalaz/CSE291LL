@@ -33,6 +33,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="tonemap.frag">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="tonemap.vert">
+      <Filter>Source Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GlutDraw.h">
