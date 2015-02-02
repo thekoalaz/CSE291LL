@@ -47,3 +47,11 @@ World & Scene::createWorld()
     World * new_world = new World();
     return *new_world;
 }
+
+void Sphere::draw()
+{
+	glPushMatrix();
+	Object::draw();
+	GlutDraw::drawSphere(_r,_n,_m);
+	glPopMatrix();
+}
