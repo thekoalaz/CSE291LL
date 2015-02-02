@@ -35,6 +35,20 @@ int main(int argc, char* argv[])
     world.addObject(gridYZ);
     gridYZ->setRotz(90);
     gridYZ->setTx(-5);
+	
+	Scene::Sphere * sphere = new Scene::Sphere();
+	world.addObject(sphere);
+	sphere->setTx(0);
+	sphere->setTy(0);
+	sphere->setTz(0);
+	
+	Scene::Camera * cam = new Scene::Camera();
+	cam->setRoty(-45);
+	cam->setRotx(45);
+	cam->setTx(0);
+	cam->setTy(0);
+	cam->setTz(20);
+	
     */
 
     Scene::EnvMap * envMap = new Scene::EnvMap();
@@ -42,7 +56,7 @@ int main(int argc, char* argv[])
     envMap->setRotx(90);
 
     mainPanel.setWorld(&world);
-    mainPanel.setCamera(new Scene::Camera());
+	mainPanel.setCamera(cam);
     GlutUI::Controls::Mouse(mainPanel.getCamera());
 
     /* New window test*/

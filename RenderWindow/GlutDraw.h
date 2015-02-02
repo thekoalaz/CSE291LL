@@ -13,5 +13,8 @@ void drawLine(double x1, double y1, double z1,
 void drawRectangle(double x, double y,
         double width, double height);
 
+//Draw sphere at center of panel
+void drawSphere(double r,double n, double m);
+
 };
 #endif /* GLUTDRAW_H */
