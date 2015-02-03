@@ -46,11 +46,11 @@ int main(int argc, char* argv[])
     Scene::Sphere * sphere = new Scene::Sphere();
     world.addObject(sphere);
 
-    //MANAGER.setShaders("tonemap.vert","tonemap.frag");
     Scene::EnvMap * envMap = new Scene::EnvMap();
     world.addObject(envMap);
     envMap->setRotx(90);
-    //MANAGER.deleteShaders();
+    Scene::Shader * envShader = new Scene::Shader("tonemap.vert", "tonemap.frag");
+    world.assignShader(envMap, envShader);
 
     mainPanel.setWorld(&world);
     mainPanel.setCamera(cam);

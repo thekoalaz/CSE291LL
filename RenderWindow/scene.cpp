@@ -4,59 +4,63 @@ using namespace Scene;
 /** Global variables **/
 int Object::NEXTID = 0;
 
+/* Utility Functions */
 char * textFileRead(const char * fn);
 
-char * textFileRead(const char * fn)
+void World::assignShader(Object * obj, Shader * shader)
 {
-    FILE * fp;
-    char * content = nullptr;
-
-    int count = 0;
-    if (fn != nullptr)
-    {
-        fopen_s(&fp, fn, "rt");
-        if (fp != nullptr)
-        {
-            fseek(fp, 0, SEEK_END);
-            count = ftell(fp);
-            rewind(fp);
-            if (count > 0)
-            {
-                content = (char *) malloc(sizeof(char) * (count + 1));
-                count = fread(content, sizeof(char), count, fp);
-                content[count] = '\0';
-            }
-            fclose(fp);
-        }
-    }
-    return content;
+    _shaderMap[obj->getId()] = shader;
 }
+
 void World::draw()
 {
     for(std::vector<Object *>::const_iterator object = _objects.begin() ;
         object < _objects.end() ; object++)
     {
-        (*object)->draw();
+        auto shader = _shaderMap.find((*object)->getId());
+        if (shader != _shaderMap.end())
+        {
+            (*object)->draw(_shaderMap[(*object)->getId()]);
+        }
+        else
+        {
+            (*object)->draw();
+        }
     }
 }
 
 void Object::draw()
 {
+    glPushMatrix();
     glTranslated(_tx, _ty, _tz);
     glRotated(_rotx,1,0,0);
     glRotated(_roty,0,1,0);
     glRotated(_rotz,0,0,1);
+    doDraw();
+    glPopMatrix();
 }
 
-
-void Camera::draw()
-{
-}
-
-void Grid::draw()
+void Object::draw(Shader * shader)
 {
     glPushMatrix();
-    Object::draw();
+    glTranslated(_tx, _ty, _tz);
+    glRotated(_rotx,1,0,0);
+    glRotated(_roty,0,1,0);
+    glRotated(_rotz,0,0,1);
+
+    shader->link();
+    doDraw();
+    shader->unlink();
+    glPopMatrix();
+}
+
+
+void Camera::doDraw()
+{
+}
+
+void Grid::doDraw()
+{
     for(int r = -(_rows/2); r <= (_rows/2); r++)
     {
         GlutDraw::drawLine(-(_cols/2.)*_gap, 0, r*_gap,
@@ -67,7 +71,6 @@ void Grid::draw()
         GlutDraw::drawLine(c*_gap, 0, -(_rows/2.)*_gap,
             c*_gap, 0, (_rows/2.)*_gap);
     }
-    glPopMatrix();
 }
 
 void EnvMap::_readMap()
@@ -92,49 +95,9 @@ void EnvMap::_readMap()
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, _width, _height, 0, GL_RGB, GL_FLOAT, _data);
 }
 
-void EnvMap::draw()
+void EnvMap::doDraw()
 {
-    GLint GlewInitResult = glewInit();
-    if (GLEW_OK != GlewInitResult)
-    {
-        printf("ERROR: %s\n", glewGetErrorString(GlewInitResult));
-        exit(EXIT_FAILURE);
-    }
-
-    GLuint v, f, p;
-    char *vs,*fs;
-
-    if ("tonemap.vert" == "" && "tonemap.frag" == ""){ return;  }
-    p = glCreateProgram();
-
-    if ("tonemap.vert" != "")
-    {
-        v = glCreateShader(GL_VERTEX_SHADER);
-        vs = textFileRead("tonemap.vert");
-        const char * vv = vs;
-        glShaderSource(v, 1, &vv,NULL);
-        free(vs);
-        glCompileShader(v);
-        glAttachShader(p,v);
-    }
-
-    if ("tonemap.frag" != "")
-    {
-        f = glCreateShader(GL_FRAGMENT_SHADER);
-        fs = textFileRead("tonemap.frag");
-        const char * ff = fs;
-        glShaderSource(f, 1, &ff, NULL);
-        free(fs);
-        glCompileShader(f);
-        glAttachShader(p, f);
-    }
-
-    glLinkProgram(p);
-    glUseProgram(p);
     GLUquadric* quad = gluNewQuadric(); 
-
-    glPushMatrix();
-    Object::draw();
 
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D , _textureID);
@@ -143,13 +106,6 @@ void EnvMap::draw()
     gluSphere(quad,1000,20,20);
 
     glDisable(GL_TEXTURE_2D);
-    glPopMatrix();
-    glDetachShader(p,v);
-    glDetachShader(p,f);
-    glDeleteShader(v);
-    glDeleteShader(f);
-    glDeleteProgram(p);
-    glUseProgram(0);
 }
 
 std::tuple<float, float, float> EnvMap::map(const double theta, const double phi)
@@ -190,17 +146,105 @@ float EnvMap::_bilinearInterpolate(const float * _colors, const double x, const 
         + (p3 * fx2 * fy2) );
 }
 
-
 World & Scene::createWorld()
 {
     World * new_world = new World();
     return *new_world;
 }
 
-void Sphere::draw()
+void Sphere::doDraw()
 {
-    glPushMatrix();
-    Object::draw();
     GlutDraw::drawSphere(_r,_n,_m);
-    glPopMatrix();
+}
+
+void Shader::_initShaders()
+{
+    bool no_shaders = false;
+    if (_vertfile == "")
+    {
+        no_shaders = true;
+    }
+    if (_fragfile == "")
+    {
+        no_shaders = true;
+    }
+    if (no_shaders)
+    {
+        std::cout << "No shaders! Initialization failing." << std::endl;
+        return;
+    }
+    else if (_initialized)
+    {
+        std::cout << "Already initialized." << std::endl;
+    }
+    else
+    {
+        _initialized = true;
+    }
+
+    char *vs,*fs;
+
+    if (_vertfile == "" && _fragfile == ""){ return;  }
+    _program = glCreateProgram();
+
+    if (_vertfile != "")
+    {
+        _vertex = glCreateShader(GL_VERTEX_SHADER);
+        vs = textFileRead(_vertfile.c_str());
+        const char * vv = vs;
+        glShaderSource(_vertex, 1, &vv,NULL);
+        free(vs);
+        glCompileShader(_vertex);
+        glAttachShader(_program,_vertex);
+    }
+
+    if (_fragfile != "")
+    {
+        _frag = glCreateShader(GL_FRAGMENT_SHADER);
+        fs = textFileRead(_fragfile.c_str());
+        const char * ff = fs;
+        glShaderSource(_frag, 1, &ff, NULL);
+        free(fs);
+        glCompileShader(_frag);
+        glAttachShader(_program, _frag);
+    }
+
+    glLinkProgram(_program);
+}
+
+void Shader::link()
+{
+    glUseProgram(_program);
+}
+
+void Shader::unlink()
+{
+    glUseProgram(0);
+}
+
+/* Utility Functions */
+char * textFileRead(const char * fn)
+{
+    FILE * fp;
+    char * content = nullptr;
+
+    int count = 0;
+    if (fn != nullptr)
+    {
+        fopen_s(&fp, fn, "rt");
+        if (fp != nullptr)
+        {
+            fseek(fp, 0, SEEK_END);
+            count = ftell(fp);
+            rewind(fp);
+            if (count > 0)
+            {
+                content = (char *) malloc(sizeof(char) * (count + 1));
+                count = fread(content, sizeof(char), count, fp);
+                content[count] = '\0';
+            }
+            fclose(fp);
+        }
+    }
+    return content;
 }

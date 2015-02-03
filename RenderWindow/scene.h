@@ -11,6 +11,7 @@ namespace Scene
 /** Global variables **/
 
 class Object;
+class Shader;
 
 class World
 {
@@ -18,12 +19,14 @@ public:
     World() { }
 
     void addObject(Object * obj) { _objects.push_back(obj); }
+    void assignShader(Object * obj, Shader * shader);
 
     //void removeObject(Object & obj) {  }
 
     void draw();
 private:
     std::vector<Object *> _objects;
+    std::unordered_map<int, Shader *> _shaderMap;
 };
 
 class Object
@@ -35,7 +38,9 @@ public:
     Object(double tx, double ty, double tz, double rotx, double roty, double rotz) : _tx(tx), _ty(ty), _tz(tz),
         _rotx(rotx), _roty(roty), _rotz(rotz), _visible(true)
         { _objectId = nextId(); }
-    virtual void draw() = 0;
+    void draw();
+    void draw(Shader *);
+    virtual void doDraw() = 0;
 
     /* getters */
     double getTx() { return _tx; } const
@@ -72,7 +77,8 @@ public:
 /* Constructors */
     Camera() : Object() { }
 
-    void draw();
+    void doDraw();
+
 private:
 };
 
@@ -82,7 +88,7 @@ public:
 /* Constructors */
     Grid() : Object(), _rows(10), _cols(10), _gap(1.0) { }
 
-    void draw();
+    void doDraw();
 
 private:
     int _rows, _cols;
@@ -114,7 +120,7 @@ public:
         */
     }
 
-    void draw();
+    void doDraw();
     void setR(double r) { _r = r; }
     /*
     void setBrdfR(float* f) {
@@ -161,10 +167,11 @@ public:
 /* Constructors */
     EnvMap() : Object(), _fileName(DEFAULT_ENV_MAP) { _readMap(); };
 
-    void draw();
+    void doDraw();
     std::tuple<float, float, float> map(const double theta, const double phi);
     std::tuple<float, float, float> getColor(const double x, const double y);
 
+/* Destructors */
     ~EnvMap() { if(_data != nullptr) delete _data; }
 
 private:
@@ -175,6 +182,38 @@ private:
 
     void _readMap();
     float _bilinearInterpolate(const float * _colors, const double x, const double y);
+};
+
+class Shader
+    /* Base class for vert/frag shader. */
+{
+public:
+/* Constructors */
+    Shader() : _vertfile(), _fragfile() { };
+    Shader(std::string vertfile, std::string fragfile)
+        : _vertfile(vertfile), _fragfile(fragfile)
+        { _initShaders(); };
+
+    void link();
+    void unlink();
+
+/* Destructors */
+    ~Shader() {
+        glDetachShader(_program, _vertex);
+        glDetachShader(_program, _frag);
+        glDeleteShader(_vertex);
+        glDeleteShader(_frag);
+        glDeleteProgram(_program);
+    }
+
+private:
+    std::string _vertfile, _fragfile;
+    GLuint _program;
+    GLuint _vertex;
+    GLuint _frag;
+    bool _initialized;
+
+    void _initShaders();
 };
 
 World & createWorld();

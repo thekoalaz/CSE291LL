@@ -145,6 +145,12 @@ void Window::init()
     glutCreateWindow(getName().c_str());
     glutDisplayFunc(Window::displayFuncWrapper);
     glutReshapeFunc(Window::reshapeFuncWrapper);
+    GLint GlewInitResult = glewInit();
+    if (GLEW_OK != GlewInitResult)
+    {
+        std::cout << "ERROR: " << glewGetErrorString(GlewInitResult) << std::endl;
+        exit(EXIT_FAILURE);
+    }
 }
 
 void Window::displayFuncWrapper()
