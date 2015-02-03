@@ -210,6 +210,11 @@ void Shader::_initShaders()
     }
 
     glLinkProgram(_program);
+
+    glDetachShader(_program, _vertex);
+    glDetachShader(_program, _frag);
+    glDeleteShader(_vertex);
+    glDeleteShader(_frag);
 }
 
 void Shader::link()

@@ -198,13 +198,7 @@ public:
     void unlink();
 
 /* Destructors */
-    ~Shader() {
-        glDetachShader(_program, _vertex);
-        glDetachShader(_program, _frag);
-        glDeleteShader(_vertex);
-        glDeleteShader(_frag);
-        glDeleteProgram(_program);
-    }
+    ~Shader() { glDeleteProgram(_program); }
 
 private:
     std::string _vertfile, _fragfile;
