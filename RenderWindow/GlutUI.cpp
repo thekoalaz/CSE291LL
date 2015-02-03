@@ -13,7 +13,7 @@ int UIElement::NEXTID = 0;
 Window * mainWindow;
 Controls::Mouse * mainMouse;
 
-char * textFileRead(const char * fn);
+//char * textFileRead(const char * fn);
 
 /** Method Definitions **/
 
@@ -33,52 +33,52 @@ void Manager::drawElements()
     glutMainLoop();
 }
 
-void Manager::setShaders(const std::string vertfile, const std::string fragfile)
-{
-    GLint GlewInitResult = glewInit();
-    if (GLEW_OK != GlewInitResult)
-    {
-        printf("ERROR: %s\n", glewGetErrorString(GlewInitResult));
-        exit(EXIT_FAILURE);
-    }
+//void Manager::setShaders(const std::string vertfile, const std::string fragfile)
+//{
+//    GLint GlewInitResult = glewInit();
+//    if (GLEW_OK != GlewInitResult)
+//    {
+//        printf("ERROR: %s\n", glewGetErrorString(GlewInitResult));
+//        exit(EXIT_FAILURE);
+//    }
 
-    GLuint v, f, p;
-    char *vs,*fs;
+//    GLuint v, f, p;
+//    char *vs,*fs;
 
-    if (vertfile == "" && fragfile == ""){ return;  }
-    p = glCreateProgram();
+//    if (vertfile == "" && fragfile == ""){ return;  }
+//    p = glCreateProgram();
 
-    if (vertfile != "")
-    {
-        v = glCreateShader(GL_VERTEX_SHADER);
-        vs = textFileRead(vertfile.c_str());
-        const char * vv = vs;
-        glShaderSource(v, 1, &vv,NULL);
-        free(vs);
-        glCompileShader(v);
-        glAttachShader(p,v);
-    }
+//    if (vertfile != "")
+//    {
+//        v = glCreateShader(GL_VERTEX_SHADER);
+//        vs = textFileRead(vertfile.c_str());
+//        const char * vv = vs;
+//        glShaderSource(v, 1, &vv,NULL);
+//        free(vs);
+//        glCompileShader(v);
+//        glAttachShader(p,v);
+//    }
 
-    if (fragfile != "")
-    {
-        f = glCreateShader(GL_FRAGMENT_SHADER);
-        fs = textFileRead(fragfile.c_str());
-        const char * ff = fs;
-        glShaderSource(f, 1, &ff, NULL);
-        free(fs);
-        glCompileShader(f);
-        glAttachShader(p, f);
-    }
+//    if (fragfile != "")
+//    {
+//        f = glCreateShader(GL_FRAGMENT_SHADER);
+//        fs = textFileRead(fragfile.c_str());
+//        const char * ff = fs;
+//        glShaderSource(f, 1, &ff, NULL);
+//        free(fs);
+//        glCompileShader(f);
+//        glAttachShader(p, f);
+//    }
 
-    glLinkProgram(p);
-    glUseProgram(p);
-}
+//    glLinkProgram(p);
+//    glUseProgram(p);
+//}
 
-void Manager::deleteShaders()
-{
-    glDeleteShader(v);
-    glDeleteShader(f);
-}
+//void Manager::deleteShaders()
+//{
+//    glDeleteShader(v);
+//    glDeleteShader(f);
+//}
 
 Window & Manager::createWindow(int width, int height)
 {
@@ -328,28 +328,28 @@ void Controls::Mouse::motionFuncWrapper(int x, int y)
 //TODO Keyboard functions
 
 
-char * textFileRead(const char * fn)
-{
-    FILE * fp;
-    char * content = nullptr;
+//char * textFileRead(const char * fn)
+//{
+//    FILE * fp;
+//    char * content = nullptr;
 
-    int count = 0;
-    if (fn != nullptr)
-    {
-        fopen_s(&fp, fn, "rt");
-        if (fp != nullptr)
-        {
-            fseek(fp, 0, SEEK_END);
-            count = ftell(fp);
-            rewind(fp);
-            if (count > 0)
-            {
-                content = (char *) malloc(sizeof(char) * (count + 1));
-                count = fread(content, sizeof(char), count, fp);
-                content[count] = '\0';
-            }
-            fclose(fp);
-        }
-    }
-    return content;
-}
+//    int count = 0;
+//    if (fn != nullptr)
+//    {
+//        fopen_s(&fp, fn, "rt");
+//        if (fp != nullptr)
+//        {
+//            fseek(fp, 0, SEEK_END);
+//            count = ftell(fp);
+//            rewind(fp);
+//            if (count > 0)
+//            {
+//                content = (char *) malloc(sizeof(char) * (count + 1));
+//                count = fread(content, sizeof(char), count, fp);
+//                content[count] = '\0';
+//            }
+//            fclose(fp);
+//        }
+//    }
+//    return content;
+//}

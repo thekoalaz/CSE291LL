@@ -4,6 +4,33 @@ using namespace Scene;
 /** Global variables **/
 int Object::NEXTID = 0;
 
+char * textFileRead(const char * fn);
+
+char * textFileRead(const char * fn)
+{
+    FILE * fp;
+    char * content = nullptr;
+
+    int count = 0;
+    if (fn != nullptr)
+    {
+        fopen_s(&fp, fn, "rt");
+        if (fp != nullptr)
+        {
+            fseek(fp, 0, SEEK_END);
+            count = ftell(fp);
+            rewind(fp);
+            if (count > 0)
+            {
+                content = (char *) malloc(sizeof(char) * (count + 1));
+                count = fread(content, sizeof(char), count, fp);
+                content[count] = '\0';
+            }
+            fclose(fp);
+        }
+    }
+    return content;
+}
 void World::draw()
 {
     for(std::vector<Object *>::const_iterator object = _objects.begin() ;
@@ -67,6 +94,43 @@ void EnvMap::_readMap()
 
 void EnvMap::draw()
 {
+    GLint GlewInitResult = glewInit();
+    if (GLEW_OK != GlewInitResult)
+    {
+        printf("ERROR: %s\n", glewGetErrorString(GlewInitResult));
+        exit(EXIT_FAILURE);
+    }
+
+    GLuint v, f, p;
+    char *vs,*fs;
+
+    if ("tonemap.vert" == "" && "tonemap.frag" == ""){ return;  }
+    p = glCreateProgram();
+
+    if ("tonemap.vert" != "")
+    {
+        v = glCreateShader(GL_VERTEX_SHADER);
+        vs = textFileRead("tonemap.vert");
+        const char * vv = vs;
+        glShaderSource(v, 1, &vv,NULL);
+        free(vs);
+        glCompileShader(v);
+        glAttachShader(p,v);
+    }
+
+    if ("tonemap.frag" != "")
+    {
+        f = glCreateShader(GL_FRAGMENT_SHADER);
+        fs = textFileRead("tonemap.frag");
+        const char * ff = fs;
+        glShaderSource(f, 1, &ff, NULL);
+        free(fs);
+        glCompileShader(f);
+        glAttachShader(p, f);
+    }
+
+    glLinkProgram(p);
+    glUseProgram(p);
     GLUquadric* quad = gluNewQuadric(); 
 
     glPushMatrix();
@@ -80,6 +144,12 @@ void EnvMap::draw()
 
     glDisable(GL_TEXTURE_2D);
     glPopMatrix();
+    glDetachShader(p,v);
+    glDetachShader(p,f);
+    glDeleteShader(v);
+    glDeleteShader(f);
+    glDeleteProgram(p);
+    glUseProgram(0);
 }
 
 std::tuple<float, float, float> EnvMap::map(const double theta, const double phi)

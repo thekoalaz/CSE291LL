@@ -5,7 +5,6 @@
 
 namespace GlutDraw
 {
-
 void drawLine(double x1, double y1, double z1,
         double x2, double y2, double z2);
 
@@ -15,6 +14,5 @@ void drawRectangle(double x, double y,
 
 //Draw sphere at center of panel
 void drawSphere(double r,double n, double m);
-
 };
 #endif /* GLUTDRAW_H */
