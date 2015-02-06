@@ -45,6 +45,8 @@ int main(int argc, char* argv[])
 
     Scene::Sphere * sphere = new Scene::Sphere();
     world.addObject(sphere);
+    Scene::Shader * sphereShader = new Scene::Shader("sphere.vert", "sphere.frag");
+    world.assignShader(sphere, sphereShader);
 
     Scene::EnvMap * envMap = new Scene::EnvMap();
     world.addObject(envMap);
