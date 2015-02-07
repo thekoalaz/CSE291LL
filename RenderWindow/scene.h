@@ -18,8 +18,9 @@ class World
 public:
     World() { }
 
-    void addObject(Object * obj) { _objects.push_back(obj); }
+    void addObject(Object * obj) { _objects.push_back(obj); obj->setWorld(this);  }
     void assignShader(Object * obj, Shader * shader);
+    Shader * findShader(Object * obj);
 
     //void removeObject(Object & obj) {  }
 
@@ -60,11 +61,14 @@ public:
     void setRoty(double roty) { _roty = roty; }
     void setRotz(double rotz) { _rotz = rotz; }
     void setVisible(bool visible) { _visible = visible; }
+    void setWorld(World * world) { _world = world; }
 
     /* Single line functions */
     int nextId() { return NEXTID++; }
 private:
     static int NEXTID;
+
+    World * _world;
     int _objectId;
     double _tx, _ty, _tz;
     double _rotx, _roty, _rotz;
