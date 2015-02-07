@@ -9,6 +9,21 @@ extern "C" {
 namespace Scene
 {
 /** Global variables **/
+const float GOLDEN_RATIO = (1 + sqrt(5)) / 2;
+const float ICOSAHEDRON_VERTS[][3] = {
+    {  0,  1,  GOLDEN_RATIO },
+    {  0, -1,  GOLDEN_RATIO },
+    {  0,  1, -GOLDEN_RATIO },
+    {  0, -1, -GOLDEN_RATIO },
+    {  1,  GOLDEN_RATIO,  0 },
+    { -1,  GOLDEN_RATIO,  0 },
+    {  1, -GOLDEN_RATIO,  0 },
+    { -1, -GOLDEN_RATIO,  0 },
+    {  1,  0,  GOLDEN_RATIO },
+    { -1,  0,  GOLDEN_RATIO },
+    {  1,  0, -GOLDEN_RATIO },
+    { -1,  0, -GOLDEN_RATIO }
+};
 
 class World;
 class Shader;
