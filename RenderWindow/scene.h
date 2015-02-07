@@ -51,6 +51,7 @@ public:
     double getRoty() { return _roty; } const
     double getRotz() { return _rotz; } const
     bool getVisible() { return _visible; } const
+    World* getWorld() { return _world; } const
     int getId() { return _objectId; } const
 
     /* setters */
@@ -65,14 +66,16 @@ public:
 
     /* Single line functions */
     int nextId() { return NEXTID++; }
-private:
-    static int NEXTID;
 
+protected:
     World * _world;
     int _objectId;
     double _tx, _ty, _tz;
     double _rotx, _roty, _rotz;
     bool _visible;
+
+private:
+    static int NEXTID;
 };
 
 class Camera : public Object
@@ -104,24 +107,6 @@ class Sphere : public Object
 public:
     /* Constructors */
     Sphere() : Object(), _r(5), _n(100), _m(100) {
-        /*
-        _fR = new float[_n][_m];
-        _fG = new float[_n][_m];
-        _fB = new float[_n][_m];
-        _outR = new float[_n][_m];
-        _outG = new float[_n][_m];
-        _outB = new float[_n][_m];
-        for (int i = 0; i < n; i++){
-            for (int j = 0; j < m; j++){
-                _fR[i][j] = 1;
-                _fB[i][j] = 1;
-                _fG[i][j] = 1;
-                _outR[i][j] = rand() / RAND_MAX;
-                _outG[i][j] = rand() / RAND_MAX;
-                _outB[i][j] = rand() / RAND_MAX;
-            }
-        }
-        */
     }
 
     void doDraw();
@@ -166,6 +151,7 @@ public:
 
     void link();
     void unlink();
+    GLuint getProgram() { return _program; };
 
 /* Destructors */
     ~Shader() { glDeleteProgram(_program); }
