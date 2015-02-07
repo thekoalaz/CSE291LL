@@ -113,7 +113,7 @@ void EnvMap::doDraw()
     glBindTexture(GL_TEXTURE_2D , _textureID);
 
     gluQuadricTexture(quad,GL_TRUE); 
-    gluSphere(quad,1000,20,20);
+    gluSphere(quad,_r,_n,_m);
 
     glDisable(GL_TEXTURE_2D);
 }

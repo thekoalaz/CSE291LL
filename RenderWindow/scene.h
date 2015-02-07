@@ -103,39 +103,22 @@ class Sphere : public Object
 {
 public:
     /* Constructors */
-    Sphere() : Object(), _r(5), _n(100), _m(100) {
-        /*
-        _fR = new float[_n][_m];
-        _fG = new float[_n][_m];
-        _fB = new float[_n][_m];
-        _outR = new float[_n][_m];
-        _outG = new float[_n][_m];
-        _outB = new float[_n][_m];
-        for (int i = 0; i < n; i++){
-            for (int j = 0; j < m; j++){
-                _fR[i][j] = 1;
-                _fB[i][j] = 1;
-                _fG[i][j] = 1;
-                _outR[i][j] = rand() / RAND_MAX;
-                _outG[i][j] = rand() / RAND_MAX;
-                _outB[i][j] = rand() / RAND_MAX;
-            }
-        }
-        */
-    }
+    Sphere() : Object(), _r(5), _n(100), _m(100) { }
+    Sphere(double radius, int n, int m) : Object(), _r(radius), _n(n), _m(m) { }
 
     void doDraw();
     void setR(double r) { _r = r; }
-private:
+protected:
     int _n, _m; // number of theta and phi subdivisions respectively
     double _r;
 };
 
-class EnvMap : public Object
+class EnvMap : public Sphere
 {
 public:
 /* Constructors */
-    EnvMap() : Object(), _fileName(DEFAULT_ENV_MAP) { _readMap(); };
+    EnvMap() : Sphere(1000.0, 20, 20), _fileName(DEFAULT_ENV_MAP) { _readMap(); };
+    EnvMap(double radius, int n, int m) : Sphere(radius, n, m), _fileName(DEFAULT_ENV_MAP) { _readMap(); };
 
     void doDraw();
     std::tuple<float, float, float> map(const double theta, const double phi);
