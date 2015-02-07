@@ -18,7 +18,7 @@ class World
 public:
     World() { }
 
-    void addObject(Object * obj) { _objects.push_back(obj); obj->setWorld(this);  }
+    void addObject(Object * obj);
     void assignShader(Object * obj, Shader * shader);
     Shader * findShader(Object * obj);
 

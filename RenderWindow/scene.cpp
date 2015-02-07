@@ -7,6 +7,11 @@ int Object::NEXTID = 0;
 /* Utility Functions */
 char * textFileRead(const char * fn);
 
+void World::addObject(Object * obj)
+{
+    _objects.push_back(obj);
+    obj->setWorld(this);
+}
 void World::assignShader(Object * obj, Shader * shader)
 {
     _shaderMap[obj->getId()] = shader;
