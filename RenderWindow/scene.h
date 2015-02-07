@@ -26,7 +26,33 @@ const float ICOSAHEDRON_VERTS[][3] = {
 };
 
 class World;
-class Shader;
+
+class Shader
+    /* Base class for vert/frag shader. */
+{
+public:
+/* Constructors */
+    Shader() : _vertfile(), _fragfile() { };
+    Shader(std::string vertfile, std::string fragfile)
+        : _vertfile(vertfile), _fragfile(fragfile)
+        { _initShaders(); };
+
+    void link();
+    void unlink();
+    GLuint getProgram() { return _program; };
+
+/* Destructors */
+    ~Shader() { glDeleteProgram(_program); }
+
+private:
+    std::string _vertfile, _fragfile;
+    GLuint _program;
+    GLuint _vertex;
+    GLuint _frag;
+    bool _initialized;
+
+    void _initShaders();
+};
 
 class Object
 {
@@ -138,33 +164,6 @@ private:
     float _bilinearInterpolate(const float * _colors, const double x, const double y);
 };
 
-class Shader
-    /* Base class for vert/frag shader. */
-{
-public:
-/* Constructors */
-    Shader() : _vertfile(), _fragfile() { };
-    Shader(std::string vertfile, std::string fragfile)
-        : _vertfile(vertfile), _fragfile(fragfile)
-        { _initShaders(); };
-
-    void link();
-    void unlink();
-    GLuint getProgram() { return _program; };
-
-/* Destructors */
-    ~Shader() { glDeleteProgram(_program); }
-
-private:
-    std::string _vertfile, _fragfile;
-    GLuint _program;
-    GLuint _vertex;
-    GLuint _frag;
-    bool _initialized;
-
-    void _initShaders();
-};
-
 class World
 {
 public:
@@ -178,8 +177,8 @@ public:
 
     //void removeObject(Object & obj) {  }
 
-    Camera * getCam() { return _cam }
-    EnvMap * getEnvMap() { return _envMap }
+    Camera * getCam() { return _cam; }
+    EnvMap * getEnvMap() { return _envMap; }
 
     void draw();
 private:
