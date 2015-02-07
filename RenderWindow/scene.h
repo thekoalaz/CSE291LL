@@ -163,8 +163,8 @@ public:
 
     //void removeObject(Object & obj) {  }
 
-    Camera * getCam();
-    EnvMap * getEnvMap();
+    Camera * getCam() { return _cam }
+    EnvMap * getEnvMap() { return _envMap }
 
     void draw();
 private:
