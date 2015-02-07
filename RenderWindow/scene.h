@@ -51,6 +51,7 @@ public:
     double getRoty() { return _roty; } const
     double getRotz() { return _rotz; } const
     bool getVisible() { return _visible; } const
+    World* getWorld() { return _world; } const
     int getId() { return _objectId; } const
 
     /* setters */
@@ -65,14 +66,16 @@ public:
 
     /* Single line functions */
     int nextId() { return NEXTID++; }
-private:
-    static int NEXTID;
 
+protected:
     World * _world;
     int _objectId;
     double _tx, _ty, _tz;
     double _rotx, _roty, _rotz;
     bool _visible;
+
+private:
+    static int NEXTID;
 };
 
 class Camera : public Object
@@ -149,6 +152,7 @@ public:
 
     void link();
     void unlink();
+    GLuint getProgram() { return _program; };
 
 /* Destructors */
     ~Shader() { glDeleteProgram(_program); }

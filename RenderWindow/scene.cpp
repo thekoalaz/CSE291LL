@@ -164,6 +164,12 @@ World & Scene::createWorld()
 
 void Sphere::doDraw()
 {
+    //float lightDir[3] = { 0.0, 0.0, 1.0 };
+    Shader * shader = _world->findShader(this);
+    GLint lightDir = glGetUniformLocation(shader->getProgram(), "lightDir");
+    GLfloat lightDirValue[3] = { 0.0, 0.0, 1.0 };
+    glUniform3fv(lightDir, 3, lightDirValue);
+    
     GlutDraw::drawSphere(_r,_n,_m);
 }
 
