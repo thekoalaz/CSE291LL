@@ -34,3 +34,8 @@
 /ipch/renderwindow-30bfc081
 /Debug
 /RenderWindow/Debug
+
+*.suo
+*.sdf
+*.hdr
+*.PNG
