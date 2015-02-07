@@ -13,6 +13,34 @@ void World::addObject(Object * obj)
     obj->setWorld(this);
 }
 
+void World::addObject(Camera * cam)
+{
+    if (_cam == nullptr)
+    {
+        _objects.push_back(cam);
+        cam->setWorld(this);
+        _cam = cam;
+    }
+    else
+    {
+        std::cout << "Cam already set!" << std::endl;
+    }
+}
+
+void World::addObject(EnvMap * envMap)
+{
+    if (_envMap == nullptr)
+    {
+        _objects.push_back(envMap);
+        envMap->setWorld(this);
+        _envMap = envMap;
+    }
+    else
+    {
+        std::cout << "Env map already set!" << std::endl;
+    }
+}
+
 void World::assignShader(Object * obj, Shader * shader)
 {
     _shaderMap[obj->getId()] = shader;

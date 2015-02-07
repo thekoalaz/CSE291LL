@@ -42,6 +42,7 @@ int main(int argc, char* argv[])
     cam->setTx(0);
     cam->setTy(0);
     cam->setTz(20);
+    world.addObject(cam);
 
     Scene::Sphere * sphere = new Scene::Sphere();
     world.addObject(sphere);

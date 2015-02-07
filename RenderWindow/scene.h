@@ -10,25 +10,8 @@ namespace Scene
 {
 /** Global variables **/
 
-class Object;
+class World;
 class Shader;
-
-class World
-{
-public:
-    World() { }
-
-    void addObject(Object * obj);
-    void assignShader(Object * obj, Shader * shader);
-    Shader * findShader(Object * obj);
-
-    //void removeObject(Object & obj) {  }
-
-    void draw();
-private:
-    std::vector<Object *> _objects;
-    std::unordered_map<int, Shader *> _shaderMap;
-};
 
 class Object
 {
@@ -110,7 +93,7 @@ public:
     Sphere(double radius, int n, int m) : Object(), _r(radius), _n(n), _m(m) { }
 
     void doDraw();
-    void setR(double r) { _r = r; }
+
 protected:
     int _n, _m; // number of theta and phi subdivisions respectively
     double _r;
@@ -124,8 +107,8 @@ public:
     EnvMap(double radius, int n, int m) : Sphere(radius, n, m), _fileName(DEFAULT_ENV_MAP) { _readMap(); };
 
     void doDraw();
-    std::tuple<float, float, float> map(const double theta, const double phi);
-    std::tuple<float, float, float> getColor(const double x, const double y);
+    std::tuple<float, float, float> map(const double, const double);
+    std::tuple<float, float, float> getColor(const double, const double);
 
 /* Destructors */
     ~EnvMap() { if(_data != nullptr) delete _data; }
@@ -165,6 +148,31 @@ private:
     bool _initialized;
 
     void _initShaders();
+};
+
+class World
+{
+public:
+    World() : _cam(nullptr), _envMap(nullptr) { }
+
+    void addObject(Object *);
+    void addObject(Camera *);
+    void addObject(EnvMap *);
+    void assignShader(Object *, Shader *);
+    Shader * findShader(Object *);
+
+    //void removeObject(Object & obj) {  }
+
+    Camera * getCam();
+    EnvMap * getEnvMap();
+
+    void draw();
+private:
+    std::vector<Object *> _objects;
+    std::unordered_map<int, Shader *> _shaderMap;
+
+    Camera * _cam;
+    EnvMap * _envMap;
 };
 
 World & createWorld();
