@@ -12,6 +12,11 @@ void World::assignShader(Object * obj, Shader * shader)
     _shaderMap[obj->getId()] = shader;
 }
 
+Shader * World::findShader(Object * obj)
+{
+    return _shaderMap[obj->getId()];
+}
+
 void World::draw()
 {
     for(std::vector<Object *>::const_iterator object = _objects.begin() ;
