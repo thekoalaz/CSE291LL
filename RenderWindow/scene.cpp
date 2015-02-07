@@ -12,11 +12,11 @@ void World::addObject(Object * obj)
     _objects.push_back(obj);
     obj->setWorld(this);
 }
+
 void World::assignShader(Object * obj, Shader * shader)
 {
     _shaderMap[obj->getId()] = shader;
 }
-
 Shader * World::findShader(Object * obj)
 {
     return _shaderMap[obj->getId()];

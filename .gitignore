@@ -26,16 +26,20 @@
 *.exe
 *.out
 *.app
-/RenderWindow/Debug
-/packages
-/ipch/renderwindow-30bfc081
-/Debug
-/packages
-/ipch/renderwindow-30bfc081
-/Debug
-/RenderWindow/Debug
 
+# Visual Studio files
+/RenderWindow/Debug
+/packages
+/ipch/renderwindow-30bfc081
+/Debug
+/packages
+/ipch/renderwindow-30bfc081
+/Debug
+/RenderWindow/Debug
 *.suo
 *.sdf
+*.opensdf
+
+# Images
 *.hdr
 *.PNG
