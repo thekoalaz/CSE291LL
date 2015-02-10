@@ -45,6 +45,12 @@
     <None Include="sphere.frag">
       <Filter>Source Files</Filter>
     </None>
+    <None Include="specSphere.frag">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="specSphere.vert">
+      <Filter>Source Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GlutDraw.h">

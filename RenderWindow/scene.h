@@ -150,6 +150,8 @@ public:
     void doDraw();
     std::tuple<float, float, float> map(const double, const double);
     std::tuple<float, float, float> getColor(const double, const double);
+    void bind();
+    void unbind();
 
 /* Destructors */
     ~EnvMap() { if(_data != nullptr) delete _data; }

@@ -74,6 +74,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="specSphere.frag" />
+    <None Include="specSphere.vert" />
     <None Include="sphere.frag" />
     <None Include="sphere.vert" />
     <None Include="tonemap.frag" />
