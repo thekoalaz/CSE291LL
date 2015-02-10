@@ -9,9 +9,50 @@ extern "C" {
 namespace Scene
 {
 /** Global variables **/
+const float GOLDEN_RATIO = (1 + sqrt(5)) / 2;
+const float ICOSAHEDRON_VERTS[][3] = {
+    {  0,  1,  GOLDEN_RATIO },
+    {  0, -1,  GOLDEN_RATIO },
+    {  0,  1, -GOLDEN_RATIO },
+    {  0, -1, -GOLDEN_RATIO },
+    {  1,  GOLDEN_RATIO,  0 },
+    { -1,  GOLDEN_RATIO,  0 },
+    {  1, -GOLDEN_RATIO,  0 },
+    { -1, -GOLDEN_RATIO,  0 },
+    {  1,  0,  GOLDEN_RATIO },
+    { -1,  0,  GOLDEN_RATIO },
+    {  1,  0, -GOLDEN_RATIO },
+    { -1,  0, -GOLDEN_RATIO }
+};
 
 class World;
-class Shader;
+
+class Shader
+    /* Base class for vert/frag shader. */
+{
+public:
+/* Constructors */
+    Shader() : _vertfile(), _fragfile() { };
+    Shader(std::string vertfile, std::string fragfile)
+        : _vertfile(vertfile), _fragfile(fragfile)
+        { _initShaders(); };
+
+    void link();
+    void unlink();
+    GLuint getProgram() { return _program; };
+
+/* Destructors */
+    ~Shader() { glDeleteProgram(_program); }
+
+private:
+    std::string _vertfile, _fragfile;
+    GLuint _program;
+    GLuint _vertex;
+    GLuint _frag;
+    bool _initialized;
+
+    void _initShaders();
+};
 
 class Object
 {
@@ -121,33 +162,6 @@ private:
 
     void _readMap();
     float _bilinearInterpolate(const float * _colors, const double x, const double y);
-};
-
-class Shader
-    /* Base class for vert/frag shader. */
-{
-public:
-/* Constructors */
-    Shader() : _vertfile(), _fragfile() { };
-    Shader(std::string vertfile, std::string fragfile)
-        : _vertfile(vertfile), _fragfile(fragfile)
-        { _initShaders(); };
-
-    void link();
-    void unlink();
-    GLuint getProgram() { return _program; };
-
-/* Destructors */
-    ~Shader() { glDeleteProgram(_program); }
-
-private:
-    std::string _vertfile, _fragfile;
-    GLuint _program;
-    GLuint _vertex;
-    GLuint _frag;
-    bool _initialized;
-
-    void _initShaders();
 };
 
 class World
