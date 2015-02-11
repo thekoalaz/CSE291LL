@@ -210,10 +210,10 @@ void Sphere::doDraw()
     //GLfloat lightDirValue[3] = { 0.0, 1.0, 1.0 };
     //glUniform3fv(lightDir, 1, lightDirValue);
 
-//    Camera * cam = _world->getCam();
-//    GLint CamPos = glGetUniformLocation(shader->getProgram(), "camPos");
-//    GLfloat CamPosValue[3] = { cam->getTx(), cam->getTy(), cam->getTz() };
-//    glUniform3fv(CamPos, 1, CamPosValue);
+    Camera * cam = _world->getCam();
+    GLint CamPos = glGetUniformLocation(shader->getProgram(), "camPos");
+    GLfloat CamPosValue[3] = { cam->getTx(), cam->getTy(), cam->getTz() };
+    glUniform3fv(CamPos, 1, CamPosValue);
 
     GlutDraw::drawSphere(_r,_n,_m);
 

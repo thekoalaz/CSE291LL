@@ -37,8 +37,16 @@ int main(int argc, char* argv[])
     */
 
     Scene::Camera * cam = new Scene::Camera();
+    /*
     cam->setRoty(-45);
     cam->setRotx(45);
+    cam->setTx(0);
+    cam->setTy(0);
+    cam->setTz(40);
+    */
+    cam->setRotz(0);
+    cam->setRoty(0);
+    cam->setRotx(90);
     cam->setTx(0);
     cam->setTy(0);
     cam->setTz(40);
