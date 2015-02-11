@@ -20,9 +20,9 @@ int main(int argc, char* argv[])
 
     GlutUI::Button & testButton = MANAGER.createButton(mainPanel, 40, 20, 10, 10, "TestButton");
 
-    Scene::Grid * gridXZ = new Scene::Grid();
+    Scene::Grid * gridXZ = new Scene::Grid(20,20,2.0);
     world.addObject(gridXZ);
-    gridXZ->setTy(-5);
+    gridXZ->setTy(-7.5);
 
     /* Only draw XZ grid.
     Scene::Grid * gridXY = new Scene::Grid();
@@ -41,7 +41,7 @@ int main(int argc, char* argv[])
     cam->setRotx(45);
     cam->setTx(0);
     cam->setTy(0);
-    cam->setTz(20);
+    cam->setTz(40);
     world.addObject(cam);
 
     Scene::Sphere * sphere = new Scene::Sphere();
@@ -59,6 +59,7 @@ int main(int argc, char* argv[])
     Scene::EnvMap * envMap = new Scene::EnvMap();
     world.addObject(envMap);
     envMap->setRotx(90);
+    envMap->setRotz(180);
     Scene::Shader * envShader = new Scene::Shader("tonemap.vert", "tonemap.frag");
     world.assignShader(envMap, envShader);
 

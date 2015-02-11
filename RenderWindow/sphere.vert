@@ -6,7 +6,7 @@ out vec2 xy;
 void main()
 {
     gl_TexCoord[0] = gl_MultiTexCoord0;
-	gl_Position = ftransform();
+    gl_Position = ftransform();
     vec3 normal = vec3(gl_Normal);
     vec3 vertex = vec3(gl_Vertex);
     vec3 viewDir = normalize(camPos-vertex);
@@ -14,5 +14,5 @@ void main()
     vec3 refDir = normalize(normal+dv-2*dot(normal,dv)*normal);
     double theta = atan2(refDir[2]/refDir[1]);
     double phi = acos(refDir[3]);
-    xy = 1536*vec2(1+theta/M_PI,phi/M_PI);
+    xy = vec2((1+theta/M_PI)/2,phi/M_PI);
 }

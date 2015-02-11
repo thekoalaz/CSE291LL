@@ -118,6 +118,8 @@ class Grid : public Object
 public:
 /* Constructors */
     Grid() : Object(), _rows(10), _cols(10), _gap(1.0) { }
+    Grid(int rows, int cols, double gap) : Object(),
+        _rows(rows), _cols(cols), _gap(gap) { }
 
     void doDraw();
 

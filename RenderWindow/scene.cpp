@@ -185,15 +185,12 @@ float EnvMap::_bilinearInterpolate(const float * _colors, const double x, const 
 
 void EnvMap::bind()
 {
-    glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D , _textureID);
-    GLUquadric* quad = gluNewQuadric(); 
-    gluQuadricTexture(quad,GL_TRUE); 
+//    glActiveTexture(GL_TEXTURE0 + 0);
+//    glBindTexture(GL_TEXTURE_2D, _textureID);
 }
 
 void EnvMap::unbind()
 {
-    glDisable(GL_TEXTURE_2D);
 }
 
 World & Scene::createWorld()
@@ -206,15 +203,21 @@ void Sphere::doDraw()
 {
     Shader * shader = _world->findShader(this);
     EnvMap * envMap = _world->getEnvMap();
-    //envMap->bind();
 
-    GLint lightDir = glGetUniformLocation(shader->getProgram(), "lightDir");
-    GLfloat lightDirValue[3] = { 0.0, 1.0, 1.0 };
-    glUniform3fv(lightDir, 1, lightDirValue);
+//    envMap->bind(0);
+
+    //GLint lightDir = glGetUniformLocation(shader->getProgram(), "lightDir");
+    //GLfloat lightDirValue[3] = { 0.0, 1.0, 1.0 };
+    //glUniform3fv(lightDir, 1, lightDirValue);
+
+//    Camera * cam = _world->getCam();
+//    GLint CamPos = glGetUniformLocation(shader->getProgram(), "camPos");
+//    GLfloat CamPosValue[3] = { cam->getTx(), cam->getTy(), cam->getTz() };
+//    glUniform3fv(CamPos, 1, CamPosValue);
 
     GlutDraw::drawSphere(_r,_n,_m);
 
-    //envMap->unbind();
+//    envMap->unbind();
 }
 
 void Shader::_initShaders()
