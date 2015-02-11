@@ -6,7 +6,7 @@ out vec2 xy;
 void main()
 {
     gl_TexCoord[0] = gl_MultiTexCoord0;
-    gl_Position = ftransform();
+	gl_Position = ftransform();
     vec3 normal = vec3(gl_Normal);
     vec3 vertex = vec3(gl_Vertex);
     vec3 viewDir = normalize(camPos-vertex);
