@@ -45,11 +45,11 @@ int main(int argc, char* argv[])
     cam->setTz(40);
     */
     cam->setRotz(0);
-    cam->setRoty(0);
-    cam->setRotx(90);
+    cam->setRoty(-90);
+    cam->setRotx(0);
     cam->setTx(0);
     cam->setTy(0);
-    cam->setTz(40);
+    cam->setTz(25);
     world.addObject(cam);
 
     Scene::Sphere * sphere = new Scene::Sphere();

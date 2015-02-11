@@ -7,6 +7,23 @@ int Object::NEXTID = 0;
 /* Utility Functions */
 char * textFileRead(const char * fn);
 
+/*
+double ** matrixMultiply(double ** A, double ** B, int nRow, int nCol, int innerDim) {
+    double ** C;
+    C = new double*[nRow];
+    for (int i = 0; i < nRow; i++){
+        C[i] = new double[nCol];
+        for (int j = 0; j < nCol; j++){
+            C[i][j] = 0;
+            for (int k = 0; k < innerDim; k++){
+                C[i][j] += A[i][k] * B[k][j];
+            }
+        }
+    }
+    return C;
+}
+*/
+
 void World::addObject(Object * obj)
 {
     _objects.push_back(obj);
@@ -212,8 +229,36 @@ void Sphere::doDraw()
 
     Camera * cam = _world->getCam();
     GLint CamPos = glGetUniformLocation(shader->getProgram(), "camPos");
-    GLfloat CamPosValue[3] = { cam->getTx(), cam->getTy(), cam->getTz() };
-    glUniform3fv(CamPos, 1, CamPosValue);
+
+    double xAng = cam->getRotx();
+    double yAng = cam->getRoty();
+    double zAng = cam->getRotz();
+
+    double V[3] = { 0, 0, 1 }; // initial camera viewing direction is along (minus)z-axis?
+    double Rx[3][3] = { { 1, 0, 0 }, { 0, cos(xAng), -sin(xAng) }, { 0, sin(xAng), cos(xAng) } };
+    double Ry[3][3] = { { cos(yAng), 0, sin(yAng) }, { 0, 1, 0 }, { -sin(yAng), 0, cos(yAng) } };
+    double Rz[3][3] = { { cos(zAng), -sin(zAng), 0 }, { sin(zAng), cos(zAng), 0 }, { 0, 0, 1 } };
+    double RzRy[3][3] = { { 0, 0, 0, }, { 0, 0, 0 }, { 0, 0, 0 } };
+    double RxV[3] = { 0, 0, 0 };
+    for (int i = 0; i < 3; i++){
+        for (int k = 0; k < 3; k++){
+            RxV[i] += Rx[i][k] * V[k];
+            for (int j = 0; j < 3; j++){
+                RzRy[i][j] += Rz[i][k] * Ry[k][j];
+            }
+        }
+    }
+    for (int i = 0; i < 3; i++){
+        V[i] = 0;
+        for (int k = 0; k < 3; k++){
+            V[i] += RzRy[i][k] * RxV[k];
+        }
+    }
+    V[1] += cam->getTx();
+    V[2] += cam->getTy();
+    V[3] += cam->getTz();
+
+    glUniform3dv(CamPos, 1, V);
 
     GlutDraw::drawSphere(_r,_n,_m);
 
