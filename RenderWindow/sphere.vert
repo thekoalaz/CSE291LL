@@ -15,8 +15,8 @@ void main()
     vec3 refDir = normalize(reflect(incident,normal));
     float theta = atan(refDir.y,refDir.x);
     float phi = acos(refDir.z);
-    float x = (1+theta/3.14)/2;
-    float y = phi/3.14;
+    float x = (1+theta/M_PI)/2;
+    float y = phi/M_PI;
     xy = vec2(x,y);
     //gl_TexCoord[0].s=x;
     //gl_TexCoord[0].t=y;

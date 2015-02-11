@@ -54,6 +54,7 @@ int main(int argc, char* argv[])
 
     Scene::Sphere * sphere = new Scene::Sphere();
     world.addObject(sphere);
+    sphere->setRotx(90);
     Scene::Shader * sphereShader = new Scene::Shader("sphere.vert", "sphere.frag");
     world.assignShader(sphere, sphereShader);
     sphere->setTx(7.5);
@@ -66,8 +67,8 @@ int main(int argc, char* argv[])
 
     Scene::EnvMap * envMap = new Scene::EnvMap();
     world.addObject(envMap);
+    envMap->setRotz(-90);
     envMap->setRotx(90);
-    envMap->setRotz(180);
     Scene::Shader * envShader = new Scene::Shader("tonemap.vert", "tonemap.frag");
     world.assignShader(envMap, envShader);
 
