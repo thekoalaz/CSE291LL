@@ -14,5 +14,5 @@ void main()
     vec3 refDir = normalize(normal+dv-2*dot(normal,dv)*normal);
     double theta = atan2(refDir[2]/refDir[1]);
     double phi = acos(refDir[3]);
-    xy = 1536*vec2(1+theta/M_PI,phi/M_PI);
+    xy = vec2((1+theta/M_PI)/2,phi/M_PI);
 }
