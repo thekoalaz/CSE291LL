@@ -30,7 +30,7 @@ Right now we are working primarily on shading a perfectly reflective sphere. We 
 
 Regarding shading diffuse surfaces, we have setup a shader for integrating the environment map over a hemisphere oriented along the surface normal. We naively shaded the sphere using a uniform light source, but soon, we will swap this out for light coming in from every direction, as is the case with environment maps.
 
-Our next steps are to implement the prefiltering and warping of the environment maps which will be headed by Kevin, and continue working on the shader so that we can integrate over the full environment map which will be headed by Myron.
+Our next steps are to implement the prefiltering of the environment maps in each direction of the icosahedron which will be headed by Kevin, and continue working on the shader so that we can calculate the warp direction based on the material BRDF and interpolate between the prefiltered maps through spherical barycentric coordinates which will be headed by Myron.
 
 
 \section{Results}
