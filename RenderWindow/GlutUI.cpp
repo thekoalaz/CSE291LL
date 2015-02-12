@@ -332,30 +332,3 @@ void Controls::Mouse::motionFuncWrapper(int x, int y)
 }
 
 //TODO Keyboard functions
-
-
-//char * textFileRead(const char * fn)
-//{
-//    FILE * fp;
-//    char * content = nullptr;
-
-//    int count = 0;
-//    if (fn != nullptr)
-//    {
-//        fopen_s(&fp, fn, "rt");
-//        if (fp != nullptr)
-//        {
-//            fseek(fp, 0, SEEK_END);
-//            count = ftell(fp);
-//            rewind(fp);
-//            if (count > 0)
-//            {
-//                content = (char *) malloc(sizeof(char) * (count + 1));
-//                count = fread(content, sizeof(char), count, fp);
-//                content[count] = '\0';
-//            }
-//            fclose(fp);
-//        }
-//    }
-//    return content;
-//}
