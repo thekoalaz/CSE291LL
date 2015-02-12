@@ -10,7 +10,7 @@ int main(int argc, char* argv[])
 {
     MANAGER.init(argc, argv);
 
-    GlutUI::Window & mainWindow = MANAGER.createWindow(640,480, "TestWindow");
+    GlutUI::Window & mainWindow = MANAGER.createWindow(640,480, "Render Window");
     GlutUI::Panel & mainPanel = MANAGER.createPanel(mainWindow, 640,480, "TestPanel");
     Scene::World world = Scene::createWorld();
     std::cout << std::string((char *) glGetString(GL_VENDOR)) << std::endl;
@@ -18,7 +18,7 @@ int main(int argc, char* argv[])
     std::cout << "OpenGL " << std::string((char *) glGetString(GL_VERSION)) << std::endl;
     std::cout << "====================================================" << std::endl;
 
-    GlutUI::Button & testButton = MANAGER.createButton(mainPanel, 40, 20, 10, 10, "TestButton");
+    //GlutUI::Button & testButton = MANAGER.createButton(mainPanel, 40, 20, 10, 10, "TestButton");
 
     Scene::Grid * gridXZ = new Scene::Grid(20,20,2.0);
     world.addObject(gridXZ);
@@ -61,6 +61,7 @@ int main(int argc, char* argv[])
 
     Scene::Sphere * specSphere = new Scene::Sphere();
     world.addObject(specSphere);
+    specSphere->setRotx(90);
     Scene::Shader * sphereSpecShader = new Scene::Shader("specSphere.vert", "specSphere.frag");
     world.assignShader(specSphere, sphereSpecShader);
     specSphere->setTx(-7.5);
