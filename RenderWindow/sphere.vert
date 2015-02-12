@@ -1,13 +1,14 @@
 #define M_PI 3.1415926535897932384626433832795
 
 uniform vec3 camPos;
-out vec2 xy;
+varying vec2 xy;
 
 void main()
 {
 	gl_Position = ftransform();
     vec3 normal = vec3(gl_Normal);
     vec3 vertex = vec3(gl_Vertex);
+    //vec3 vertex = vec3(gl_ModelViewMatrix*gl_Vertex);
     vec3 viewDir = normalize(camPos-vertex);
     vec3 incident = normalize(vec3(vertex-camPos));
     vec3 refDir = normalize(reflect(incident,normal));
