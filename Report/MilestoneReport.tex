@@ -1,7 +1,9 @@
 \documentclass[12pt]{article}
-\usepackage{natbib}
-\usepackage{url}
 \usepackage{fullpage}
+\usepackage{natbib}
+
+\usepackage{hyperref}
+\hypersetup{colorlinks=true,urlcolor=blue}
 
 \usepackage{times}
 
@@ -17,7 +19,19 @@
 \maketitle
 
 \section{Abstract}
-We implement Reflection Space Image Based Rendering as described by Cabral et al.\cite{cabral1999reflection}. The goal is to generate a scene in which the user can rotate around the object lit by an HDR environment map, and observe view dependent BRDF changes in real time.
+We implement Reflection Space Image Based Rendering as described by Cabral et al.\cite{cabral1999reflection}. The goal is to generate a scene in which the user can rotate around the object lit by an HDR environment map, and observe view dependent BRDF changes in real time. Possible extensions would be to implement environment maps prefiltering with spherical harmonics for comparison.
+
+
+\section{Milestone Report}
+
+Our focus so far has been to setup the architecture from which we can interact with our shaded geometry in a 3D viewer. This is now fully setup and we can interact with our camera to move around the world and add objects to our scene easily.
+
+Right now we are working primarily on shading a perfectly reflective sphere. We have built a GLSL shader for grabbing the camera position per vertex, and along with the position and normal, compute the reflection direction in spherical coordinates $(\theta,\phi)$. We use RADIANCE HDR maps that are already in latitude longitude panoramic format from \href{http://gl.ict.usc.edu/Data/HighResProbes/}{USC's High-Resolution Light Probe Image Gallery} which makes the conversion straightforward.
+
+Regarding shading diffuse surfaces, we have setup a shader for integrating the environment map over a hemisphere oriented along the surface normal. We naively shaded the sphere using a uniform light source, but soon, we will swap this out for light coming in from every direction, as is the case with environment maps.
+
+Our next steps are to implement the prefiltering and warping of the environment maps which will be headed by Kevin, and continue working on the shader so that we can integrate over the full environment map.
+
 
 \section{Results}
 \begin{figure}[H]
@@ -27,15 +41,9 @@ We implement Reflection Space Image Based Rendering as described by Cabral et al
 \label{fig:milestone}
 \end{figure}
 
-\section{Current Progress}
 
-
-Right now we are working primarily on shading a perfectly reflective sphere. We already have a framework established for grabbing the camera position at each instant, and using that camera position, along with the fragment position and fragment vector to compute the reflection direction $(\theta,\phi)$. From this, we can grab the relevant texture via the simple formula given on http://gl.ict.usc.edu/Data/HighResProbes/, which is the source from which our HDR image originates. It's not really working quite as intended; it looks more like the texture is simply wrapped onto the sphere, and the texture doesn't change with the viewing direction.
-
-Regarding shading diffuse surfaces, we have set up a framework for integrating the environment map over a hemisphere oriented along the surface normal. We naively shaded a sphere using a uniform light source, but soon, we will swap this out for light coming in from every direction, as is the case with environment maps
-
-%\bibliographystyle{plain}
-%\bibliography{MilestoneReport}
+\bibliographystyle{plain}
+\bibliography{MilestoneReport}
 
 \end{document}
 
