@@ -61,6 +61,7 @@ int main(int argc, char* argv[])
 
     Scene::Sphere * specSphere = new Scene::Sphere();
     world.addObject(specSphere);
+    specSphere->setRotx(90);
     Scene::Shader * sphereSpecShader = new Scene::Shader("specSphere.vert", "specSphere.frag");
     world.assignShader(specSphere, sphereSpecShader);
     specSphere->setTx(-7.5);

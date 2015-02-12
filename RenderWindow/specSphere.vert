@@ -1,9 +1,14 @@
 #define M_PI 3.1415926535897932384626433832795
 
 uniform vec3 camPos;
+uniform mat4 Projection;
+uniform mat4 View;
+uniform mat4 Model;
+
 out vec2 xy;
-out vec4 diffuse;
-out vec4 specular;
+out vec3 light_vector;
+out vec3 normal_vector;
+out vec3 halfway_vector;
 
 void main()
 {
@@ -23,11 +28,11 @@ void main()
     //gl_TexCoord[0].s=x;
     //gl_TexCoord[0].t=y;
 
-	vec3 lightdir = vec3(1,1,0);
-    float d = dot(normal, lightdir);
-    diffuse = max(d,0)*vec4(1,1,1,1);
-
-    bool facing = d > 0.0;
-    float s = pow(dot(normal, reflect(lightdir, normal)), 250.0);
-    specular = (facing ? s * vec4(0,0,5,1): vec4(0.0, 0.0, 0.0, 1));
+	vec3 light_position = vec3(10,10,0);
+    vec4 v = View * Model * vec4(vertex, 1.0);
+    vec3 normal1 = normalize(normal);
+ 
+    light_vector = normalize((View * vec4(light_position, 1.0)).xyz - v.xyz);
+    normal_vector = (inverse(transpose(View * Model)) * vec4(normal1, 0.0)).xyz;
+    halfway_vector = light_vector + normalize(-v.xyz);
 }
