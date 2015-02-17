@@ -227,15 +227,12 @@ void Sphere::doDraw()
     //GLfloat lightDirValue[3] = { 0.0, 1.0, 1.0 };
     //glUniform3fv(lightDir, 1, lightDirValue);
 
-    Camera * cam = _world->getCam();
-    GLint CamPos = glGetUniformLocation(shader->getProgram(), "camPos");
-
-    double xAng = -cam->getRotx();
-    double yAng = -cam->getRoty();
-    double zAng = -cam->getRotz();
+    /*
+    double xAng = cam->getRotx();
+    double yAng = cam->getRoty();
+    double zAng = cam->getRotz();
 
     double V[3] = { cam->getTx(), cam->getTy(), cam->getTz() }; // initial camera viewing direction is along its own (minus)z-axis?
-    printf("camPos: %f %f %f\n", V[0], V[1], V[2]);
     double Rx[3][3] = { { 1, 0, 0 }, { 0, cos(xAng), -sin(xAng) }, { 0, sin(xAng), cos(xAng) } };
     double Ry[3][3] = { { cos(yAng), 0, sin(yAng) }, { 0, 1, 0 }, { -sin(yAng), 0, cos(yAng) } };
     double Rz[3][3] = { { cos(zAng), -sin(zAng), 0 }, { sin(zAng), cos(zAng), 0 }, { 0, 0, 1 } };
@@ -255,12 +252,18 @@ void Sphere::doDraw()
             V[i] += RzRy[i][k] * RxV[k];
         }
     }
+    GLint mat = glGetUniformLocation(shader->getProgram(), "modelViewMatrix");
+    GLfloat matrix[16];
+    glGetFloatv(GL_MODELVIEW_MATRIX, matrix);
+    glUniformMatrix4fv(mat, 1, false, matrix);
+    printf("camera position: %f %f %f\n", V[0], V[1], V[2]);
+    printf("distance= %f\n", sqrt(pow(V[0], 2) + pow(V[1], 2) + pow(V[2], 2)));
 
-    printf("camPos: %f %f %f\n", V[0], V[1], V[2]);
-    printf("squared distance= %f\n", pow(V[0], 2) + pow(V[1], 2) + pow(V[2], 2));
-
-    glUniform3dv(CamPos, 1, V);
-
+    Camera * cam = _world->getCam();
+    GLint CamPos = glGetUniformLocation(shader->getProgram() , "camPos");
+    //glUniform3f(CamPos,V[0],V[1],V[2]);
+    //glUniform3f(CamPos, 0.0, 0.0, 0.0);
+    */
     GlutDraw::drawSphere(_r,_n,_m);
 
 //    envMap->unbind();

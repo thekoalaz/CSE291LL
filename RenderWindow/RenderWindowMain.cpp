@@ -45,31 +45,31 @@ int main(int argc, char* argv[])
     cam->setTz(40);
     */
     cam->setRotz(0);
-    cam->setRoty(-90);
+    //cam->setRoty(-90);
     cam->setRotx(0);
     cam->setTx(0);
     cam->setTy(0);
-    cam->setTz(25);
+    cam->setTz(15);
     world.addObject(cam);
 
     Scene::Sphere * sphere = new Scene::Sphere();
     world.addObject(sphere);
-    sphere->setRotx(90);
+    //sphere->setRotx(90);
     Scene::Shader * sphereShader = new Scene::Shader("sphere.vert", "sphere.frag");
     world.assignShader(sphere, sphereShader);
-    sphere->setTx(7.5);
-
+    //sphere->setTx(7.5);
+    /*
     Scene::Sphere * specSphere = new Scene::Sphere();
     world.addObject(specSphere);
     specSphere->setRotx(90);
     Scene::Shader * sphereSpecShader = new Scene::Shader("specSphere.vert", "specSphere.frag");
     world.assignShader(specSphere, sphereSpecShader);
     specSphere->setTx(-7.5);
-
+    */
     Scene::EnvMap * envMap = new Scene::EnvMap();
     world.addObject(envMap);
     envMap->setRotz(-90);
-    envMap->setRotx(90);
+    //envMap->setRotx(90);
     Scene::Shader * envShader = new Scene::Shader("tonemap.vert", "tonemap.frag");
     world.assignShader(envMap, envShader);
 
