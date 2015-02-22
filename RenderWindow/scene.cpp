@@ -193,6 +193,52 @@ void EnvMap::unbind()
 {
 }
 
+void DiffuseEnvMap::_readMap()
+{
+    std::cout << "sup" << std::endl;
+
+    double diffMap[100][100][3];
+    double normal[3]; // surface normal
+    double intvec[3]; // integration vector
+    for (int i = 0; i < _width; i++){
+        double theta = 1+M_PI*i/_width;
+        normal[2] = cos(theta);
+        for (int j = 0; j < _height; j++){
+            double phi = M_PI*j/_height;
+            normal[0] = sin(theta)*cos(phi);
+            normal[1] = sin(theta)*sin(phi);
+            diffMap[i][j][0] = 0;
+            diffMap[i][j][1] = 0;
+            diffMap[i][j][2] = 0;
+            for (int k = 0; k < _width; k++){
+                theta = 1+M_PI*k/_width;
+                intvec[2] = cos(theta);
+                for (int l = 0; l < _height; l++){
+                    phi = M_PI*l/_height;
+                    intvec[0] = sin(theta)*cos(phi);
+                    intvec[1] = sin(theta)*sin(phi);
+                    double R = _data[_width*i+j];
+                    double G = _data[_width*i + j + 1];
+                    double B = _data[_width*i + j + 2];
+                    double cosAng = std::max(0.0, normal[0] + intvec[0] + normal[1] + intvec[1] + normal[2] + intvec[2]);
+                    cosAng = sqrt(cosAng);
+                    diffMap[i][j][0] += R*cosAng*sin(theta) * 2 * M_PI*M_PI / (_width*_height);
+                    diffMap[i][j][1] += G*cosAng*sin(theta) * 2 * M_PI*M_PI / (_width*_height);
+                    diffMap[i][j][2] += B*cosAng*sin(theta) * 2 * M_PI*M_PI / (_width*_height);
+                }
+            }
+        }
+    }
+
+    glGenTextures(1, &_textureID);
+    glBindTexture(GL_TEXTURE_2D, _textureID);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, _width, _height, 0, GL_RGB, GL_FLOAT, _data);
+}
+
 World & Scene::createWorld()
 {
     World * new_world = new World();
@@ -306,38 +352,4 @@ char * textFileRead(const char * fn)
         }
     }
     return content;
-}
-
-
-double diffMap[r][c][3];
-double normal[3]; // surface normal
-double intvec[3]; // integration vector
-for (int i = 0; i < r; i++){
-    double theta = 1+M_PI*i/r;
-    normal[2] = cos(theta);
-    for (int j = 0; j < c; j++){
-        double phi = M_PI*j/c;
-        normal[0] = sin(theta)*cos(phi);
-        normal[1] = sin(theta)*sin(phi);
-        diffMap[i][j][0] = 0;
-        diffMap[i][j][1] = 0;
-        diffMap[i][j][2] = 0;
-        for (k = 0; k < r, k++){
-            theta = 1+M_PI*k/r;
-            intvec[2] = cos(theta);
-            for (l = 0; l < c, l++){
-                phi = M_PI*l/c;
-                intvec[0] = sin(theta)*cos(phi);
-                intvec[1] = sin(theta)*sin(phi);
-                double R = diffEnvMap._data()[r*i+j];
-                double G = diffEnvMap._data()[r*i + j + 1];
-                double B = diffEnvMap._data()[r*i + j + 2];
-                double cosAng = max(normal[0] + intvec[0] + normal[1] + intvec[1] + normal[2] + intvec[2],0);
-                cosAng = sqrt(cosAng);
-                diffMap[i][j][0] += R*cosAng*sin(theta) * 2 * M_PI*M_PI / (r*c);
-                diffMap[i][j][1] += G*cosAng*sin(theta) * 2 * M_PI*M_PI / (r*c);
-                diffMap[i][j][2] += B*cosAng*sin(theta) * 2 * M_PI*M_PI / (r*c);
-            }
-        }
-    }
 }

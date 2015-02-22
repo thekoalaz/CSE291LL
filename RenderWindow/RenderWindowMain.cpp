@@ -73,6 +73,9 @@ int main(int argc, char* argv[])
     Scene::Shader * envShader = new Scene::Shader("tonemap.vert", "tonemap.frag");
     world.assignShader(envMap, envShader);
 
+    Scene::DiffuseEnvMap * diffuseMap = new Scene::DiffuseEnvMap(*envMap);
+    world.addObject(diffuseMap);
+
     mainPanel.setWorld(&world);
     mainPanel.setCamera(cam);
     GlutUI::Controls::Mouse(mainPanel.getCamera());
@@ -87,10 +90,6 @@ int main(int argc, char* argv[])
     //GlutUI::Button & renderButton = MANAGER.createButton(renderPanel, 80, 20, 10, 10, "RenderButton");
 
     MANAGER.drawElements();
-
-    texture2D
-
-
 
     return 0;
 }

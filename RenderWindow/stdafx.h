@@ -17,6 +17,7 @@
 #include <tuple>
 #include <unordered_map>
 #include <string>
+#include <algorithm>
 
 #define _USE_MATH_DEFINES
 #include <math.h>

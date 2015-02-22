@@ -149,7 +149,7 @@ public:
     EnvMap() : Sphere(1000.0, 20, 20), _fileName(DEFAULT_ENV_MAP) { _readMap(); };
     EnvMap(double radius, int n, int m) : Sphere(radius, n, m), _fileName(DEFAULT_ENV_MAP) { _readMap(); };
 
-    void doDraw();
+    virtual void doDraw();
     std::tuple<float, float, float> map(const double, const double);
     std::tuple<float, float, float> getColor(const double, const double);
     void bind();
@@ -159,15 +159,29 @@ public:
     ~EnvMap() { if(_data != nullptr) delete _data; }
 
 protected:
+    virtual void _readMap();
     float * _data;
+    int _width, _height;
+    GLuint _textureID;
+    int _getWidth() { return _width; };
+    int _getHeight() { return _height; };
+
 
 private:
     std::string _fileName;
-    int _width, _height;
-    GLuint _textureID;
 
-    void _readMap();
     float _bilinearInterpolate(const float * _colors, const double x, const double y);
+};
+
+class DiffuseEnvMap : public EnvMap
+{
+public:
+    DiffuseEnvMap(EnvMap & envMap) : EnvMap(1000.0, 20, 20), _envMap(envMap) { _readMap(); };
+protected:
+    void _readMap();
+
+private:
+    EnvMap _envMap;
 };
 
 class World
