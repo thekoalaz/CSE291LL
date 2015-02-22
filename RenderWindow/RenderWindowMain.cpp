@@ -57,7 +57,7 @@ int main(int argc, char* argv[])
     //sphere->setRotx(90);
     Scene::Shader * sphereShader = new Scene::Shader("sphere.vert", "sphere.frag");
     world.assignShader(sphere, sphereShader);
-    //sphere->setTx(7.5);
+    sphere->setTx(7.5);
     /*
     Scene::Sphere * specSphere = new Scene::Sphere();
     world.addObject(specSphere);
@@ -87,5 +87,10 @@ int main(int argc, char* argv[])
     //GlutUI::Button & renderButton = MANAGER.createButton(renderPanel, 80, 20, 10, 10, "RenderButton");
 
     MANAGER.drawElements();
+
+    texture2D
+
+
+
     return 0;
 }

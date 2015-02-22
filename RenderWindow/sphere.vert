@@ -10,7 +10,7 @@ void main()
     gl_Position = gl_ModelViewProjectionMatrix*gl_Vertex;
     vec3 normal = vec3(gl_NormalMatrix*gl_Normal);
     vec3 vertex = vec3(gl_Position);
-    
+
 	//gl_Position = ftransform();
     //vec3 normal = vec3(gl_Normal);
     //vec3 vertex = vec3(gl_Vertex);
