@@ -158,10 +158,12 @@ public:
 /* Destructors */
     ~EnvMap() { if(_data != nullptr) delete _data; }
 
+protected:
+    float * _data;
+
 private:
     std::string _fileName;
     int _width, _height;
-    float * _data;
     GLuint _textureID;
 
     void _readMap();
