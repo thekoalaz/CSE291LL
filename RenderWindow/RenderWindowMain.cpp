@@ -66,13 +66,21 @@ int main(int argc, char* argv[])
     world.assignShader(specSphere, sphereSpecShader);
     specSphere->setTx(-7.5);
     */
-    Scene::EnvMap * envMap = new Scene::EnvMap();
+    Scene::EnvMap * envMap = new Scene::EnvMap(5, 20, 20);
     world.addObject(envMap);
     envMap->setRotz(-90);
     //envMap->setRotx(90);
+    envMap->setTx(7.5);
     Scene::Shader * envShader = new Scene::Shader("tonemap.vert", "tonemap.frag");
     world.assignShader(envMap, envShader);
-
+    /*
+    Scene::DiffEnvMap * diffEnvMap = new Scene::DiffEnvMap(5, 20, 20);
+    world.addObject(diffEnvMap);
+    diffEnvMap->setRotz(-90);
+    diffEnvMap->setTx(-7.5);
+    Scene::Shader * diffEnvShader = new Scene::Shader("tonemap.vert", "tonemap.frag");
+    world.assignShader(diffEnvMap, diffEnvShader);
+    */
     mainPanel.setWorld(&world);
     mainPanel.setCamera(cam);
     GlutUI::Controls::Mouse(mainPanel.getCamera());
