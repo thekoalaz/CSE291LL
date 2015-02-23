@@ -96,9 +96,5 @@ int main(int argc, char* argv[])
 
     MANAGER.drawElements();
 
-    texture2D
-
-
-
     return 0;
 }

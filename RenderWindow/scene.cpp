@@ -308,36 +308,34 @@ char * textFileRead(const char * fn)
     return content;
 }
 
-
-double diffMap[r][c][3];
-double normal[3]; // surface normal
-double intvec[3]; // integration vector
-for (int i = 0; i < r; i++){
-    double theta = 1+M_PI*i/r;
-    normal[2] = cos(theta);
-    for (int j = 0; j < c; j++){
-        double phi = M_PI*j/c;
-        normal[0] = sin(theta)*cos(phi);
-        normal[1] = sin(theta)*sin(phi);
-        diffMap[i][j][0] = 0;
-        diffMap[i][j][1] = 0;
-        diffMap[i][j][2] = 0;
-        for (k = 0; k < r, k++){
-            theta = 1+M_PI*k/r;
-            intvec[2] = cos(theta);
-            for (l = 0; l < c, l++){
-                phi = M_PI*l/c;
-                intvec[0] = sin(theta)*cos(phi);
-                intvec[1] = sin(theta)*sin(phi);
-                double R = diffEnvMap._data()[r*i+j];
-                double G = diffEnvMap._data()[r*i + j + 1];
-                double B = diffEnvMap._data()[r*i + j + 2];
-                double cosAng = max(normal[0] + intvec[0] + normal[1] + intvec[1] + normal[2] + intvec[2],0);
-                cosAng = sqrt(cosAng);
-                diffMap[i][j][0] += R*cosAng*sin(theta) * 2 * M_PI*M_PI / (r*c);
-                diffMap[i][j][1] += G*cosAng*sin(theta) * 2 * M_PI*M_PI / (r*c);
-                diffMap[i][j][2] += B*cosAng*sin(theta) * 2 * M_PI*M_PI / (r*c);
-            }
+/*
+// (x,y,z) is orientation of the patch (e.g. icosahedral directions)
+// compute radiance map in coordinates of envMap for this patch
+warpEnvMap(double x,double y,double z) {
+    double mag = sqrt(x*x + y*y + z*z);
+    double xN = x / mag;
+    double yN = y / mag;
+    double zN = z / mag;
+    for (i = 0, ; i < _width; i++){
+        double thetaR = M_PI*(i - 1) / _width;
+        for (j = 0; j < _height; j++){
+            double phiR = M_PI*j / _height;
+            double xR = sin(phiR)*cos(thetaR);
+            double yR = sin(phiR)*sin(thetaR);
+            double zR = cos(phi);
+            double f = xN*xR + yN*yR + zN*zR - 1;
+            double xI = f*xN - xR;
+            double yI = f*yN - yR;
+            double zI = f*zN - zR;
+            double phiI = acos(zI);
+            double thetaI = atan2(yI, xI);
+            double px = 1 + _width*thetaI / M_PI;
+            double py = _height*phiI / M_PI;
+            _data[px*_width + py][0];
+            _data[px*_width + py][1];
+            _data[px*_width + py][2];
         }
     }
+
 }
+*/
