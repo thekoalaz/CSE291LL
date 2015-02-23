@@ -9,21 +9,21 @@ extern "C" {
 namespace Scene
 {
 /** Global variables **/
-const float GOLDEN_RATIO = (1 + sqrt(5)) / 2;
-const float ICOSAHEDRON_VERTS[][3] = {
-    {  0,  1,  GOLDEN_RATIO },
-    {  0, -1,  GOLDEN_RATIO },
-    {  0,  1, -GOLDEN_RATIO },
-    {  0, -1, -GOLDEN_RATIO },
-    {  1,  GOLDEN_RATIO,  0 },
-    { -1,  GOLDEN_RATIO,  0 },
-    {  1, -GOLDEN_RATIO,  0 },
-    { -1, -GOLDEN_RATIO,  0 },
-    {  1,  0,  GOLDEN_RATIO },
-    { -1,  0,  GOLDEN_RATIO },
-    {  1,  0, -GOLDEN_RATIO },
-    { -1,  0, -GOLDEN_RATIO }
-};
+//const float GOLDEN_RATIO = (1 + sqrt(5)) / 2;
+//const float ICOSAHEDRON_VERTS[][3] = {
+//    {  0,  1,  GOLDEN_RATIO },
+//    {  0, -1,  GOLDEN_RATIO },
+//    {  0,  1, -GOLDEN_RATIO },
+//    {  0, -1, -GOLDEN_RATIO },
+//    {  1,  GOLDEN_RATIO,  0 },
+//    { -1,  GOLDEN_RATIO,  0 },
+//    {  1, -GOLDEN_RATIO,  0 },
+//    { -1, -GOLDEN_RATIO,  0 },
+//    {  1,  0,  GOLDEN_RATIO },
+//    { -1,  0,  GOLDEN_RATIO },
+//    {  1,  0, -GOLDEN_RATIO },
+//    { -1,  0, -GOLDEN_RATIO }
+//};
 
 class World;
 
@@ -146,28 +146,50 @@ class EnvMap : public Sphere
 {
 public:
 /* Constructors */
-    EnvMap() : Sphere(1000.0, 20, 20), _fileName(DEFAULT_ENV_MAP) { _readMap(); };
-    EnvMap(double radius, int n, int m) : Sphere(radius, n, m), _fileName(DEFAULT_ENV_MAP) { _readMap(); };
+    EnvMap() : Sphere(1000.0, 20, 20), _fileName(DEFAULT_ENV_MAP), _mapReady(false) { };
+    EnvMap(double radius, int n, int m) : Sphere(radius, n, m), _fileName(DEFAULT_ENV_MAP), _mapReady(false) {};
 
-    void doDraw();
+    virtual void doDraw();
     std::tuple<float, float, float> map(const double, const double);
     std::tuple<float, float, float> getColor(const double, const double);
     void bind();
     void unbind();
 
+    const float _getPixelR(int x, int y) { return _data[3*(x + y * _width) + 0]; };
+    const float _getPixelR(double x, double y) { return _bilinearInterpolate(&_data[0], x, y); };
+    const float _getPixelG(int x, int y) { return _data[3*(x + y * _width) + 1]; };
+    const float _getPixelG(double x, double y) { return _bilinearInterpolate(&_data[1], x, y); };
+    const float _getPixelB(int x, int y) { return _data[3*(x + y * _width) + 2]; };
+    const float _getPixelB(double x, double y) { return _bilinearInterpolate(&_data[2], x, y); };
+    const int _getWidth() { return _width; };
+    const int _getHeight() { return _height; };
+
 /* Destructors */
     ~EnvMap() { if(_data != nullptr) delete _data; }
 
 protected:
+    virtual void _readMap();
     float * _data;
-
-private:
-    std::string _fileName;
     int _width, _height;
     GLuint _textureID;
+private:
+    std::string _fileName;
+    bool _mapReady;
 
-    void _readMap();
     float _bilinearInterpolate(const float * _colors, const double x, const double y);
+};
+
+class DiffuseEnvMap : public EnvMap
+{
+public:
+    DiffuseEnvMap(EnvMap & envMap) : EnvMap(), _envMap(envMap) {};
+    DiffuseEnvMap(EnvMap & envMap, double radius, int n, int m) : EnvMap(radius, n, m), _envMap(envMap) {};
+
+protected:
+    void _readMap();
+
+private:
+    EnvMap & _envMap;
 };
 
 class World
