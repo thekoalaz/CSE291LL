@@ -52,29 +52,24 @@ int main(int argc, char* argv[])
     cam->setTz(15);
     world.addObject(cam);
 
-    Scene::Sphere * sphere = new Scene::Sphere();
-    world.addObject(sphere);
-    //sphere->setRotx(90);
-    Scene::Shader * sphereShader = new Scene::Shader("sphere.vert", "sphere.frag");
-    world.assignShader(sphere, sphereShader);
-    sphere->setTx(7.5);
-    /*
-    Scene::Sphere * specSphere = new Scene::Sphere();
-    world.addObject(specSphere);
-    specSphere->setRotx(90);
-    Scene::Shader * sphereSpecShader = new Scene::Shader("specSphere.vert", "specSphere.frag");
-    world.assignShader(specSphere, sphereSpecShader);
-    specSphere->setTx(-7.5);
-    */
-    Scene::EnvMap * envMap = new Scene::EnvMap();
+//    Scene::Sphere * sphere = new Scene::Sphere();
+//    world.addObject(sphere);
+//    //sphere->setRotx(90);
+//    Scene::Shader * sphereShader = new Scene::Shader("sphere.vert", "sphere.frag");
+//    world.assignShader(sphere, sphereShader);
+//    sphere->setTx(7.5);
+
+
+    Scene::EnvMap * envMap = new Scene::EnvMap(5, 20, 20);
     world.addObject(envMap);
-    envMap->setRotz(-90);
-    //envMap->setRotx(90);
     Scene::Shader * envShader = new Scene::Shader("tonemap.vert", "tonemap.frag");
     world.assignShader(envMap, envShader);
+    envMap->setTx(-7.5);
 
-    Scene::DiffuseEnvMap * diffuseMap = new Scene::DiffuseEnvMap(*envMap);
+    Scene::DiffuseEnvMap * diffuseMap = new Scene::DiffuseEnvMap(*envMap, 5, 20, 20);
     world.addObject(diffuseMap);
+    diffuseMap->setTx(7.5);
+    world.assignShader(diffuseMap, envShader);
 
     mainPanel.setWorld(&world);
     mainPanel.setCamera(cam);
