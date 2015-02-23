@@ -371,35 +371,33 @@ char * textFileRead(const char * fn)
     return content;
 }
 
-
 /*
 // (x,y,z) is orientation of the patch (e.g. icosahedral directions)
 // compute radiance map in coordinates of envMap for this patch
-warpEnvMap(double x,double y,double z) {
-double mag = sqrt(x*x + y*y + z*z);
-double xN = x / mag;
-double yN = y / mag;
-double zN = z / mag;
-for (i = 0, ; i < _width; i++){
-double thetaR = M_PI*(i - 1) / _width;
-for (j = 0; j < _height; j++){
-double phiR = M_PI*j / _height;
-double xR = sin(phiR)*cos(thetaR);
-double yR = sin(phiR)*sin(thetaR);
-double zR = cos(phi);
-double f = xN*xR + yN*yR + zN*zR - 1;
-double xI = f*xN - xR;
-double yI = f*yN - yR;
-double zI = f*zN - zR;
-double phiI = acos(zI);
-double thetaI = atan2(yI, xI);
-double px = 1 + _width*thetaI / M_PI;
-double py = _height*phiI / M_PI;
-_data[px*_width + py][0];
-_data[px*_width + py][1];
-_data[px*_width + py][2];
-}
-}
-
+warpEnvMap(double x, double y, double z) {
+    double mag = sqrt(x*x + y*y + z*z);
+    double xN = x / mag;
+    double yN = y / mag;
+    double zN = z / mag;
+    for (i = 0, ; i < _width; i++){
+        double thetaR = M_PI*(i - 1) / _width;
+        for (j = 0; j < _height; j++){
+            double phiR = M_PI*j / _height;
+            double xR = sin(phiR)*cos(thetaR);
+            double yR = sin(phiR)*sin(thetaR);
+            double zR = cos(phi);
+            double f = xN*xR + yN*yR + zN*zR - 1;
+            double xI = f*xN - xR;
+            double yI = f*yN - yR;
+            double zI = f*zN - zR;
+            double phiI = acos(zI);
+            double thetaI = atan2(yI, xI);
+            double px = 1 + _width*thetaI / M_PI;
+            double py = _height*phiI / M_PI;
+            _data[px*_width + py][0];
+            _data[px*_width + py][1];
+            _data[px*_width + py][2];
+        }
+    }
 }
 */
