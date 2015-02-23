@@ -38,6 +38,8 @@ void World::addObject(EnvMap * envMap)
     else
     {
         std::cout << "Env map already set!" << std::endl;
+        _objects.push_back(envMap);
+        envMap->setWorld(this);
     }
 }
 
@@ -120,7 +122,7 @@ void EnvMap::_readMap()
         // Read header
         RGBE_ReadHeader(hdrfile, &_width, &_height, NULL);
         // Read data
-        _data = new float[3 * _width*_height];
+        _data = new float[3 * _width * _height];
         RGBE_ReadPixels_RLE(hdrfile, _data, _width, _height);
     }
 
@@ -135,6 +137,7 @@ void EnvMap::_readMap()
 
 void EnvMap::doDraw()
 {
+    bind();
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D , _textureID);
     GLUquadric* quad = gluNewQuadric(); 
@@ -143,6 +146,7 @@ void EnvMap::doDraw()
     gluSphere(quad,_r,_n,_m);
 
     glDisable(GL_TEXTURE_2D);
+    unbind();
 }
 
 std::tuple<float, float, float> EnvMap::map(const double theta, const double phi)
@@ -185,12 +189,71 @@ float EnvMap::_bilinearInterpolate(const float * _colors, const double x, const 
 
 void EnvMap::bind()
 {
+    if (!_mapReady)
+    {
+        _readMap();
+        _mapReady = true;
+    }
 //    glActiveTexture(GL_TEXTURE0 + 0);
 //    glBindTexture(GL_TEXTURE_2D, _textureID);
 }
 
 void EnvMap::unbind()
 {
+}
+
+void DiffuseEnvMap::_readMap()
+{
+    _width = _envMap._getWidth();
+    _height = _envMap._getHeight();
+    _data = new float[_width * _height * 3];
+
+    double normal[3]; // surface normal
+    double intvec[3]; // integration vector
+
+    for (int i = 0; i < _width; i++){
+        if (i % 10 == 0)
+        {
+            std::cout << "We're on x " << i << "\r";
+        }
+        double theta = M_PI*(i-1)/_width;
+        normal[2] = cos(theta);
+        for (int j = 0; j < _height; j++){
+            double phi = M_PI*j/_height;
+            normal[0] = sin(theta)*cos(phi);
+            normal[1] = sin(theta)*sin(phi);
+            _data[i + j *_width + 0] = 0;
+            _data[i + j *_width + 1] = 0;
+            _data[i + j *_width + 2] = 0;
+            for (int k = 0; k < _width; k+=256){
+                theta = M_PI*(k-1)/_width;
+                intvec[2] = cos(theta);
+                for (int l = 0; l < _height; l+=256){
+                    phi = M_PI*l/_height;
+                    intvec[0] = sin(phi)*cos(theta);
+                    intvec[1] = sin(phi)*sin(theta);
+                    double R = _envMap._getPixelR(k,l);
+                    double G = _envMap._getPixelG(k,l);
+                    double B = _envMap._getPixelB(k,l);
+                    double cosAng = std::max(0.0, normal[0] * intvec[0] +
+                        normal[1] * intvec[1] + normal[2] * intvec[2]);
+                    _data[i + j *_width + 0] += R*cosAng*sin(theta) * 2 * M_PI*M_PI / (_width*_height) * (256*256);
+                    _data[i + j *_width + 1] += G*cosAng*sin(theta) * 2 * M_PI*M_PI / (_width*_height) * (256*256);
+                    _data[i + j *_width + 2] += B*cosAng*sin(theta) * 2 * M_PI*M_PI / (_width*_height) * (256*256);
+                }
+            }
+        }
+    }
+
+    std::cout << std::endl;
+
+    glGenTextures(1, &_textureID);
+    glBindTexture(GL_TEXTURE_2D, _textureID);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, _width, _height, 0, GL_RGB, GL_FLOAT, _data);
 }
 
 World & Scene::createWorld()
@@ -308,34 +371,35 @@ char * textFileRead(const char * fn)
     return content;
 }
 
+
 /*
 // (x,y,z) is orientation of the patch (e.g. icosahedral directions)
 // compute radiance map in coordinates of envMap for this patch
 warpEnvMap(double x,double y,double z) {
-    double mag = sqrt(x*x + y*y + z*z);
-    double xN = x / mag;
-    double yN = y / mag;
-    double zN = z / mag;
-    for (i = 0, ; i < _width; i++){
-        double thetaR = M_PI*(i - 1) / _width;
-        for (j = 0; j < _height; j++){
-            double phiR = M_PI*j / _height;
-            double xR = sin(phiR)*cos(thetaR);
-            double yR = sin(phiR)*sin(thetaR);
-            double zR = cos(phi);
-            double f = xN*xR + yN*yR + zN*zR - 1;
-            double xI = f*xN - xR;
-            double yI = f*yN - yR;
-            double zI = f*zN - zR;
-            double phiI = acos(zI);
-            double thetaI = atan2(yI, xI);
-            double px = 1 + _width*thetaI / M_PI;
-            double py = _height*phiI / M_PI;
-            _data[px*_width + py][0];
-            _data[px*_width + py][1];
-            _data[px*_width + py][2];
-        }
-    }
+double mag = sqrt(x*x + y*y + z*z);
+double xN = x / mag;
+double yN = y / mag;
+double zN = z / mag;
+for (i = 0, ; i < _width; i++){
+double thetaR = M_PI*(i - 1) / _width;
+for (j = 0; j < _height; j++){
+double phiR = M_PI*j / _height;
+double xR = sin(phiR)*cos(thetaR);
+double yR = sin(phiR)*sin(thetaR);
+double zR = cos(phi);
+double f = xN*xR + yN*yR + zN*zR - 1;
+double xI = f*xN - xR;
+double yI = f*yN - yR;
+double zI = f*zN - zR;
+double phiI = acos(zI);
+double thetaI = atan2(yI, xI);
+double px = 1 + _width*thetaI / M_PI;
+double py = _height*phiI / M_PI;
+_data[px*_width + py][0];
+_data[px*_width + py][1];
+_data[px*_width + py][2];
+}
+}
 
 }
 */
