@@ -9,21 +9,21 @@ extern "C" {
 namespace Scene
 {
 /** Global variables **/
-//const float GOLDEN_RATIO = (1 + sqrt(5)) / 2;
-//const float ICOSAHEDRON_VERTS[][3] = {
-//    {  0,  1,  GOLDEN_RATIO },
-//    {  0, -1,  GOLDEN_RATIO },
-//    {  0,  1, -GOLDEN_RATIO },
-//    {  0, -1, -GOLDEN_RATIO },
-//    {  1,  GOLDEN_RATIO,  0 },
-//    { -1,  GOLDEN_RATIO,  0 },
-//    {  1, -GOLDEN_RATIO,  0 },
-//    { -1, -GOLDEN_RATIO,  0 },
-//    {  1,  0,  GOLDEN_RATIO },
-//    { -1,  0,  GOLDEN_RATIO },
-//    {  1,  0, -GOLDEN_RATIO },
-//    { -1,  0, -GOLDEN_RATIO }
-//};
+const float GOLDEN_RATIO = (float) (1 + sqrt(5)) / 2;
+const float ICOSAHEDRON_VERTS[][3] = {
+    {  0,  1,  GOLDEN_RATIO },
+    {  0, -1,  GOLDEN_RATIO },
+    {  0,  1, -GOLDEN_RATIO },
+    {  0, -1, -GOLDEN_RATIO },
+    {  1,  GOLDEN_RATIO,  0 },
+    { -1,  GOLDEN_RATIO,  0 },
+    {  1, -GOLDEN_RATIO,  0 },
+    { -1, -GOLDEN_RATIO,  0 },
+    {  1,  0,  GOLDEN_RATIO },
+    { -1,  0,  GOLDEN_RATIO },
+    {  1,  0, -GOLDEN_RATIO },
+    { -1,  0, -GOLDEN_RATIO }
+};
 
 class World;
 
@@ -155,11 +155,11 @@ public:
     void bind();
     void unbind();
 
-    const float _getPixelR(int x, int y) { return _data[(x + y * _width) + 0]; };
+    const float _getPixelR(int x, int y) { return _data[(x + y * _width)*3 + 0]; };
+    const float _getPixelG(int x, int y) { return _data[(x + y * _width)*3 + 1]; };
+    const float _getPixelB(int x, int y) { return _data[(x + y * _width)*3 + 2]; };
     const float _getPixelR(double x, double y) { return _bilinearInterpolate(&_data[0], x, y); };
-    const float _getPixelG(int x, int y) { return _data[(x + y * _width) + 1]; };
     const float _getPixelG(double x, double y) { return _bilinearInterpolate(&_data[1], x, y); };
-    const float _getPixelB(int x, int y) { return _data[(x + y * _width) + 2]; };
     const float _getPixelB(double x, double y) { return _bilinearInterpolate(&_data[2], x, y); };
     const int _getWidth() { return _width; };
     const int _getHeight() { return _height; };
@@ -169,9 +169,14 @@ public:
 
 protected:
     virtual void _readMap();
+    void _writeMap(std::string filename);
     float * _data;
     int _width, _height;
     GLuint _textureID;
+    void _setPixelR(int x, int y, float c) { _data[(x + y * _width)*3 + 0] = c; };
+    void _setPixelG(int x, int y, float c) { _data[(x + y * _width)*3 + 1] = c; };
+    void _setPixelB(int x, int y, float c) { _data[(x + y * _width)*3 + 2] = c; };
+    
 private:
     std::string _fileName;
     bool _mapReady;
