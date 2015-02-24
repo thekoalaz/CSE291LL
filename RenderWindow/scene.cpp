@@ -124,6 +124,7 @@ void EnvMap::_readMap()
         // Read data
         _data = new float[3 * _width * _height];
         RGBE_ReadPixels_RLE(hdrfile, _data, _width, _height);
+        fclose(hdrfile);
     }
 
     glGenTextures(1, &_textureID);
@@ -206,46 +207,72 @@ void DiffuseEnvMap::_readMap()
 {
     _width = _envMap._getWidth();
     _height = _envMap._getHeight();
-    _data = new float[_width * _height * 3];
+    _data = new float[3 * _width * _height];
 
-    double normal[3]; // surface normal
-    double intvec[3]; // integration vector
 
-    for (int i = 0; i < _width; i++){
-        if (i % 10 == 0)
+    std::cout << _width << std::endl;
+    std::cout << _height << std::endl;
+
+    for (int y = 0; y < _height * 3; y++)
+    {
+        for (int x = 0; x < _width; x++)
         {
-            std::cout << "We're on x " << i << "\r";
-        }
-        double theta = M_PI*(i-1)/_width;
-        normal[2] = cos(theta);
-        for (int j = 0; j < _height; j++){
-            double phi = M_PI*j/_height;
-            normal[0] = sin(theta)*cos(phi);
-            normal[1] = sin(theta)*sin(phi);
-            _data[i + j *_width + 0] = 0;
-            _data[i + j *_width + 1] = 0;
-            _data[i + j *_width + 2] = 0;
-            for (int k = 0; k < _width; k+=256){
-                theta = M_PI*(k-1)/_width;
-                intvec[2] = cos(theta);
-                for (int l = 0; l < _height; l+=256){
-                    phi = M_PI*l/_height;
-                    intvec[0] = sin(phi)*cos(theta);
-                    intvec[1] = sin(phi)*sin(theta);
-                    double R = _envMap._getPixelR(k,l);
-                    double G = _envMap._getPixelG(k,l);
-                    double B = _envMap._getPixelB(k,l);
-                    double cosAng = std::max(0.0, normal[0] * intvec[0] +
-                        normal[1] * intvec[1] + normal[2] * intvec[2]);
-                    _data[i + j *_width + 0] += R*cosAng*sin(theta) * 2 * M_PI*M_PI / (_width*_height) * (256*256);
-                    _data[i + j *_width + 1] += G*cosAng*sin(theta) * 2 * M_PI*M_PI / (_width*_height) * (256*256);
-                    _data[i + j *_width + 2] += B*cosAng*sin(theta) * 2 * M_PI*M_PI / (_width*_height) * (256*256);
-                }
-            }
+            _data[x + y*_width + 0] = _envMap._getPixelR(x, y);
+            _data[x + y*_width + 1] = _envMap._getPixelG(x, y);
+            _data[x + y*_width + 2] = _envMap._getPixelB(x, y);
         }
     }
 
+//    double normal[3]; // surface normal
+//    double intvec[3]; // integration vector
+
+//    for (int i = 0; i < _width; i++){
+//        if (i % 10 == 0)
+//        {
+//            std::cout << "We're on x " << i << "\r";
+//        }
+//        double theta = M_PI*(i-1)/_width;
+//        normal[2] = cos(theta);
+//        for (int j = 0; j < _height; j++){
+//            double phi = M_PI*j/_height;
+//            normal[0] = sin(theta)*cos(phi);
+//            normal[1] = sin(theta)*sin(phi);
+//            _data[i + j *_width + 0] = 0;
+//            _data[i + j *_width + 1] = 0;
+//            _data[i + j *_width + 2] = 0;
+//            for (int k = 0; k < _width; k+=256){
+//                theta = M_PI*(k-1)/_width;
+//                intvec[2] = cos(theta);
+//                for (int l = 0; l < _height; l+=256){
+//                    phi = M_PI*l/_height;
+//                    intvec[0] = sin(phi)*cos(theta);
+//                    intvec[1] = sin(phi)*sin(theta);
+//                    double R = _envMap._getPixelR(k,l);
+//                    double G = _envMap._getPixelG(k,l);
+//                    double B = _envMap._getPixelB(k,l);
+//                    double cosAng = std::max(0.0, normal[0] * intvec[0] +
+//                        normal[1] * intvec[1] + normal[2] * intvec[2]);
+//                    _data[i + j *_width + 0] += R*cosAng*sin(theta) * 2 * M_PI*M_PI / (_width*_height) * (256*256);
+//                    _data[i + j *_width + 1] += G*cosAng*sin(theta) * 2 * M_PI*M_PI / (_width*_height) * (256*256);
+//                    _data[i + j *_width + 2] += B*cosAng*sin(theta) * 2 * M_PI*M_PI / (_width*_height) * (256*256);
+//                }
+//            }
+//        }
+//    }
+
+    FILE* hdrfile;
+    fopen_s(&hdrfile, "test.hdr", "wb");
+    if (hdrfile != nullptr)
+    {
+        // Write header
+        RGBE_WriteHeader(hdrfile, _width, _height, NULL);
+        // Write data
+        RGBE_WritePixels_RLE(hdrfile, _data, _width, _height);
+        fclose(hdrfile);
+    }
+
     std::cout << std::endl;
+    
 
     glGenTextures(1, &_textureID);
     glBindTexture(GL_TEXTURE_2D, _textureID);

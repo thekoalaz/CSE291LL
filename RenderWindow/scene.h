@@ -155,11 +155,11 @@ public:
     void bind();
     void unbind();
 
-    const float _getPixelR(int x, int y) { return _data[3*(x + y * _width) + 0]; };
+    const float _getPixelR(int x, int y) { return _data[(x + y * _width) + 0]; };
     const float _getPixelR(double x, double y) { return _bilinearInterpolate(&_data[0], x, y); };
-    const float _getPixelG(int x, int y) { return _data[3*(x + y * _width) + 1]; };
+    const float _getPixelG(int x, int y) { return _data[(x + y * _width) + 1]; };
     const float _getPixelG(double x, double y) { return _bilinearInterpolate(&_data[1], x, y); };
-    const float _getPixelB(int x, int y) { return _data[3*(x + y * _width) + 2]; };
+    const float _getPixelB(int x, int y) { return _data[(x + y * _width) + 2]; };
     const float _getPixelB(double x, double y) { return _bilinearInterpolate(&_data[2], x, y); };
     const int _getWidth() { return _width; };
     const int _getHeight() { return _height; };
