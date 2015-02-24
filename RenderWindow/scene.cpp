@@ -124,6 +124,7 @@ void EnvMap::_readMap()
         // Read data
         _data = new float[3 * _width * _height];
         RGBE_ReadPixels_RLE(hdrfile, _data, _width, _height);
+        fclose(hdrfile);
     }
 
     glGenTextures(1, &_textureID);
@@ -133,6 +134,20 @@ void EnvMap::_readMap()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, _width, _height, 0, GL_RGB, GL_FLOAT, _data);
+}
+
+void EnvMap::_writeMap(std::string filename)
+{
+    FILE* hdrfile;
+    fopen_s(&hdrfile, filename.c_str(), "wb");
+    if (hdrfile != nullptr)
+    {
+        // Write header
+        RGBE_WriteHeader(hdrfile, _width, _height, NULL);
+        // Write data
+        RGBE_WritePixels_RLE(hdrfile, _data, _width, _height);
+        fclose(hdrfile);
+    }
 }
 
 void EnvMap::doDraw()
@@ -206,10 +221,8 @@ void DiffuseEnvMap::_readMap()
 {
     _width = _envMap._getWidth();
     _height = _envMap._getHeight();
-    _data = new float[_width * _height * 3];
+    _data = new float[3 * _width * _height];
 
-    double normal[3]; // surface normal
-    double intvec[3]; // integration vector
 
     /*
     for (int i = 0; i < _width; i++){
@@ -246,8 +259,8 @@ void DiffuseEnvMap::_readMap()
             _data[i + j *_width + 0] /= M_PI;
             _data[i + j *_width + 1] /= M_PI;
             _data[i + j *_width + 2] /= M_PI;
-        }
-    }
+                }
+            }
     */
     for (int i = 0; i < _width; i++){
         for (int j = 0; j < _height; j++){
@@ -258,6 +271,7 @@ void DiffuseEnvMap::_readMap()
     }
 
     std::cout << std::endl;
+
 
     glGenTextures(1, &_textureID);
     glBindTexture(GL_TEXTURE_2D, _textureID);
