@@ -223,54 +223,50 @@ void DiffuseEnvMap::_readMap()
     _height = _envMap._getHeight();
     _data = new float[3 * _width * _height];
 
+    double normal[3];
+    double intvec[3];
 
-    std::cout << _width << std::endl;
-    std::cout << _height << std::endl;
-
-    for (int x = 0; x < _width; x++)
+    for (int i = 0; i < _width; i++)
     {
-        for (int y = 0; y < _height; y++)
-        {
-            _setPixelR(x, y, _envMap._getPixelR(x, y));
-            _setPixelG(x, y, _envMap._getPixelG(x, y));
-            _setPixelB(x, y, _envMap._getPixelB(x, y));
-        }
-    }
-
-    double normal[3]; // surface normal
-    double intvec[3]; // integration vector
-
-    for (int i = 0; i < _width; i++){
         if (i % 10 == 0)
         {
             std::cout << "We're on x " << i << "\r";
         }
-        double theta = M_PI*(i-1)/_width;
-        normal[2] = cos(theta);
-        for (int j = 0; j < _height; j++){
-            double phi = M_PI*j/_height;
-            normal[0] = sin(theta)*cos(phi);
-            normal[1] = sin(theta)*sin(phi);
+        double theta = M_PI*(i - 1) / _width;
+        for (int j = 0; j < _height; j++)
+        {
+            double phi = M_PI*j / _height;
+            normal[0] = sin(phi)*cos(theta);
+            normal[1] = sin(phi)*sin(theta);
+            normal[2] = cos(phi);
             _setPixelR(i, j, 0);
             _setPixelG(i, j, 0);
             _setPixelB(i, j, 0);
-            for (int k = 0; k < _width; k+=256){
-                theta = M_PI*(k-1)/_width;
-                intvec[2] = cos(theta);
-                for (int l = 0; l < _height; l+=256){
-                    phi = M_PI*l/_height;
+            for (int k = 0; k < _width; k += 64)
+            {
+                theta = M_PI*(k - 1) / _width;
+                for (int l = 0; l < _height; l += 64)
+                {
+                    phi = M_PI*l / _height;
                     intvec[0] = sin(phi)*cos(theta);
                     intvec[1] = sin(phi)*sin(theta);
-                    double R = _envMap._getPixelR(k,l);
-                    double G = _envMap._getPixelG(k,l);
-                    double B = _envMap._getPixelB(k,l);
+                    intvec[2] = cos(phi);
+                    double R = _envMap._getPixelR(k, l);
+                    double G = _envMap._getPixelG(k, l);
+                    double B = _envMap._getPixelB(k, l);
                     double cosAng = std::max(0.0, normal[0] * intvec[0] +
                         normal[1] * intvec[1] + normal[2] * intvec[2]);
-                    _setPixelR(i, j,  _getPixelR(i,j) + R*cosAng*sin(theta) * 2 * M_PI*M_PI / (_width*_height) * (256*256));
-                    _setPixelG(i, j,  _getPixelG(i,j) + G*cosAng*sin(theta) * 2 * M_PI*M_PI / (_width*_height) * (256*256));
-                    _setPixelB(i, j,  _getPixelB(i,j) + B*cosAng*sin(theta) * 2 * M_PI*M_PI / (_width*_height) * (256*256));
+                    _setPixelR(i, j,
+                        _getPixelR(i, j) + R*cosAng*sin(phi) * 2 * M_PI*M_PI / (_width*_height) * (64 * 64));
+                    _setPixelG(i, j,
+                        _getPixelG(i, j) + G*cosAng*sin(phi) * 2 * M_PI*M_PI / (_width*_height) * (64 * 64));
+                    _setPixelB(i, j,
+                        _getPixelB(i, j) + B*cosAng*sin(phi) * 2 * M_PI*M_PI / (_width*_height) * (64 * 64));
                 }
             }
+            _setPixelR(i, j, _getPixelR(i, j) / M_PI);
+            _setPixelG(i, j, _getPixelG(i, j) / M_PI);
+            _setPixelB(i, j, _getPixelB(i, j) / M_PI);
         }
     }
 
