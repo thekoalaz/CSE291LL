@@ -69,6 +69,7 @@ int main(int argc, char* argv[])
     Scene::DiffuseEnvMap * diffuseMap = new Scene::DiffuseEnvMap(*envMap, 5, 20, 20);
     world.addObject(diffuseMap);
     diffuseMap->setTx(7.5);
+    diffuseMap->useCache("test.hdr");
     world.assignShader(diffuseMap, envShader);
 
     mainPanel.setWorld(&world);

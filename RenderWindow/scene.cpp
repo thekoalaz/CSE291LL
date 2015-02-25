@@ -113,10 +113,10 @@ void Grid::doDraw()
     }
 }
 
-void EnvMap::_readMap()
+int EnvMap::_readMap()
 {
     FILE* hdrfile;
-    fopen_s(&hdrfile, _fileName.c_str(), "rb");
+    fopen_s(&hdrfile, _filename.c_str(), "rb");
     if (hdrfile != nullptr)
     {
         // Read header
@@ -126,6 +126,10 @@ void EnvMap::_readMap()
         RGBE_ReadPixels_RLE(hdrfile, _data, _width, _height);
         fclose(hdrfile);
     }
+    else
+    {
+        return -1;
+    }
 
     glGenTextures(1, &_textureID);
     glBindTexture(GL_TEXTURE_2D, _textureID);
@@ -134,9 +138,16 @@ void EnvMap::_readMap()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, _width, _height, 0, GL_RGB, GL_FLOAT, _data);
+
+    return 0;
 }
 
-void EnvMap::_writeMap(std::string filename)
+int EnvMap::_writeMap()
+{
+    return _writeMap(_filename);
+}
+
+int EnvMap::_writeMap(std::string filename)
 {
     FILE* hdrfile;
     fopen_s(&hdrfile, filename.c_str(), "wb");
@@ -148,6 +159,11 @@ void EnvMap::_writeMap(std::string filename)
         RGBE_WritePixels_RLE(hdrfile, _data, _width, _height);
         fclose(hdrfile);
     }
+    else
+    {
+        return -1;
+    }
+    return 0;
 }
 
 void EnvMap::doDraw()
@@ -217,69 +233,87 @@ void EnvMap::unbind()
 {
 }
 
-void DiffuseEnvMap::_readMap()
+int DiffuseEnvMap::_readMap()
 {
-    _width = _envMap._getWidth();
-    _height = _envMap._getHeight();
-    _data = new float[3 * _width * _height];
+    int read;
 
-    double normal[3];
-    double intvec[3];
-
-    for (int i = 0; i < _width; i++)
+    if (_cached)
     {
-        if (i % 10 == 0)
+        read = EnvMap::_readMap();
+    }
+    if (read == 0)
+    {
+        std::cout << "Read diffuse map cache from " << _filename << std::endl;
+    }
+    else
+    {
+        _width = _envMap._getWidth();
+        _height = _envMap._getHeight();
+        _data = new float[3 * _width * _height];
+
+        double normal[3];
+        double intvec[3];
+        for (int i = 0; i < _width; i++)
         {
             std::cout << "We're on x " << i << "\r";
-        }
-        double theta = M_PI*(i - 1) / _width;
-        for (int j = 0; j < _height; j++)
-        {
-            double phi = M_PI*j / _height;
-            normal[0] = sin(phi)*cos(theta);
-            normal[1] = sin(phi)*sin(theta);
-            normal[2] = cos(phi);
-            _setPixelR(i, j, 0);
-            _setPixelG(i, j, 0);
-            _setPixelB(i, j, 0);
-            for (int k = 0; k < _width; k += 64)
+            double theta = M_PI*(i - 1) / _width;
+            for (int j = 0; j < _height; j++)
             {
-                theta = M_PI*(k - 1) / _width;
-                for (int l = 0; l < _height; l += 64)
+                double phi = M_PI*j / _height;
+                normal[0] = sin(phi)*cos(theta);
+                normal[1] = sin(phi)*sin(theta);
+                normal[2] = cos(phi);
+                _setPixelR(i, j, 0);
+                _setPixelG(i, j, 0);
+                _setPixelB(i, j, 0);
+                int skip = 256;
+                for (int k = 0; k < _width; k += skip)
                 {
-                    phi = M_PI*l / _height;
-                    intvec[0] = sin(phi)*cos(theta);
-                    intvec[1] = sin(phi)*sin(theta);
-                    intvec[2] = cos(phi);
-                    double R = _envMap._getPixelR(k, l);
-                    double G = _envMap._getPixelG(k, l);
-                    double B = _envMap._getPixelB(k, l);
-                    double cosAng = std::max(0.0, normal[0] * intvec[0] +
-                        normal[1] * intvec[1] + normal[2] * intvec[2]);
-                    _setPixelR(i, j,
-                        _getPixelR(i, j) + R*cosAng*sin(phi) * 2 * M_PI*M_PI / (_width*_height) * (64 * 64));
-                    _setPixelG(i, j,
-                        _getPixelG(i, j) + G*cosAng*sin(phi) * 2 * M_PI*M_PI / (_width*_height) * (64 * 64));
-                    _setPixelB(i, j,
-                        _getPixelB(i, j) + B*cosAng*sin(phi) * 2 * M_PI*M_PI / (_width*_height) * (64 * 64));
+                    theta = M_PI*(k - 1) / _width;
+                    for (int l = 0; l < _height; l += skip)
+                    {
+                        phi = M_PI*l / _height;
+                        intvec[0] = sin(phi)*cos(theta);
+                        intvec[1] = sin(phi)*sin(theta);
+                        intvec[2] = cos(phi);
+                        double R = _envMap._getPixelR(k, l);
+                        double G = _envMap._getPixelG(k, l);
+                        double B = _envMap._getPixelB(k, l);
+                        double cosAng = std::max(0.0, normal[0] * intvec[0] +
+                            normal[1] * intvec[1] + normal[2] * intvec[2]);
+                        if (cosAng != 0.0)
+                        {
+                            _setPixelR(i, j,
+                                _getPixelR(i, j) + R*cosAng*sin(phi) * 2 * M_PI*M_PI / (_width*_height) * (skip * skip));
+                            _setPixelG(i, j,
+                                _getPixelG(i, j) + G*cosAng*sin(phi) * 2 * M_PI*M_PI / (_width*_height) * (skip * skip));
+                            _setPixelB(i, j,
+                                _getPixelB(i, j) + B*cosAng*sin(phi) * 2 * M_PI*M_PI / (_width*_height) * (skip * skip));
+                        }
+                    }
                 }
+                _setPixelR(i, j, _getPixelR(i, j) / M_PI);
+                _setPixelG(i, j, _getPixelG(i, j) / M_PI);
+                _setPixelB(i, j, _getPixelB(i, j) / M_PI);
             }
-            _setPixelR(i, j, _getPixelR(i, j) / M_PI);
-            _setPixelG(i, j, _getPixelG(i, j) / M_PI);
-            _setPixelB(i, j, _getPixelB(i, j) / M_PI);
         }
-    }
+        std::cout << std::endl;
 
-    std::cout << std::endl;
+        if (_cached)
+        {
+            _writeMap();
+        }
     
 
-    glGenTextures(1, &_textureID);
-    glBindTexture(GL_TEXTURE_2D, _textureID);
+        glGenTextures(1, &_textureID);
+        glBindTexture(GL_TEXTURE_2D, _textureID);
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, _width, _height, 0, GL_RGB, GL_FLOAT, _data);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, _width, _height, 0, GL_RGB, GL_FLOAT, _data);
+    }
+    return 0;
 }
 
 World & Scene::createWorld()

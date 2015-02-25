@@ -146,8 +146,8 @@ class EnvMap : public Sphere
 {
 public:
 /* Constructors */
-    EnvMap() : Sphere(1000.0, 20, 20), _fileName(DEFAULT_ENV_MAP), _mapReady(false) { };
-    EnvMap(double radius, int n, int m) : Sphere(radius, n, m), _fileName(DEFAULT_ENV_MAP), _mapReady(false) {};
+    EnvMap() : Sphere(1000.0, 20, 20), _filename(DEFAULT_ENV_MAP), _mapReady(false) { };
+    EnvMap(double radius, int n, int m) : Sphere(radius, n, m), _filename(DEFAULT_ENV_MAP), _mapReady(false) {};
 
     virtual void doDraw();
     std::tuple<float, float, float> map(const double, const double);
@@ -168,17 +168,19 @@ public:
     ~EnvMap() { if(_data != nullptr) delete _data; }
 
 protected:
-    virtual void _readMap();
-    void _writeMap(std::string filename);
-    float * _data;
-    int _width, _height;
-    GLuint _textureID;
+    virtual int _readMap();
+    int _writeMap();
+    int _writeMap(std::string filename);
     void _setPixelR(int x, int y, float c) { _data[(x + y * _width)*3 + 0] = c; };
     void _setPixelG(int x, int y, float c) { _data[(x + y * _width)*3 + 1] = c; };
     void _setPixelB(int x, int y, float c) { _data[(x + y * _width)*3 + 2] = c; };
+
+    float * _data;
+    int _width, _height;
+    GLuint _textureID;
+    std::string _filename;
     
 private:
-    std::string _fileName;
     bool _mapReady;
 
     float _bilinearInterpolate(const float * _colors, const double x, const double y);
@@ -190,11 +192,14 @@ public:
     DiffuseEnvMap(EnvMap & envMap) : EnvMap(), _envMap(envMap) {};
     DiffuseEnvMap(EnvMap & envMap, double radius, int n, int m) : EnvMap(radius, n, m), _envMap(envMap) {};
 
+    void useCache(std::string filename) { _cached = true; _filename = filename; }
+
 protected:
-    void _readMap();
+    int _readMap();
 
 private:
     EnvMap & _envMap;
+    bool _cached;
 };
 
 class World
