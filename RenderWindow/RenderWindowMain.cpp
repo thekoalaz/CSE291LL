@@ -49,28 +49,28 @@ int main(int argc, char* argv[])
     cam->setRotx(0);
     cam->setTx(0);
     cam->setTy(0);
-    cam->setTz(15);
+    cam->setTz(30);
     world.addObject(cam);
 
-//    Scene::Sphere * sphere = new Scene::Sphere();
-//    world.addObject(sphere);
-//    //sphere->setRotx(90);
-//    Scene::Shader * sphereShader = new Scene::Shader("sphere.vert", "sphere.frag");
-//    world.assignShader(sphere, sphereShader);
-//    sphere->setTx(7.5);
+    Scene::Sphere * sphere = new Scene::Sphere();
+    world.addObject(sphere);
+    Scene::Shader * sphereShader = new Scene::Shader("sphere.vert", "sphere.frag");
+    world.assignShader(sphere, sphereShader);
 
-
-    Scene::EnvMap * envMap = new Scene::EnvMap(5, 20, 20);
+    Scene::EnvMap * envMap = new Scene::EnvMap();
     world.addObject(envMap);
     Scene::Shader * envShader = new Scene::Shader("tonemap.vert", "tonemap.frag");
     world.assignShader(envMap, envShader);
-    envMap->setTx(-7.5);
+
+    Scene::EnvMap * envMapVis = new Scene::EnvMap(5,20,20);
+    world.addObject(envMapVis);
+    world.assignShader(envMapVis, envShader);
+    envMapVis->setTx(-15);
 
     Scene::DiffuseEnvMap * diffuseMap = new Scene::DiffuseEnvMap(*envMap, 5, 20, 20);
     world.addObject(diffuseMap);
-    diffuseMap->setTx(7.5);
-    diffuseMap->useCache("test.hdr");
-    diffuseMap->disableCache();
+    diffuseMap->setTx(15);
+    //diffuseMap->useCache("test.hdr");
     world.assignShader(diffuseMap, envShader);
 
     mainPanel.setWorld(&world);

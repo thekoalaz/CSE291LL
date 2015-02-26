@@ -225,8 +225,8 @@ void EnvMap::bind()
         _readMap();
         _mapReady = true;
     }
-//    glActiveTexture(GL_TEXTURE0 + 0);
-//    glBindTexture(GL_TEXTURE_2D, _textureID);
+    glActiveTexture(GL_TEXTURE0 + 0);
+    glBindTexture(GL_TEXTURE_2D, _textureID);
 }
 
 void EnvMap::unbind()
@@ -236,6 +236,7 @@ void EnvMap::unbind()
 int DiffuseEnvMap::_readMap()
 {
     int read = -1;
+    int integrationStart = glutGet(GLUT_ELAPSED_TIME);
 
     if (_cached)
     {
@@ -266,7 +267,7 @@ int DiffuseEnvMap::_readMap()
                 _setPixelR(i, j, 0);
                 _setPixelG(i, j, 0);
                 _setPixelB(i, j, 0);
-                int skip = 256;
+                int skip = 128;
                 for (int k = 0; k < _width; k += skip)
                 {
                     theta = M_PI*(k - 1) / _width;
@@ -284,11 +285,11 @@ int DiffuseEnvMap::_readMap()
                         if (cosAng != 0.0)
                         {
                             _setPixelR(i, j,
-                                _getPixelR(i, j) + R*cosAng*sin(phi) * 2 * M_PI*M_PI / (_width*_height) * (skip * skip));
+                                _getPixelR(i, j) + R*cosAng*sin(phi) * M_PI*M_PI / (_width*_height) * (skip * skip));
                             _setPixelG(i, j,
-                                _getPixelG(i, j) + G*cosAng*sin(phi) * 2 * M_PI*M_PI / (_width*_height) * (skip * skip));
+                                _getPixelG(i, j) + G*cosAng*sin(phi) * M_PI*M_PI / (_width*_height) * (skip * skip));
                             _setPixelB(i, j,
-                                _getPixelB(i, j) + B*cosAng*sin(phi) * 2 * M_PI*M_PI / (_width*_height) * (skip * skip));
+                                _getPixelB(i, j) + B*cosAng*sin(phi) * M_PI*M_PI / (_width*_height) * (skip * skip));
                         }
                     }
                 }
@@ -297,13 +298,13 @@ int DiffuseEnvMap::_readMap()
                 _setPixelB(i, j, _getPixelB(i, j) / M_PI);
             }
         }
-        std::cout << std::endl;
+        int integrationEnd = glutGet(GLUT_ELAPSED_TIME);
+        std::cout << std::endl << (integrationEnd - integrationStart) / 100.0 << "s" << std::endl;
 
         if (_cached)
         {
             _writeMap();
         }
-    
 
         glGenTextures(1, &_textureID);
         glBindTexture(GL_TEXTURE_2D, _textureID);
@@ -327,7 +328,7 @@ void Sphere::doDraw()
     Shader * shader = _world->findShader(this);
     EnvMap * envMap = _world->getEnvMap();
 
-//    envMap->bind(0);
+    envMap->bind();
 
     GlutDraw::drawSphere(_r,_n,_m);
 
