@@ -146,8 +146,14 @@ class EnvMap : public Sphere
 {
 public:
 /* Constructors */
-    EnvMap() : Sphere(1000.0, 20, 20), _filename(DEFAULT_ENV_MAP), _mapReady(false) { };
-    EnvMap(double radius, int n, int m) : Sphere(radius, n, m), _filename(DEFAULT_ENV_MAP), _mapReady(false) {};
+    EnvMap() :
+        Sphere(1000.0, 20, 20), _filename(DEFAULT_ENV_MAP), _mapReady(false) { };
+    EnvMap(std::string  filename) :
+        Sphere(1000.0, 20, 20), _filename(filename), _mapReady(false) { };
+    EnvMap(double radius, int n, int m) :
+        Sphere(radius, n, m), _filename(DEFAULT_ENV_MAP), _mapReady(false) {};
+    EnvMap(std::string  filename, double radius, int n, int m) :
+        Sphere(radius, n, m), _filename(filename), _mapReady(false) {};
 
     virtual void doDraw();
     std::tuple<float, float, float> map(const double, const double);

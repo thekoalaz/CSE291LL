@@ -267,7 +267,7 @@ int DiffuseEnvMap::_readMap()
                 _setPixelR(i, j, 0);
                 _setPixelG(i, j, 0);
                 _setPixelB(i, j, 0);
-                int skip = 128;
+                int skip = 1024;
                 for (int k = 0; k < _width; k += skip)
                 {
                     theta = M_PI*(k - 1) / _width;
@@ -299,7 +299,8 @@ int DiffuseEnvMap::_readMap()
             }
         }
         int integrationEnd = glutGet(GLUT_ELAPSED_TIME);
-        std::cout << std::endl << (integrationEnd - integrationStart) / 100.0 << "s" << std::endl;
+        std::cout << std::endl
+            << "Integration took " << ((integrationEnd - integrationStart) / 100.0) << "s" << std::endl;
 
         if (_cached)
         {
