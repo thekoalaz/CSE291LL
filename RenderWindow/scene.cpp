@@ -235,7 +235,7 @@ void EnvMap::unbind()
 
 int DiffuseEnvMap::_readMap()
 {
-    int read;
+    int read = -1;
 
     if (_cached)
     {

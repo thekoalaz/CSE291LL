@@ -70,6 +70,7 @@ int main(int argc, char* argv[])
     world.addObject(diffuseMap);
     diffuseMap->setTx(7.5);
     diffuseMap->useCache("test.hdr");
+    diffuseMap->disableCache();
     world.assignShader(diffuseMap, envShader);
 
     mainPanel.setWorld(&world);

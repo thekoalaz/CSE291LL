@@ -193,6 +193,7 @@ public:
     DiffuseEnvMap(EnvMap & envMap, double radius, int n, int m) : EnvMap(radius, n, m), _envMap(envMap) {};
 
     void useCache(std::string filename) { _cached = true; _filename = filename; }
+    void disableCache() { _cached = false; }
 
 protected:
     int _readMap();
