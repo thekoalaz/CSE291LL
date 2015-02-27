@@ -33,7 +33,7 @@ void World::addObject(EnvMap * envMap)
     {
         _objects.push_back(envMap);
         envMap->setWorld(this);
-        _envMap = envMap;
+        setEnvMap(envMap);
     }
     else
     {
@@ -41,6 +41,11 @@ void World::addObject(EnvMap * envMap)
         _objects.push_back(envMap);
         envMap->setWorld(this);
     }
+}
+
+void World::setEnvMap(EnvMap * envMap)
+{
+    _envMap = envMap;
 }
 
 void World::assignShader(Object * obj, Shader * shader)
@@ -248,6 +253,7 @@ int DiffuseEnvMap::_readMap()
     }
     else
     {
+        std::cout << "Starting integration." << std::endl;
         _width = _envMap._getWidth();
         _height = _envMap._getHeight();
         _data = new float[3 * _width * _height];
@@ -257,26 +263,26 @@ int DiffuseEnvMap::_readMap()
         for (int i = 0; i < _width; i++)
         {
             std::cout << "We're on x " << i << "\r";
-            double theta = M_PI*(i - 1) / _width;
+            double theta = M_PI*(i/ _width - 1);
             for (int j = 0; j < _height; j++)
             {
                 double phi = M_PI*j / _height;
                 normal[0] = sin(phi)*cos(theta);
-                normal[1] = sin(phi)*sin(theta);
-                normal[2] = cos(phi);
+                normal[1] = cos(phi);
+                normal[2] = sin(phi)*sin(theta);
                 _setPixelR(i, j, 0);
                 _setPixelG(i, j, 0);
                 _setPixelB(i, j, 0);
-                int skip = 1024;
+                int skip = 32;
                 for (int k = 0; k < _width; k += skip)
                 {
-                    theta = M_PI*(k - 1) / _width;
+                    theta = M_PI*(k / _width - 1);
                     for (int l = 0; l < _height; l += skip)
                     {
                         phi = M_PI*l / _height;
                         intvec[0] = sin(phi)*cos(theta);
-                        intvec[1] = sin(phi)*sin(theta);
-                        intvec[2] = cos(phi);
+                        intvec[1] = cos(phi);
+                        intvec[2] = sin(phi)*sin(theta);
                         double R = _envMap._getPixelR(k, l);
                         double G = _envMap._getPixelG(k, l);
                         double B = _envMap._getPixelB(k, l);
@@ -285,11 +291,11 @@ int DiffuseEnvMap::_readMap()
                         if (cosAng != 0.0)
                         {
                             _setPixelR(i, j,
-                                _getPixelR(i, j) + R*cosAng*sin(phi) * M_PI*M_PI / (_width*_height) * (skip * skip));
+                                _getPixelR(i, j) + R*cosAng*sin(phi) * 2 * M_PI / (_width*_height) * (skip * skip));
                             _setPixelG(i, j,
-                                _getPixelG(i, j) + G*cosAng*sin(phi) * M_PI*M_PI / (_width*_height) * (skip * skip));
+                                _getPixelG(i, j) + G*cosAng*sin(phi) * 2 * M_PI / (_width*_height) * (skip * skip));
                             _setPixelB(i, j,
-                                _getPixelB(i, j) + B*cosAng*sin(phi) * M_PI*M_PI / (_width*_height) * (skip * skip));
+                                _getPixelB(i, j) + B*cosAng*sin(phi) * 2 * M_PI / (_width*_height) * (skip * skip));
                         }
                     }
                 }
@@ -300,7 +306,7 @@ int DiffuseEnvMap::_readMap()
         }
         int integrationEnd = glutGet(GLUT_ELAPSED_TIME);
         std::cout << std::endl
-            << "Integration took " << ((integrationEnd - integrationStart) / 100.0) << "s" << std::endl;
+            << "Integration took " << ((integrationEnd - integrationStart) / 1000.0) << "s" << std::endl;
 
         if (_cached)
         {

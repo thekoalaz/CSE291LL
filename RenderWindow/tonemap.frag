@@ -1,7 +1,8 @@
-uniform sampler2D tex;
+uniform sampler2D envMap;
+varying vec2 xy;
 
 void main()
 {
-    vec4 color = texture2D(tex, gl_TexCoord[0].st);
-    gl_FragColor = color * 15;
+    vec4 env = texture2D(envMap, xy);
+    gl_FragColor = env*10;
 }

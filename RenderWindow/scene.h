@@ -224,6 +224,7 @@ public:
 
     Camera * getCam() { return _cam; }
     EnvMap * getEnvMap() { return _envMap; }
+    void setEnvMap(EnvMap *);
 
     void draw();
 private:
