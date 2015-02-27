@@ -63,7 +63,7 @@ int main(int argc, char* argv[])
     Scene::EnvMap * envMap = new Scene::EnvMap(envmapfile);
     world.addObject(envMap);
     Scene::Shader * envShader = new Scene::Shader("tonemap.vert", "tonemap.frag");
-    world.assignShader(envMap, envShader);
+    //world.assignShader(envMap, envShader);
 
     Scene::EnvMap * envMapVis = new Scene::EnvMap(envmapfile, 5,50,50);
     world.addObject(envMapVis);

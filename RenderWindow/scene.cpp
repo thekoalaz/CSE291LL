@@ -263,26 +263,27 @@ int DiffuseEnvMap::_readMap()
         for (int i = 0; i < _width; i++)
         {
             std::cout << "We're on x " << i << "\r";
-            double theta = M_PI*(i/ _width - 1);
+            double theta0 = M_PI*(2*(double)i/_width - 1);
             for (int j = 0; j < _height; j++)
             {
-                double phi = M_PI*j / _height;
-                normal[0] = sin(phi)*cos(theta);
-                normal[1] = cos(phi);
-                normal[2] = sin(phi)*sin(theta);
+                double phi0 = M_PI*(double)j / _height;
+                normal[0] =  sin(phi0)*sin(theta0);
+                normal[1] =  cos(phi0);
+                normal[2] = -sin(phi0)*cos(theta0);
+
                 _setPixelR(i, j, 0);
                 _setPixelG(i, j, 0);
                 _setPixelB(i, j, 0);
-                int skip = 32;
+                int skip = 256;
                 for (int k = 0; k < _width; k += skip)
                 {
-                    theta = M_PI*(k / _width - 1);
+                    double theta = M_PI*(2*(double)k/_width - 1);
                     for (int l = 0; l < _height; l += skip)
                     {
-                        phi = M_PI*l / _height;
-                        intvec[0] = sin(phi)*cos(theta);
-                        intvec[1] = cos(phi);
-                        intvec[2] = sin(phi)*sin(theta);
+                        double phi = M_PI*(double)l / _height;
+                        intvec[0] =  sin(phi)*sin(theta);
+                        intvec[1] =  cos(phi);
+                        intvec[2] = -sin(phi)*cos(theta);
                         double R = _envMap._getPixelR(k, l);
                         double G = _envMap._getPixelG(k, l);
                         double B = _envMap._getPixelB(k, l);
@@ -297,6 +298,7 @@ int DiffuseEnvMap::_readMap()
                             _setPixelB(i, j,
                                 _getPixelB(i, j) + B*cosAng*sin(phi) * 2 * M_PI / (_width*_height) * (skip * skip));
                         }
+                        //if (i == skip && j == skip) printf("%f, %f, %f\n", _getPixelR(i, j), _getPixelG(i, j), _getPixelB(i, j));
                     }
                 }
                 _setPixelR(i, j, _getPixelR(i, j) / M_PI);
