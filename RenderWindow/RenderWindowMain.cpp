@@ -56,18 +56,18 @@ int main(int argc, char* argv[])
     world.addObject(sphere);
     Scene::Shader * sphereShader = new Scene::Shader("sphere.vert", "sphere.frag");
     world.assignShader(sphere, sphereShader);
-
-    Scene::EnvMap * envMap = new Scene::EnvMap("half.hdr");
-    world.addObject(envMap);
+    
+    //Scene::EnvMap * envMap = new Scene::EnvMap("half.hdr");
+    //world.addObject(envMap);
     Scene::Shader * envShader = new Scene::Shader("tonemap.vert", "tonemap.frag");
-    world.assignShader(envMap, envShader);
+    //world.assignShader(envMap, envShader);
 
-    Scene::EnvMap * envMapVis = new Scene::EnvMap("half.hdr", 5,20,20);
+    Scene::EnvMap * envMapVis = new Scene::EnvMap("quarter.hdr", 5,20,20);
     world.addObject(envMapVis);
     world.assignShader(envMapVis, envShader);
     envMapVis->setTx(-15);
 
-    Scene::DiffuseEnvMap * diffuseMap = new Scene::DiffuseEnvMap(*envMap, 5, 20, 20);
+    Scene::DiffuseEnvMap * diffuseMap = new Scene::DiffuseEnvMap(*envMapVis, 5, 20, 20);
     world.addObject(diffuseMap);
     diffuseMap->setTx(15);
     //diffuseMap->useCache("test.hdr");
