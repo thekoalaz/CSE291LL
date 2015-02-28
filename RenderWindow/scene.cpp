@@ -258,54 +258,105 @@ int DiffuseEnvMap::_readMap()
         _height = _envMap._getHeight();
         _data = new float[3 * _width * _height];
 
-        double normal[3];
-        double intvec[3];
-        for (int i = 0; i < _width; i++)
+        int xStep = 1;
+        int yStep = xStep;
+        int xSkip = 256;
+        int ySkip = xSkip;
+        double a = 2 * M_PI / (double)(_width*_height) * (double)(xStep * yStep);
+        
+        for (int jj = 0; jj < _height-_height%ySkip+ySkip ; jj += ySkip)
         {
-            std::cout << "We're on x " << i << "\r";
-            double theta0 = M_PI*(2*(double)i/_width - 1);
-            for (int j = 0; j < _height; j++)
+            int j = std::min(jj,_height-1);
+            std::cout << "We're on y " << j << "\r";
+            double phiN = M_PI*(double)j / (double)_height;
+            double yN = cos(phiN);
+            for (int i = 0; i < _width; i += xSkip)
             {
-                double phi0 = M_PI*(double)j / _height;
-                normal[0] =  sin(phi0)*sin(theta0);
-                normal[1] =  cos(phi0);
-                normal[2] = -sin(phi0)*cos(theta0);
-
-                _setPixelR(i, j, 0);
-                _setPixelG(i, j, 0);
-                _setPixelB(i, j, 0);
-                int skip = 256;
-                for (int k = 0; k < _width; k += skip)
+                
+                double thetaN = M_PI*(2 * (double)i / (double)_width - 1);
+                double xN = sin(phiN)*sin(thetaN);
+                double zN = -sin(phiN)*cos(thetaN);
+                double Rsum = 0;
+                double Gsum = 0;
+                double Bsum = 0;
+                for (int l = 0; l < _height; l += yStep)
                 {
-                    double theta = M_PI*(2*(double)k/_width - 1);
-                    for (int l = 0; l < _height; l += skip)
+                    double phiE = M_PI*(double)l / (double)_height;
+                    double yE = cos(phiE);
+                    for (int k = 0; k < _width; k += xStep)
                     {
-                        double phi = M_PI*(double)l / _height;
-                        intvec[0] =  sin(phi)*sin(theta);
-                        intvec[1] =  cos(phi);
-                        intvec[2] = -sin(phi)*cos(theta);
+                        double thetaE = M_PI*(2 * (double)k / (double)_width - 1);
+                        double xE = sin(phiE)*sin(thetaE);
+                        double zE = -sin(phiE)*cos(thetaE);
                         double R = _envMap._getPixelR(k, l);
                         double G = _envMap._getPixelG(k, l);
                         double B = _envMap._getPixelB(k, l);
-                        double cosAng = std::max(0.0, normal[0] * intvec[0] +
-                            normal[1] * intvec[1] + normal[2] * intvec[2]);
-                        if (cosAng != 0.0)
-                        {
-                            _setPixelR(i, j,
-                                _getPixelR(i, j) + R*cosAng*sin(phi) * 2 * M_PI / (_width*_height) * (skip * skip));
-                            _setPixelG(i, j,
-                                _getPixelG(i, j) + G*cosAng*sin(phi) * 2 * M_PI / (_width*_height) * (skip * skip));
-                            _setPixelB(i, j,
-                                _getPixelB(i, j) + B*cosAng*sin(phi) * 2 * M_PI / (_width*_height) * (skip * skip));
-                        }
-                        //if (i == skip && j == skip) printf("%f, %f, %f\n", _getPixelR(i, j), _getPixelG(i, j), _getPixelB(i, j));
+                        double cosAng = xE*xN + yE*yN + zE*zN;
+                        if (cosAng <= 0) continue;
+                        Rsum += R*cosAng*sin(phiE);
+                        Gsum += G*cosAng*sin(phiE);
+                        Bsum += B*cosAng*sin(phiE);
                     }
                 }
-                _setPixelR(i, j, _getPixelR(i, j) / M_PI);
-                _setPixelG(i, j, _getPixelG(i, j) / M_PI);
-                _setPixelB(i, j, _getPixelB(i, j) / M_PI);
+                _setPixelR(i, j, a*Rsum);
+                _setPixelG(i, j, a*Gsum);
+                _setPixelB(i, j, a*Bsum);
+                /*
+                _setPixelR(i, j, _envMap._getPixelR(i, j));
+                _setPixelG(i, j, _envMap._getPixelG(i, j));
+                _setPixelB(i, j, _envMap._getPixelB(i, j));
+                */
             }
         }
+        // interpolate if integration was not done on that patch
+        for (int i = 0; i < _width; i++){
+            int i1 = i - i%xSkip;
+            int i2 = i1 + xSkip;
+            double dTheta1 = 2 * M_PI * (double)(i - i1) / _width;
+            double dTheta2 = 2 * M_PI * (double)(i2 - i) / _width;
+            i2 = i2%_width;
+            //if (i2 > _width - 1) {
+            //    i2 = 0;
+            //    dTheta2 = M_PI*(3 - 2 * (double)i / _width);
+            //}
+            for (int j = 0; j < _height; j++){
+                int j1 = j - j%ySkip;
+                int j2 = std::min(j1 + ySkip, _height - 1);
+                double phi = M_PI*(double)j / _height;
+                double phi1 = M_PI*(double)j1 / _height;
+                double phi2 = M_PI*(double)j2 / _height;
+                double a11 = dTheta1*(cos(phi1) - cos(phi));
+                double a12 = dTheta1*(cos(phi) - cos(phi2));
+                double a21 = dTheta2*(cos(phi1) - cos(phi));
+                double a22 = dTheta2*(cos(phi) - cos(phi2));
+                if (j1 == j2) a11, a12, a21, a22 = 1;
+                double A = a11 + a12 + a21 + a22;
+                double R = (a22*_getPixelR(i1, j1) + a21*_getPixelR(i1, j2) + a12*_getPixelR(i2, j1) + a11*_getPixelR(i2, j2)) / A;
+                double G = (a22*_getPixelG(i1, j1) + a21*_getPixelG(i1, j2) + a12*_getPixelG(i2, j1) + a11*_getPixelG(i2, j2)) / A;
+                double B = (a22*_getPixelB(i1, j1) + a21*_getPixelB(i1, j2) + a12*_getPixelB(i2, j1) + a11*_getPixelB(i2, j2)) / A;
+                _setPixelR(i, j, R);
+                _setPixelG(i, j, G);
+                _setPixelB(i, j, B);
+            }
+        }
+
+        /*
+        int u, v, r;
+        for (int i = 0; i < _width; i++){
+        r = i%skip;
+        if (r < skip / 2) u = i - r;
+        else u = std::min(i - r + skip, _width) % _width;
+        for (int j = 0; j < _height; j++){
+        r = j%skip;
+        v = j - r;
+        if (r >= skip / 2 && v + skip<_height) v += skip;
+        _setPixelR(i, j, _getPixelR(u, v));
+        _setPixelG(i, j, _getPixelG(u, v));
+        _setPixelB(i, j, _getPixelB(u, v));
+        }
+        }
+        */
+
         int integrationEnd = glutGet(GLUT_ELAPSED_TIME);
         std::cout << std::endl
             << "Integration took " << ((integrationEnd - integrationStart) / 1000.0) << "s" << std::endl;
@@ -442,31 +493,171 @@ char * textFileRead(const char * fn)
 }
 
 /*
-// (x,y,z) is orientation of the patch (e.g. icosahedral directions)
-// compute radiance map in coordinates of envMap for this patch
+double dot3(double * x, double * y) {
+    return x[0] * y[0] + x[1] * y[1] + x[2] * y[2];
+}
+double norm3(double *x){ return sqrt(dot3(x, x)); }
+double * cross3(double * x, double * y) {
+    double out[3] = { x[1] * y[2] - x[2] * y[1], x[2] * y[0] - x[0] * y[2], x[0] * y[1] - x[1] * y[0] };
+    return out;
+}
+double * halfAngle3(double * X, double * Y) {
+    double mag = norm3(X);
+    double x[3] = { X[0] / mag, X[1] / mag, X[2] / mag };
+    mag = norm3(Y);
+    double y[3] = { Y[0] / mag, Y[1] / mag, Y[2] / mag };
+    double out[3] = { x[0] + y[0], x[1] + y[1], x[2] + y[2] };
+    double mag = norm3(out);
+    out[0] /= mag;
+    out[1] /= mag;
+    out[2] /= mag;
+    return out;
+}
+double ** wToR3(double * w){
+    double theta = norm3(w);
+    double ** R;
+    R = new double*[3];
+    R[0] = new double[3];
+    R[1] = new double[3];
+    R[2] = new double[3];
+    double a = cos(theta); // multiplicative factor holder
+    R[0][0] = a;
+    R[1][1] = a;
+    R[2][2] = a;
+    a = sin(theta) / theta;
+    R[0][1] = -a*w[2];
+    R[0][2] = a*w[1];
+    R[1][2] = -a*w[0];
+    R[1][0] = -R[0][1];
+    R[2][0] = -R[0][2];
+    R[2][1] = -R[1][2];
+    a = (1 - cos(theta)) / theta / theta;
+    R[0][0] += a*w[0] * w[0];
+    R[0][1] += a*w[0] * w[1];
+    R[0][2] += a*w[0] * w[2];
+    R[1][0] += a*w[1] * w[0];
+    R[1][1] += a*w[1] * w[1];
+    R[1][2] += a*w[1] * w[2];
+    R[2][0] += a*w[2] * w[0];
+    R[2][1] += a*w[2] * w[1];
+    R[2][2] += a*w[2] * w[2];
+    return R;
+}
+double ** Ralign3(double *X, double *Y){
+    // y=Ralign3*x aligns x with y by rotating x around the half-angle-vector
+    double * w = halfAngle3(X, Y);
+    w[0] = M_PI*w[0];
+    w[1] = M_PI*w[1];
+    w[2] = M_PI*w[2];
+    return wToR(w);
+}
+double * rotate3(double * x, double ** R){
+    double y[3] = { 0, 0, 0 };
+    for (int i = 0; i < 3; i++){
+        for (int j = 0; j < 3; j++){
+            y[i] += R[i][j] * x[j];
+        }
+    }
+    return y;
+}
+double * rotate3(double * x, double * w){
+    return rotate3(x, wToR3(w));
+}
+// (x,y,z) is orientation of the patch normal (e.g. icosahedral directions) relative to the envMap
+// Compute the viewpoint for such a patch from every theta (polar), phi (azimuthal) relative to the normal
 warpEnvMap(double x, double y, double z) {
-    double mag = sqrt(x*x + y*y + z*z);
-    double xN = x / mag;
-    double yN = y / mag;
-    double zN = z / mag;
-    for (i = 0, ; i < _width; i++){
-        double thetaR = M_PI*(i - 1) / _width;
-        for (j = 0; j < _height; j++){
-            double phiR = M_PI*j / _height;
-            double xR = sin(phiR)*cos(thetaR);
-            double yR = sin(phiR)*sin(thetaR);
-            double zR = cos(phi);
-            double f = xN*xR + yN*yR + zN*zR - 1;
-            double xI = f*xN - xR;
-            double yI = f*yN - yR;
-            double zI = f*zN - zR;
-            double phiI = acos(zI);
-            double thetaI = atan2(yI, xI);
-            double px = 1 + _width*thetaI / M_PI;
-            double py = _height*phiI / M_PI;
-            _data[px*_width + py][0];
-            _data[px*_width + py][1];
-            _data[px*_width + py][2];
+    double xAxE_E[3] = { 1, 0, 0 }; // x-axis of EnvMap in the frame of EnvMap
+    double yAxE_E[3] = { 0, 1, 0 };
+    double zAxE_E[3] = { 0, 0, 1 };
+    double xAxP_E[3]; // x-axis of Patch in the frame of EnvMap
+    double yAxP_E[3];
+    double zAxP_E[3];
+    if (x == 0 && y == 0){
+        if (z >= 0){
+            xAxP_E[0] = 1; // x-axis unit vector in EnvMap coordinates in special case
+            xAxP_E[1] = 0;
+            xAxP_E[2] = 0;
+            yAxP_E[0] = 0; // y-axis set such that coordinates are right-handed
+            yAxP_E[1] = 1;
+            yAxP_E[2] = 0;
+            zAxP_E[0] = 0; // z-axis set to surface normal
+            zAxP_E[1] = 0;
+            zAxP_E[2] = 1;
+        }
+        else {
+            xAxP_E[0] = 1; //
+            xAxP_E[1] = 0;
+            xAxP_E[2] = 0;
+            yAxP_E[0] = 0; //
+            yAxP_E[1] = -1;
+            yAxP_E[2] = 0;
+            zAxP_E[0] = 0; //
+            zAxP_E[1] = 0;
+            zAxP_E[2] = -1;
+        }
+    }
+    else {
+        double mag = sqrt(x*x + y*y + z*z);
+        zAxP_E[0] = x / mag;
+        zAxP_E[1] = y / mag;
+        zAxP_E[2] = z / mag;
+        // xAxis is [0,0,1] orthogonalized relative to normal (z-Axis)
+        xAxP_E[0] = -zAxP_E[2] * zAxP_E[0];
+        xAxP_E[1] = -zAxP_E[2] * zAxP_E[1];
+        xAxP_E[2] = -zAxP_E[2] * zAxP_E[2] + 1;
+        mag = norm3(xAxP_E);
+        xAxP_E[0] = xAxP_E[0] / mag;
+        xAxP_E[1] = xAxP_E[1] / mag;
+        xAxP_E[2] = xAxP_E[2] / mag;
+        // yAxis is zAxis cross xAxis
+        yAxP_E[0] = zAxP_E[1] * xAxP_E[2] - xAxP_E[2] * xAxP_E[1];
+        yAxP_E[1] = zAxP_E[2] * xAxP_E[0] - zAxP_E[0] * xAxP_E[2];
+        yAxP_E[2] = zAxP_E[0] * xAxP_E[1] - zAxP_E[1] * xAxP_E[0];
+    }
+    double a = 2 * M_PI*M_PI / (double)(_width*_height);
+    for (int i = 0 ; i < _width; i++){
+        double thetaV_P = 2 * M_PI*((double)i / _width - 1);
+        for (int j = 0; j <= _height/2; j++){
+            double phiV_P = M_PI*(double)j / _height;
+            double N_P[3] = { 0, 0, 1 };
+            double V_P[3] = { sin(phiV_P)*cos(thetaV_P), sin(phiV_P)*sin(thetaV_P), cos(phiV_P) };
+            double NdotV = V_P[2];
+            double Rsum, Gsum, Bsum = 0;
+            for (int k = 0; k < _width; k++){
+                double thetaL_E = 2 * M_PI*((double)k / _width - 1);
+                for (int l = 0; l < _height; l++){
+                    double phiL_E = M_PI*(double)j / _height;
+                    double L_E[3] = { sin(phiL_E)*sin(thetaL_E), cos(phiL_E), -sin(phiL_E)*cos(thetaL_E) };
+                    double * zAxE_half_zAxP_E = halfAngle3(zAxE_E, zAxP_E);
+                    double wAlignZ[3] = { M_PI*zAxE_half_zAxP_E[0],
+                        M_PI*zAxE_half_zAxP_E[1],
+                        M_PI*zAxE_half_zAxP_E[2] };
+                    double * xAxE_temp = rotate3(xAxE_E, wAlignZ);
+                    double dir = cross3(xAxE_E, xAxE_temp)[3] / fabs(cross3(xAxE_E, xAxE_temp)[3]);
+                    double wAlignX[3] = { 0, 0, dir*acos(dot3(xAxE_E, xAxE_temp)) };
+                    double * L_P = rotate3(rotate3(L_E, wAlignZ), wAlignX);
+                    double * H_P = halfAngle3(L_P, V_P);
+                    double NdotL = L_P[2];
+                    double NdotH = dot3(N_P, H_P);
+                    double VdotH = dot3(V_P, H_P);
+                    double LdotH = dot3(L_P, H_P);
+                    double G = std::min(1.0, 2 * NdotH*NdotV / VdotH, 2 * NdotH*NdotL / LdotH);
+                    double D = exp((NdotH*NdotH - 1) / (_roughness*_roughness*NdotH*NdotH));
+                    D /= M_PI*_roughness*_roughness*pow(NdotH,4);
+                    double F = _reflCoef + (1 - _reflCoef)*pow(1 - VdotH, 5);
+                    double brdf = F*D*G / (M_PI*NdotL*NdotV);
+                    // integrate
+                    double R = _envMap._getPixelR(k, l);
+                    double G = _envMap._getPixelG(k, l);
+                    double B = _envMap._getPixelB(k, l);
+                    Rsum += R*brdf*NdotL*sin(phiL_E);
+                    Gsum += G*brdf*NdotL*sin(phiL_E);
+                    Bsum += B*brdf*NdotL*sin(phiL_E);
+                }
+            }
+            _setPixelR(i, j, a*Rsum);
+            _setPixelG(i, j, a*Gsum);
+            _setPixelB(i, j, a*Bsum);
         }
     }
 }

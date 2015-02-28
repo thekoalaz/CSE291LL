@@ -52,11 +52,11 @@ int main(int argc, char* argv[])
     cam->setTz(30);
     world.addObject(cam);
 
-    Scene::Sphere * sphere = new Scene::Sphere();
-    world.addObject(sphere);
-    Scene::Shader * sphereShader = new Scene::Shader("sphere.vert", "sphere.frag");
-    world.assignShader(sphere, sphereShader);
-
+    //Scene::Sphere * sphere = new Scene::Sphere();
+    //world.addObject(sphere);
+    //Scene::Shader * sphereShader = new Scene::Shader("sphere.vert", "sphere.frag");
+    //world.assignShader(sphere, sphereShader);
+    
     std::string envmapfile = "grace-new.hdr";
     //envmapfile = "half.hdr";
     //envmapfile = "quarter.hdr";
@@ -65,15 +65,15 @@ int main(int argc, char* argv[])
     Scene::Shader * envShader = new Scene::Shader("tonemap.vert", "tonemap.frag");
     //world.assignShader(envMap, envShader);
 
-    Scene::EnvMap * envMapVis = new Scene::EnvMap(envmapfile, 5,50,50);
+    Scene::EnvMap * envMapVis = new Scene::EnvMap("quarter.hdr", 5,20,20);
     world.addObject(envMapVis);
     world.assignShader(envMapVis, envShader);
-    envMapVis->setTx(-15);
+    envMapVis->setTx(-7);
 
     Scene::DiffuseEnvMap * diffuseMap = new Scene::DiffuseEnvMap(*envMapVis, 5, 50, 50);
     world.addObject(diffuseMap);
-    diffuseMap->setTx(15);
-    //diffuseMap->useCache("test.hdr");
+    diffuseMap->setTx(7);
+    diffuseMap->useCache("test.hdr");
     world.assignShader(diffuseMap, envShader);
 
     //world.setEnvMap(diffuseMap);
