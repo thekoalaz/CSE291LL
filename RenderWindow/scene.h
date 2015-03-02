@@ -9,8 +9,8 @@ extern "C" {
 namespace Scene
 {
 /** Global variables **/
-const float GOLDEN_RATIO = (float) (1 + sqrt(5)) / 2;
-const float ICOSAHEDRON_VERTS[][3] = {
+const double GOLDEN_RATIO = (1 + sqrt(5)) / 2;
+const double ICOSAHEDRON_VERTS[][3] = {
     {  0,  1,  GOLDEN_RATIO },
     {  0, -1,  GOLDEN_RATIO },
     {  0,  1, -GOLDEN_RATIO },
@@ -192,21 +192,41 @@ private:
     float _bilinearInterpolate(const float * _colors, const double x, const double y);
 };
 
-class DiffuseEnvMap : public EnvMap
+class PrecomputeMap : public EnvMap
 {
 public:
-    DiffuseEnvMap(EnvMap & envMap) : EnvMap(), _envMap(envMap) {};
-    DiffuseEnvMap(EnvMap & envMap, double radius, int n, int m) : EnvMap(radius, n, m), _envMap(envMap) {};
+    PrecomputeMap(EnvMap & envMap) : EnvMap(), _envMap(envMap) {};
+    PrecomputeMap(EnvMap & envMap, double radius, int n, int m) : EnvMap(radius, n, m), _envMap(envMap) {};
 
     void useCache(std::string filename) { _cached = true; _filename = filename; }
     void disableCache() { _cached = false; }
 
 protected:
-    int _readMap();
+    virtual int _readMap();
+    virtual void _precomputeMap() = 0;
 
-private:
     EnvMap & _envMap;
     bool _cached;
+};
+
+class DiffuseEnvMap : public PrecomputeMap
+{
+public:
+    DiffuseEnvMap(EnvMap & envMap) : PrecomputeMap(envMap) {};
+    DiffuseEnvMap(EnvMap & envMap, double radius, int n, int m) : PrecomputeMap(envMap, radius, n, m){};
+
+protected:
+    void _precomputeMap();
+};
+
+class PhongEnvMap : public PrecomputeMap
+{
+public:
+    PhongEnvMap(EnvMap & envMap) : PrecomputeMap(envMap) {};
+    PhongEnvMap(EnvMap & envMap, double radius, int n, int m) : PrecomputeMap(envMap, radius, n, m){};
+
+protected:
+    void _precomputeMap();
 };
 
 class World
