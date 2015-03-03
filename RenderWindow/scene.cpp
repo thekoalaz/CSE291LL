@@ -252,11 +252,12 @@ int DiffuseEnvMap::_readMap()
         _height = _envMap._getHeight();
         _data = new float[3 * _width * _height];
 
+        int s = 5; // Phong exponent
         int xStep = 1;
         int yStep = xStep;
         int xSkip = 256;
-        int ySkip = xSkip;
-        double a = 2 * M_PI / (double)(_width*_height) * (double)(xStep * yStep);
+        int ySkip = 64;
+        double a = (1+s) * M_PI / (double)(_width*_height) * (double)(xStep * yStep);
         
         for (int jj = 0; jj < _height-_height%ySkip+ySkip ; jj += ySkip)
         {
@@ -285,7 +286,7 @@ int DiffuseEnvMap::_readMap()
                         double R = _envMap._getPixelR(k, l);
                         double G = _envMap._getPixelG(k, l);
                         double B = _envMap._getPixelB(k, l);
-                        double cosAng = xE*xN + yE*yN + zE*zN;
+                        double cosAng = pow(xE*xN + yE*yN + zE*zN,s);
                         if (cosAng <= 0) continue;
                         Rsum += R*cosAng*sin(phiE);
                         Gsum += G*cosAng*sin(phiE);
@@ -295,11 +296,15 @@ int DiffuseEnvMap::_readMap()
                 _setPixelR(i, j, a*Rsum);
                 _setPixelG(i, j, a*Gsum);
                 _setPixelB(i, j, a*Bsum);
-                /*
-                _setPixelR(i, j, _envMap._getPixelR(i, j));
-                _setPixelG(i, j, _envMap._getPixelG(i, j));
-                _setPixelB(i, j, _envMap._getPixelB(i, j));
-                */
+                // if we are at the poles, set row (top or bottom) to the same value, and skip to next row j
+                if (j == 0 || j == _height - 1) {
+                    for (int iPole = 1; iPole < _width; iPole++){
+                        _setPixelR(iPole, j, a*Rsum);
+                        _setPixelG(iPole, j, a*Gsum);
+                        _setPixelB(iPole, j, a*Bsum);
+                    }
+                    break;
+                }
             }
         }
         // interpolate if integration was not done on that patch
