@@ -13,6 +13,8 @@
 #include <stdio.h>
 #include <tchar.h>
 #include <iostream>
+#include <fstream>
+#include <sstream>
 #include <vector>
 #include <tuple>
 #include <unordered_map>
@@ -24,3 +26,4 @@
 
 #include <GL/glew.h>
 #include <GL/glut.h>
+#include <glm/glm.hpp>

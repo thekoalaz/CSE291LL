@@ -51,31 +51,36 @@ int main(int argc, char* argv[])
     cam->setTy(0);
     cam->setTz(30);
     world.addObject(cam);
-    
+
     //Scene::Sphere * sphere = new Scene::Sphere();
     //world.addObject(sphere);
     Scene::Shader * sphereShader = new Scene::Shader("sphere.vert", "sphere.frag");
     //world.assignShader(sphere, sphereShader);
     //sphere->setTx(7);
     
-    //Scene::EnvMap * envMap = new Scene::EnvMap("half.hdr");
-    //world.addObject(envMap);
+    std::string envmapfile = "grace-new.hdr";
+    //envmapfile = "half.hdr";
+    //envmapfile = "quarter.hdr";
+    Scene::EnvMap * envMap = new Scene::EnvMap(envmapfile);
+    world.addObject(envMap);
     Scene::Shader * envShader = new Scene::Shader("tonemap.vert", "tonemap.frag");
-    //world.assignShader(envMap, envShader);
+    world.assignShader(envMap, envShader);
 
-    Scene::EnvMap * envMapVis = new Scene::EnvMap("grace-new.hdr", 5,20,20);
+    Scene::EnvMap * envMapVis = new Scene::EnvMap(envmapfile, 5,20,20);
     world.addObject(envMapVis);
     world.assignShader(envMapVis, envShader);
     envMapVis->setRotx(90);
     envMapVis->setTx(-7);
-    
-    Scene::DiffuseEnvMap * diffuseMap = new Scene::DiffuseEnvMap(*envMapVis, 5, 20, 20);
+
+    Scene::DiffuseEnvMap * diffuseMap = new Scene::DiffuseEnvMap(*envMapVis, 5, 50, 50);
     world.addObject(diffuseMap);
     diffuseMap->useCache("test.hdr");
     world.assignShader(diffuseMap, envShader);
     diffuseMap->setRotx(90);
     diffuseMap->setTx(7);
-    
+
+    //world.setEnvMap(diffuseMap);
+
     mainPanel.setWorld(&world);
     mainPanel.setCamera(cam);
     GlutUI::Controls::Mouse(mainPanel.getCamera());

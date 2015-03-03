@@ -33,7 +33,7 @@ void World::addObject(EnvMap * envMap)
     {
         _objects.push_back(envMap);
         envMap->setWorld(this);
-        _envMap = envMap;
+        setEnvMap(envMap);
     }
     else
     {
@@ -41,6 +41,11 @@ void World::addObject(EnvMap * envMap)
         _objects.push_back(envMap);
         envMap->setWorld(this);
     }
+}
+
+void World::setEnvMap(EnvMap * envMap)
+{
+    _envMap = envMap;
 }
 
 void World::assignShader(Object * obj, Shader * shader)
@@ -233,21 +238,47 @@ void EnvMap::unbind()
 {
 }
 
-int DiffuseEnvMap::_readMap()
+int PrecomputeMap::_readMap()
 {
     int read = -1;
-    int integrationStart = glutGet(GLUT_ELAPSED_TIME);
 
     if (_cached)
     {
         read = EnvMap::_readMap();
     }
+
     if (read == 0)
     {
         std::cout << "Read diffuse map cache from " << _filename << std::endl;
     }
     else
     {
+        int integrationStart = glutGet(GLUT_ELAPSED_TIME);
+        std::cout << "Starting integration." << std::endl;
+        _precomputeMap();
+
+        int integrationEnd = glutGet(GLUT_ELAPSED_TIME);
+        std::cout << std::endl
+            << "Integration took " << ((integrationEnd - integrationStart) / 1000.0) << "s" << std::endl;
+    }
+
+    if (_cached)
+    {
+        _writeMap();
+    }
+
+    glGenTextures(1, &_textureID);
+    glBindTexture(GL_TEXTURE_2D, _textureID);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, _width, _height, 0, GL_RGB, GL_FLOAT, _data);
+    return 0;
+}
+
+void DiffuseEnvMap::_precomputeMap()
+{
         _width = _envMap._getWidth();
         _height = _envMap._getHeight();
         _data = new float[3 * _width * _height];
@@ -307,6 +338,7 @@ int DiffuseEnvMap::_readMap()
                 }
             }
         }
+
         // interpolate if integration was not done on that patch
         for (int i = 0; i < _width; i++){
             int i1 = i - i%xSkip;
@@ -314,10 +346,6 @@ int DiffuseEnvMap::_readMap()
             double dTheta1 = 2 * M_PI * (double)(i - i1) / _width;
             double dTheta2 = 2 * M_PI * (double)(i2 - i) / _width;
             i2 = i2%_width;
-            //if (i2 > _width - 1) {
-            //    i2 = 0;
-            //    dTheta2 = M_PI*(3 - 2 * (double)i / _width);
-            //}
             for (int j = 0; j < _height; j++){
                 int j1 = j - j%ySkip;
                 int j2 = std::min(j1 + ySkip, _height - 1);
@@ -338,42 +366,88 @@ int DiffuseEnvMap::_readMap()
                 _setPixelB(i, j, B);
             }
         }
-
-        /*
-        int u, v, r;
-        for (int i = 0; i < _width; i++){
-        r = i%skip;
-        if (r < skip / 2) u = i - r;
-        else u = std::min(i - r + skip, _width) % _width;
-        for (int j = 0; j < _height; j++){
-        r = j%skip;
-        v = j - r;
-        if (r >= skip / 2 && v + skip<_height) v += skip;
-        _setPixelR(i, j, _getPixelR(u, v));
-        _setPixelG(i, j, _getPixelG(u, v));
-        _setPixelB(i, j, _getPixelB(u, v));
         }
-        }
-        */
 
-        int integrationEnd = glutGet(GLUT_ELAPSED_TIME);
-        std::cout << std::endl
-            << "Integration took " << ((integrationEnd - integrationStart) / 100.0) << "s" << std::endl;
+void PhongEnvMap::_precomputeMap()
+{
+    _width = _envMap._getWidth();
+    _height = _envMap._getHeight();
+    _data = new float[3 * _width * _height];
 
-        if (_cached)
+    int xStep = 1;
+    int yStep = xStep;
+    int xSkip = 256;
+    int ySkip = xSkip;
+    double a = 2 * M_PI / (double)(_width*_height) * (double)(xStep * yStep);
+    
+    for (int jj = 0; jj < _height-_height%ySkip+ySkip ; jj += ySkip)
+    {
+        int j = std::min(jj,_height-1);
+        std::cout << "We're on y " << j << "\r";
+        double phiN = M_PI*(double)j / (double)_height;
+        double yN = cos(phiN);
+        for (int i = 0; i < _width; i += xSkip)
         {
-            _writeMap();
+
+            double thetaN = M_PI*(2 * (double)i / (double)_width - 1);
+            double xN = sin(phiN)*sin(thetaN);
+            double zN = -sin(phiN)*cos(thetaN);
+            double Rsum = 0;
+            double Gsum = 0;
+            double Bsum = 0;
+            for (int l = 0; l < _height; l += yStep)
+            {
+                double phiE = M_PI*(double)l / (double)_height;
+                double yE = cos(phiE);
+                for (int k = 0; k < _width; k += xStep)
+        {
+                    double thetaE = M_PI*(2 * (double)k / (double)_width - 1);
+                    double xE = sin(phiE)*sin(thetaE);
+                    double zE = -sin(phiE)*cos(thetaE);
+                    double R = _envMap._getPixelR(k, l);
+                    double G = _envMap._getPixelG(k, l);
+                    double B = _envMap._getPixelB(k, l);
+                    double cosAng = xE*xN + yE*yN + zE*zN;
+                    if (cosAng <= 0) continue;
+                    Rsum += R*cosAng*sin(phiE);
+                    Gsum += G*cosAng*sin(phiE);
+                    Bsum += B*cosAng*sin(phiE);
+                }
+            }
+            _setPixelR(i, j, a*Rsum);
+            _setPixelG(i, j, a*Gsum);
+            _setPixelB(i, j, a*Bsum);
+        }
         }
 
-        glGenTextures(1, &_textureID);
-        glBindTexture(GL_TEXTURE_2D, _textureID);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, _width, _height, 0, GL_RGB, GL_FLOAT, _data);
+    // interpolate if integration was not done on that patch
+    for (int i = 0; i < _width; i++){
+        int i1 = i - i%xSkip;
+        int i2 = i1 + xSkip;
+        double dTheta1 = 2 * M_PI * (double)(i - i1) / _width;
+        double dTheta2 = 2 * M_PI * (double)(i2 - i) / _width;
+        i2 = i2%_width;
+        for (int j = 0; j < _height; j++){
+            int j1 = j - j%ySkip;
+            int j2 = std::min(j1 + ySkip, _height - 1);
+            double phi = M_PI*(double)j / _height;
+            double phi1 = M_PI*(double)j1 / _height;
+            double phi2 = M_PI*(double)j2 / _height;
+            double a11 = dTheta1*(cos(phi1) - cos(phi));
+            double a12 = dTheta1*(cos(phi) - cos(phi2));
+            double a21 = dTheta2*(cos(phi1) - cos(phi));
+            double a22 = dTheta2*(cos(phi) - cos(phi2));
+            if (j1 == j2) a11, a12, a21, a22 = 1;
+            double A = a11 + a12 + a21 + a22;
+            double R = (a22*_getPixelR(i1, j1) + a21*_getPixelR(i1, j2) + a12*_getPixelR(i2, j1) + a11*_getPixelR(i2, j2)) / A;
+            double G = (a22*_getPixelG(i1, j1) + a21*_getPixelG(i1, j2) + a12*_getPixelG(i2, j1) + a11*_getPixelG(i2, j2)) / A;
+            double B = (a22*_getPixelB(i1, j1) + a21*_getPixelB(i1, j2) + a12*_getPixelB(i2, j1) + a11*_getPixelB(i2, j2)) / A;
+            _setPixelR(i, j, R);
+            _setPixelG(i, j, G);
+            _setPixelB(i, j, B);
+        }
     }
-    return 0;
+
 }
 
 World & Scene::createWorld()
