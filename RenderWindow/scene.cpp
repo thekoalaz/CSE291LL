@@ -284,12 +284,12 @@ void DiffuseEnvMap::_precomputeMap()
     _height = _envMap._getHeight();
     _data = new float[3 * _width * _height];
 
-        int s = 5; // Phong exponent
+    int s = 5; // Phong exponent
     int xStep = 1;
     int yStep = xStep;
-        int xSkip = 256;
-        int ySkip = 64;
-        double a = (1+s) * M_PI / (double)(_width*_height) * (double)(xStep * yStep);
+    int xSkip = 256;
+    int ySkip = 64;
+    double a = (1+s) * M_PI / (double)(_width*_height) * (double)(xStep * yStep);
     
     for (int jj = 0; jj < _height-_height%ySkip+ySkip ; jj += ySkip)
     {
@@ -299,7 +299,6 @@ void DiffuseEnvMap::_precomputeMap()
         double yN = cos(phiN);
         for (int i = 0; i < _width; i += xSkip)
         {
-            
             double thetaN = M_PI*(2 * (double)i / (double)_width - 1);
             double xN = sin(phiN)*sin(thetaN);
             double zN = -sin(phiN)*cos(thetaN);
@@ -328,26 +327,30 @@ void DiffuseEnvMap::_precomputeMap()
             _setPixelR(i, j, a*Rsum);
             _setPixelG(i, j, a*Gsum);
             _setPixelB(i, j, a*Bsum);
-                // if we are at the poles, set row (top or bottom) to the same value, and skip to next row j
-                if (j == 0 || j == _height - 1) {
-                    for (int iPole = 1; iPole < _width; iPole++){
-                        _setPixelR(iPole, j, a*Rsum);
-                        _setPixelG(iPole, j, a*Gsum);
-                        _setPixelB(iPole, j, a*Bsum);
-        }
-                    break;
-    }
+            // if we are at the poles, set row (top or bottom) to the same value, and skip to next row j
+            if (j == 0 || j == _height - 1)
+            {
+                for (int iPole = 1; iPole < _width; iPole++)
+                {
+                    _setPixelR(iPole, j, a*Rsum);
+                    _setPixelG(iPole, j, a*Gsum);
+                    _setPixelB(iPole, j, a*Bsum);
+                }
+                break;
             }
         }
+    }
 
     // interpolate if integration was not done on that patch
-    for (int i = 0; i < _width; i++){
+    for (int i = 0; i < _width; i++)
+    {
         int i1 = i - i%xSkip;
         int i2 = i1 + xSkip;
         double dTheta1 = 2 * M_PI * (double)(i - i1) / _width;
         double dTheta2 = 2 * M_PI * (double)(i2 - i) / _width;
         i2 = i2%_width;
-        for (int j = 0; j < _height; j++){
+        for (int j = 0; j < _height; j++)
+        {
             int j1 = j - j%ySkip;
             int j2 = std::min(j1 + ySkip, _height - 1);
             double phi = M_PI*(double)j / _height;
@@ -686,16 +689,20 @@ warpEnvMap(glm::vec3 patchNormal_E) {
     xAxP_E = glm::cross(yAxP_E, xAxP_E);
     glm::mat3 R_alignEP = R_alignAxes(xAxE_E, yAxE_E, zAxE_E, xAxP_E, yAxP_E, zAxP_E);
     float a = 2 * M_PI*M_PI / (double)(_width*_height);
-    for (int i = 0; i < _width; i++){
+    for (int i = 0; i < _width; i++)
+    {
         float thetaV_P = 2 * M_PI*((double)i / _width - 1);
-        for (int j = 0; j <= _height / 2; j++){
+        for (int j = 0; j <= _height / 2; j++)
+        {
             float phiV_P = M_PI*(double)j / _height;
             glm::vec3 V_P(sin(phiV_P)*cos(thetaV_P), sin(phiV_P)*sin(thetaV_P), cos(phiV_P));
             float NdotV = V_P.z;
             double Rsum, Gsum, Bsum = 0;
-            for (int k = 0; k < _width; k++){
+            for (int k = 0; k < _width; k++)
+            {
                 float thetaL_E = 2 * M_PI*((double)k / _width - 1);
-                for (int l = 0; l < _height; l++){
+                for (int l = 0; l < _height; l++)
+                {
                     float phiL_E = M_PI*(double)j / _height;
                     glm::vec3 L_E(sin(phiL_E)*sin(thetaL_E), cos(phiL_E), -sin(phiL_E)*cos(thetaL_E));
                     glm::vec3 L_P = R_alignEP*L_E;
@@ -704,7 +711,7 @@ warpEnvMap(glm::vec3 patchNormal_E) {
                     float NdotH = H_P.z;
                     float VdotH = dot3(V_P, H_P);
                     float LdotH = dot3(L_P, H_P);
-                    float G = std::min(1.0, 2 * NdotH*NdotV / VdotH, 2 * NdotH*NdotL / LdotH);
+                    float G = std::min(1.0f, 2 * NdotH*NdotV / VdotH, 2 * NdotH*NdotL / LdotH);
                     float D = exp((NdotH*NdotH - 1) / (_roughness*_roughness*NdotH*NdotH));
                     D /= M_PI*_roughness*_roughness*pow(NdotH, 4);
                     float F = _reflCoef + (1 - _reflCoef)*pow(1 - VdotH, 5);
