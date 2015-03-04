@@ -229,6 +229,21 @@ protected:
     void _precomputeMap();
 };
 
+class ObjGeometry : public Object
+{
+public:
+    ObjGeometry(std::string filename) : Object() { _filename = filename; };
+    void doDraw();
+
+private:
+    bool _geomReady;
+    int _readGeom();
+
+    std::string _filename;
+    std::vector<glm::vec3> _vertices;
+    std::vector<glm::vec2> _uvs;
+};
+
 class World
 {
 public:

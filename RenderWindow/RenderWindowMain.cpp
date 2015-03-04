@@ -54,10 +54,10 @@ int main(int argc, char* argv[])
 
     //Scene::Sphere * sphere = new Scene::Sphere();
     //world.addObject(sphere);
-    //Scene::Shader * sphereShader = new Scene::Shader("sphere.vert", "sphere.frag");
+    Scene::Shader * sphereShader = new Scene::Shader("sphere.vert", "sphere.frag");
     //world.assignShader(sphere, sphereShader);
     
-    std::string envmapfile = "grace-new.hdr";
+    std::string envmapfile = "grace-small.hdr";
     //envmapfile = "half.hdr";
     //envmapfile = "quarter.hdr";
     Scene::EnvMap * envMap = new Scene::EnvMap(envmapfile);
@@ -75,6 +75,10 @@ int main(int argc, char* argv[])
     diffuseMap->setTx(7);
     diffuseMap->useCache("test.hdr");
     world.assignShader(diffuseMap, envShader);
+
+    Scene::ObjGeometry * kevin = new Scene::ObjGeometry("kevin_lim_C03_med_PRINT.OBJ");
+    world.addObject(kevin);
+    world.assignShader(kevin, sphereShader);
 
     //world.setEnvMap(diffuseMap);
 

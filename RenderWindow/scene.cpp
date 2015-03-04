@@ -285,14 +285,14 @@ void DiffuseEnvMap::_precomputeMap()
 
     int xStep = 1;
     int yStep = xStep;
-    int xSkip = 256;
+    int xSkip = 1;
     int ySkip = xSkip;
     double a = 2 * M_PI / (double)(_width*_height) * (double)(xStep * yStep);
     
     for (int jj = 0; jj < _height-_height%ySkip+ySkip ; jj += ySkip)
     {
         int j = std::min(jj,_height-1);
-        std::cout << "We're on y " << j << "\r";
+        std::cout << "Integration Progress: y " << j << "\r";
         double phiN = M_PI*(double)j / (double)_height;
         double yN = cos(phiN);
         for (int i = 0; i < _width; i += xSkip)
@@ -455,7 +455,93 @@ void Sphere::doDraw()
 
     GlutDraw::drawSphere(_r,_n,_m);
 
+//    Doesn't work yet.
 //    envMap->unbind();
+}
+
+void ObjGeometry::doDraw()
+{
+    if (!_geomReady) _readGeom();
+
+    glBufferData(GL_ARRAY_BUFFER, _vertices.size() * sizeof(glm::vec3), &_vertices[0], GL_STATIC_DRAW);
+
+    return;
+}
+
+int ObjGeometry::_readGeom()
+{
+    std::vector< unsigned int > vertexIndices, uvIndices, normalIndices;
+    std::vector< glm::vec3 > tempVertices;
+    std::vector< glm::vec2 > tempUVs;
+    std::vector< glm::vec3 > tempNormals;
+    int lineCount=0;
+
+    std::ifstream file;
+    file.open(_filename, std::ios::in);
+    if (!file.is_open())
+    {
+        std::cout << "Could not open " << _filename << std::endl;
+        return -1;
+    }
+
+    std::string line;
+    while (std::getline(file, line))
+    {
+        std::istringstream linestream(line);
+        std::string type;
+        if (line.find("v ") == 0)
+        {
+            glm::vec3 vertex;
+            linestream >> type >> vertex.x >> vertex.y >> vertex.z;
+            tempVertices.push_back(vertex);
+        }
+        else if (line.find("vt ") == 0)
+        {
+            glm::vec2 uv;
+            linestream >> type >> uv.x >> uv.y;
+            tempUVs.push_back(uv);
+        }
+        else if (line.find("n ") == 0)
+        {
+            glm::vec3 normal;
+            linestream >> type >> normal.x >> normal.y >> normal.z;
+            tempNormals.push_back(normal);
+        }
+        else if (line.find("f ") == 0)
+        {
+            unsigned int vertexIndex[4], uvIndex[4];
+            char delim;
+            linestream >> type >> vertexIndex[0] >> delim >> uvIndex[0] >>
+                vertexIndex[1] >> delim >> uvIndex[1] >>
+                vertexIndex[2] >> delim >> uvIndex[2] >>
+                vertexIndex[3] >> delim >> uvIndex[3];
+
+            for (int i = 0; i < 4; i++)
+            {
+                vertexIndices.push_back(vertexIndex[i]);
+                uvIndices.push_back(uvIndex[i]);
+            }
+        }
+
+        lineCount++;
+        std::cout << "Parsing obj line: " << lineCount << "\r";
+    }
+    file.close();
+
+    for (unsigned int i = 0; i < vertexIndices.size(); i++)
+    {
+        unsigned int vertexIndex = vertexIndices[i];
+        glm::vec3 vertex = tempVertices[vertexIndex - 1];
+        _vertices.push_back(vertex);
+    }
+    for (unsigned int i = 0; i < uvIndices.size(); i++)
+    {
+        unsigned int uvIndex = uvIndices[i];
+        glm::vec2 uv = tempUVs[uvIndex - 1];
+        _uvs.push_back(uv);
+    }
+
+    return lineCount;
 }
 
 void Shader::_initShaders()
