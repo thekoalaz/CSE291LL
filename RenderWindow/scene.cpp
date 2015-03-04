@@ -1,4 +1,5 @@
 #include "scene.h"
+#include <glm/gtx/transform.hpp>
 
 using namespace Scene;
 /** Global variables **/
@@ -565,160 +566,63 @@ char * textFileRead(const char * fn)
     return content;
 }
 
-/*
-double dot3(double * x, double * y) {
-    return x[0] * y[0] + x[1] * y[1] + x[2] * y[2];
-}
-double norm3(double *x){ return sqrt(dot3(x, x)); }
-double * cross3(double * x, double * y) {
-    double out[3] = { x[1] * y[2] - x[2] * y[1], x[2] * y[0] - x[0] * y[2], x[0] * y[1] - x[1] * y[0] };
-    return out;
-}
-double * halfAngle3(double * X, double * Y) {
-    double mag = norm3(X);
-    double x[3] = { X[0] / mag, X[1] / mag, X[2] / mag };
-    mag = norm3(Y);
-    double y[3] = { Y[0] / mag, Y[1] / mag, Y[2] / mag };
-    double out[3] = { x[0] + y[0], x[1] + y[1], x[2] + y[2] };
-    double mag = norm3(out);
-    out[0] /= mag;
-    out[1] /= mag;
-    out[2] /= mag;
-    return out;
-}
-double ** wToR3(double * w){
-    double theta = norm3(w);
-    double ** R;
-    R = new double*[3];
-    R[0] = new double[3];
-    R[1] = new double[3];
-    R[2] = new double[3];
-    double a = cos(theta); // multiplicative factor holder
-    R[0][0] = a;
-    R[1][1] = a;
-    R[2][2] = a;
-    a = sin(theta) / theta;
-    R[0][1] = -a*w[2];
-    R[0][2] = a*w[1];
-    R[1][2] = -a*w[0];
-    R[1][0] = -R[0][1];
-    R[2][0] = -R[0][2];
-    R[2][1] = -R[1][2];
-    a = (1 - cos(theta)) / theta / theta;
-    R[0][0] += a*w[0] * w[0];
-    R[0][1] += a*w[0] * w[1];
-    R[0][2] += a*w[0] * w[2];
-    R[1][0] += a*w[1] * w[0];
-    R[1][1] += a*w[1] * w[1];
-    R[1][2] += a*w[1] * w[2];
-    R[2][0] += a*w[2] * w[0];
-    R[2][1] += a*w[2] * w[1];
-    R[2][2] += a*w[2] * w[2];
-    return R;
-}
-double ** Ralign3(double *X, double *Y){
-    // y=Ralign3*x aligns x with y by rotating x around the half-angle-vector
-    double * w = halfAngle3(X, Y);
-    w[0] = M_PI*w[0];
-    w[1] = M_PI*w[1];
-    w[2] = M_PI*w[2];
-    return wToR(w);
-}
-double * rotate3(double * x, double ** R){
-    double y[3] = { 0, 0, 0 };
-    for (int i = 0; i < 3; i++){
-        for (int j = 0; j < 3; j++){
-            y[i] += R[i][j] * x[j];
-        }
-    }
-    return y;
-}
-double * rotate3(double * x, double * w){
-    return rotate3(x, wToR3(w));
+glm::mat3 R_alignAxes(glm::vec3 X1, glm::vec3 Y1, glm::vec3 Z1, glm::vec3 X2, glm::vec3 Y2, glm::vec3 Z2) {
+    glm::vec3 x1 = normalize(X1);
+    glm::vec3 y1 = normalize(Y1);
+    glm::vec3 z1 = normalize(Z1);
+    glm::vec3 x2 = normalize(X2);
+    glm::vec3 y2 = normalize(Y2);
+    glm::vec3 z2 = normalize(Z2);
+    glm::vec3 w = (float)M_PI*glm::normalize(z1 + z2);
+    glm::mat3 RalignZ = (float)(2 / M_PI / M_PI)*glm::outerProduct(w, w) - glm::mat3();
+    glm::vec3 y1 = RalignZ*y1;
+    float theta = glm::dot(glm::cross(y2, y1), z2);
+    w = theta*z2;
+    glm::mat3 wCrossMat;
+    wCrossMat[0] = glm::vec3(0.0, w[2], -w[1]);
+    wCrossMat[1] = glm::vec3(-w[2], 0.0, w[0]);
+    wCrossMat[2] = glm::vec3(w[1], -w[0], 0.0);
+    glm::mat3 RalignY = (float)((1 - cos(theta)) / M_PI / M_PI)*glm::outerProduct(w,w) + cos(theta)*glm::mat3()+sin(theta)/theta*wCrossMat;
+    return RalignY*RalignZ;
 }
 // (x,y,z) is orientation of the patch normal (e.g. icosahedral directions) relative to the envMap
 // Compute the viewpoint for such a patch from every theta (polar), phi (azimuthal) relative to the normal
-warpEnvMap(double x, double y, double z) {
-    double xAxE_E[3] = { 1, 0, 0 }; // x-axis of EnvMap in the frame of EnvMap
-    double yAxE_E[3] = { 0, 1, 0 };
-    double zAxE_E[3] = { 0, 0, 1 };
-    double xAxP_E[3]; // x-axis of Patch in the frame of EnvMap
-    double yAxP_E[3];
-    double zAxP_E[3];
-    if (x == 0 && y == 0){
-        if (z >= 0){
-            xAxP_E[0] = 1; // x-axis unit vector in EnvMap coordinates in special case
-            xAxP_E[1] = 0;
-            xAxP_E[2] = 0;
-            yAxP_E[0] = 0; // y-axis set such that coordinates are right-handed
-            yAxP_E[1] = 1;
-            yAxP_E[2] = 0;
-            zAxP_E[0] = 0; // z-axis set to surface normal
-            zAxP_E[1] = 0;
-            zAxP_E[2] = 1;
-        }
-        else {
-            xAxP_E[0] = 1; //
-            xAxP_E[1] = 0;
-            xAxP_E[2] = 0;
-            yAxP_E[0] = 0; //
-            yAxP_E[1] = -1;
-            yAxP_E[2] = 0;
-            zAxP_E[0] = 0; //
-            zAxP_E[1] = 0;
-            zAxP_E[2] = -1;
-        }
+warpEnvMap(glm::vec3 patchNormal_E) {
+    glm::vec3 xAxP_E, yAxP_E;
+    glm::vec3 xAxE_E(1.0f, 0.0f, 0.0f); // x-axis of EnvMap in the frame of EnvMap
+    glm::vec3 yAxE_E(0.0f, 1.0f, 0.0f);
+    glm::vec3 zAxE_E(0.0f, 0.0f, 1.0f);
+    glm::vec3 zAxP_E = glm::normalize(patchNormal_E);
+    if (patchNormal_E.x == 0 && patchNormal_E.y == 0){
+        yAxP_E = glm::vec3(0.0f, 1.0f, 0.0f);
     }
-    else {
-        double mag = sqrt(x*x + y*y + z*z);
-        zAxP_E[0] = x / mag;
-        zAxP_E[1] = y / mag;
-        zAxP_E[2] = z / mag;
-        // xAxis is [0,0,1] orthogonalized relative to normal (z-Axis)
-        xAxP_E[0] = -zAxP_E[2] * zAxP_E[0];
-        xAxP_E[1] = -zAxP_E[2] * zAxP_E[1];
-        xAxP_E[2] = -zAxP_E[2] * zAxP_E[2] + 1;
-        mag = norm3(xAxP_E);
-        xAxP_E[0] = xAxP_E[0] / mag;
-        xAxP_E[1] = xAxP_E[1] / mag;
-        xAxP_E[2] = xAxP_E[2] / mag;
-        // yAxis is zAxis cross xAxis
-        yAxP_E[0] = zAxP_E[1] * xAxP_E[2] - xAxP_E[2] * xAxP_E[1];
-        yAxP_E[1] = zAxP_E[2] * xAxP_E[0] - zAxP_E[0] * xAxP_E[2];
-        yAxP_E[2] = zAxP_E[0] * xAxP_E[1] - zAxP_E[1] * xAxP_E[0];
-    }
-    double a = 2 * M_PI*M_PI / (double)(_width*_height);
-    for (int i = 0 ; i < _width; i++){
-        double thetaV_P = 2 * M_PI*((double)i / _width - 1);
-        for (int j = 0; j <= _height/2; j++){
-            double phiV_P = M_PI*(double)j / _height;
-            double N_P[3] = { 0, 0, 1 };
-            double V_P[3] = { sin(phiV_P)*cos(thetaV_P), sin(phiV_P)*sin(thetaV_P), cos(phiV_P) };
-            double NdotV = V_P[2];
+    else yAxP_E = glm::normalize(zAxE_E - glm::dot(zAxE_E, zAxP_E)*zAxP_E);
+    xAxP_E = glm::cross(yAxP_E, xAxP_E);
+    glm::mat3 R_alignEP = R_alignAxes(xAxE_E, yAxE_E, zAxE_E, xAxP_E, yAxP_E, zAxP_E);
+    float a = 2 * M_PI*M_PI / (double)(_width*_height);
+    for (int i = 0; i < _width; i++){
+        float thetaV_P = 2 * M_PI*((double)i / _width - 1);
+        for (int j = 0; j <= _height / 2; j++){
+            float phiV_P = M_PI*(double)j / _height;
+            glm::vec3 V_P(sin(phiV_P)*cos(thetaV_P), sin(phiV_P)*sin(thetaV_P), cos(phiV_P));
+            float NdotV = V_P.z;
             double Rsum, Gsum, Bsum = 0;
             for (int k = 0; k < _width; k++){
-                double thetaL_E = 2 * M_PI*((double)k / _width - 1);
+                float thetaL_E = 2 * M_PI*((double)k / _width - 1);
                 for (int l = 0; l < _height; l++){
-                    double phiL_E = M_PI*(double)j / _height;
-                    double L_E[3] = { sin(phiL_E)*sin(thetaL_E), cos(phiL_E), -sin(phiL_E)*cos(thetaL_E) };
-                    double * zAxE_half_zAxP_E = halfAngle3(zAxE_E, zAxP_E);
-                    double wAlignZ[3] = { M_PI*zAxE_half_zAxP_E[0],
-                        M_PI*zAxE_half_zAxP_E[1],
-                        M_PI*zAxE_half_zAxP_E[2] };
-                    double * xAxE_temp = rotate3(xAxE_E, wAlignZ);
-                    double dir = cross3(xAxE_E, xAxE_temp)[3] / fabs(cross3(xAxE_E, xAxE_temp)[3]);
-                    double wAlignX[3] = { 0, 0, dir*acos(dot3(xAxE_E, xAxE_temp)) };
-                    double * L_P = rotate3(rotate3(L_E, wAlignZ), wAlignX);
-                    double * H_P = halfAngle3(L_P, V_P);
-                    double NdotL = L_P[2];
-                    double NdotH = dot3(N_P, H_P);
-                    double VdotH = dot3(V_P, H_P);
-                    double LdotH = dot3(L_P, H_P);
-                    double G = std::min(1.0, 2 * NdotH*NdotV / VdotH, 2 * NdotH*NdotL / LdotH);
-                    double D = exp((NdotH*NdotH - 1) / (_roughness*_roughness*NdotH*NdotH));
-                    D /= M_PI*_roughness*_roughness*pow(NdotH,4);
-                    double F = _reflCoef + (1 - _reflCoef)*pow(1 - VdotH, 5);
-                    double brdf = F*D*G / (M_PI*NdotL*NdotV);
+                    float phiL_E = M_PI*(double)j / _height;
+                    glm::vec3 L_E(sin(phiL_E)*sin(thetaL_E), cos(phiL_E), -sin(phiL_E)*cos(thetaL_E));
+                    glm::vec3 L_P = R_alignEP*L_E;
+                    glm::vec3 H_P = glm::normalize(L_P+V_P);
+                    float NdotL = L_P.z;
+                    float NdotH = H_P.z;
+                    float VdotH = dot3(V_P, H_P);
+                    float LdotH = dot3(L_P, H_P);
+                    float G = std::min(1.0, 2 * NdotH*NdotV / VdotH, 2 * NdotH*NdotL / LdotH);
+                    float D = exp((NdotH*NdotH - 1) / (_roughness*_roughness*NdotH*NdotH));
+                    D /= M_PI*_roughness*_roughness*pow(NdotH, 4);
+                    float F = _reflCoef + (1 - _reflCoef)*pow(1 - VdotH, 5);
+                    float brdf = F*D*G / (M_PI*NdotL*NdotV);
                     // integrate
                     double R = _envMap._getPixelR(k, l);
                     double G = _envMap._getPixelG(k, l);
@@ -734,4 +638,3 @@ warpEnvMap(double x, double y, double z) {
         }
     }
 }
-*/
