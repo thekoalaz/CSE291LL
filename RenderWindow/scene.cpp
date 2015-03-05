@@ -283,12 +283,12 @@ void PhongEnvMap::_precomputeMap()
     _height = _envMap._getHeight();
     _data = new float[3 * _width * _height];
 
-    int s = 5; // Phong exponent
+        int s = 5; // Phong exponent
     int xStep = 1;
     int yStep = xStep;
-    int xSkip = 256;
-    int ySkip = 64;
-    double a = (1+s) * M_PI / (double)(_width*_height) * (double)(xStep * yStep);
+        int xSkip = 256;
+        int ySkip = 64;
+        double a = (1+s) * M_PI / (double)(_width*_height) * (double)(xStep * yStep);
     
     for (int jj = 0; jj < _height-_height%ySkip+ySkip ; jj += ySkip)
     {
@@ -298,7 +298,6 @@ void PhongEnvMap::_precomputeMap()
         double yN = cos(phiN);
         for (int i = 0; i < _width; i += xSkip)
         {
-            
             double thetaN = M_PI*(2 * (double)i / (double)_width - 1);
             double xN = sin(phiN)*sin(thetaN);
             double zN = -sin(phiN)*cos(thetaN);
@@ -327,26 +326,30 @@ void PhongEnvMap::_precomputeMap()
             _setPixelR(i, j, a*Rsum);
             _setPixelG(i, j, a*Gsum);
             _setPixelB(i, j, a*Bsum);
-            // if we are at the poles, set row (top or bottom) to the same value, and skip to next row j
-            if (j == 0 || j == _height - 1) {
-                for (int iPole = 1; iPole < _width; iPole++){
-                    _setPixelR(iPole, j, a*Rsum);
-                    _setPixelG(iPole, j, a*Gsum);
-                    _setPixelB(iPole, j, a*Bsum);
-                }
-                break;
+                // if we are at the poles, set row (top or bottom) to the same value, and skip to next row j
+            if (j == 0 || j == _height - 1)
+            {
+                for (int iPole = 1; iPole < _width; iPole++)
+                {
+                        _setPixelR(iPole, j, a*Rsum);
+                        _setPixelG(iPole, j, a*Gsum);
+                        _setPixelB(iPole, j, a*Bsum);
+        }
+                    break;
+    }
             }
         }
-    }
 
     // interpolate if integration was not done on that patch
-    for (int i = 0; i < _width; i++){
+    for (int i = 0; i < _width; i++)
+    {
         int i1 = i - i%xSkip;
         int i2 = i1 + xSkip;
         double dTheta1 = 2 * M_PI * (double)(i - i1) / _width;
         double dTheta2 = 2 * M_PI * (double)(i2 - i) / _width;
         i2 = i2%_width;
-        for (int j = 0; j < _height; j++){
+        for (int j = 0; j < _height; j++)
+        {
             int j1 = j - j%ySkip;
             int j2 = std::min(j1 + ySkip, _height - 1);
             double phi = M_PI*(double)j / _height;
@@ -423,9 +426,9 @@ void DiffuseEnvMap::_precomputeMap()
                     _setPixelR(iPole, j, a*Rsum);
                     _setPixelG(iPole, j, a*Gsum);
                     _setPixelB(iPole, j, a*Bsum);
-                }
+        }
                 break;
-            }
+    }
         }
     }
 
@@ -709,7 +712,8 @@ void CookTorranceMap::_precomputeMap()
     for (int i = 0; i < _width; i++){
         std::cout << "We're on x " << i << "\r";
         float thetaV_P = 2 * M_PI*((double)i / _width - 1);
-        for (int j = 0; j <= _height / 2; j++){
+        for (int j = 0; j <= _height / 2; j++)
+        {
             float phiV_P = M_PI*(double)j / _height;
             glm::vec3 V_P(sin(phiV_P)*cos(thetaV_P), sin(phiV_P)*sin(thetaV_P), cos(phiV_P));
             float NdotV = V_P.z;
