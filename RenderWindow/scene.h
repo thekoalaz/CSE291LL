@@ -209,6 +209,22 @@ protected:
     bool _cached;
 };
 
+class CookTorranceMap : public PrecomputeMap
+{
+public:
+    CookTorranceMap(EnvMap & envMap) : _roughness(0.3), _reflCoeff(0.8), PrecomputeMap(envMap) {};
+    CookTorranceMap(EnvMap & envMap, double radius, int n, int m) : _roughness(0.3), _reflCoeff(0.8),
+        _zAxis(glm::vec3(5.0f,2.0f,1.0f)), PrecomputeMap(envMap, radius, n, m){};
+private:
+    float _roughness;
+    float _reflCoeff;
+    glm::vec3 _xAxis;
+    glm::vec3 _yAxis;
+    glm::vec3 _zAxis; // in the coordinates of envMap
+protected:
+    void _precomputeMap();
+};
+
 class DiffuseEnvMap : public PrecomputeMap
 {
 public:

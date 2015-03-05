@@ -58,7 +58,7 @@ int main(int argc, char* argv[])
     //world.assignShader(sphere, sphereShader);
     //sphere->setTx(7);
     
-    std::string envmapfile = "grace-small.hdr";
+    std::string envmapfile = "grace-mini.hdr";
     //envmapfile = "half.hdr";
     //envmapfile = "quarter.hdr";
     Scene::EnvMap * envMap = new Scene::EnvMap(envmapfile);
@@ -71,18 +71,28 @@ int main(int argc, char* argv[])
     world.assignShader(envMapVis, envShader);
     envMapVis->setRotx(90);
     envMapVis->setTx(-7);
-
+    
+    Scene::CookTorranceMap * ctMap = new Scene::CookTorranceMap(*envMapVis, 5, 50, 50);
+    world.addObject(ctMap);
+    ctMap->useCache("test.hdr");
+    world.assignShader(ctMap, envShader);
+    ctMap->setRotx(90);
+    ctMap->setTx(7);
+   
+    /*
     Scene::DiffuseEnvMap * diffuseMap = new Scene::DiffuseEnvMap(*envMapVis, 5, 50, 50);
     world.addObject(diffuseMap);
     diffuseMap->useCache("test.hdr");
     world.assignShader(diffuseMap, envShader);
     diffuseMap->setRotx(90);
     diffuseMap->setTx(7);
+    */
 
+    /*
     Scene::ObjGeometry * kevin = new Scene::ObjGeometry("kevin_lim_C03_med_PRINT.OBJ");
     world.addObject(kevin);
     world.assignShader(kevin, sphereShader);
-
+    */
     //world.setEnvMap(diffuseMap);
 
     mainPanel.setWorld(&world);

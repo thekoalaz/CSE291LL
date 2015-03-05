@@ -80,6 +80,8 @@
     <None Include="sphere.vert" />
     <None Include="tonemap.frag" />
     <None Include="tonemap.vert" />
+    <None Include="warp.frag" />
+    <None Include="warp.vert" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GlutDraw.h" />
