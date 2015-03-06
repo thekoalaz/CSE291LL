@@ -475,10 +475,31 @@ void Sphere::doDraw()
 
 void ObjGeometry::doDraw()
 {
-    if (!_geomReady) _readGeom();
+    if (!_geomReady)
+    {
+        _readGeom();
+        _geomReady = true;
+    }
 
+    Shader * shader = _world->findShader(this);
+    EnvMap * envMap = _world->getEnvMap();
+
+    envMap->bind();
+    GLuint vertexbuffer;
+    glGenVertexArrays(1, &vertexbuffer);
+    glBindVertexArray(vertexbuffer);
     glBufferData(GL_ARRAY_BUFFER, _vertices.size() * sizeof(glm::vec3), &_vertices[0], GL_STATIC_DRAW);
 
+    glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
+    glVertexAttribPointer(0, _vertices.size(), GL_FLOAT, GL_FALSE, 0,(void*) 0);
+
+    // Draw the triangle !
+    glDrawArrays(GL_QUADS, 0, _vertices.size());
+    glDisableVertexAttribArray(0);
+
+//    Doesn't work yet.
+//    envMap->unbind();
     return;
 }
 
@@ -507,6 +528,9 @@ int ObjGeometry::_readGeom()
         {
             glm::vec3 vertex;
             linestream >> type >> vertex.x >> vertex.y >> vertex.z;
+            vertex.x = 0.01 * vertex.x;
+            vertex.y = 0.01 * vertex.y;
+            vertex.z = 0.01 * vertex.z;
             tempVertices.push_back(vertex);
         }
         else if (line.find("vt ") == 0)
@@ -538,8 +562,12 @@ int ObjGeometry::_readGeom()
         }
 
         lineCount++;
-        std::cout << "Parsing obj line: " << lineCount << "\r";
+        if (lineCount % 1000 == 0)
+        {
+            std::cout << "Parsing obj line: " << lineCount << "\r";
+        }
     }
+    std::cout << std::endl;
     file.close();
 
     for (unsigned int i = 0; i < vertexIndices.size(); i++)
@@ -664,7 +692,7 @@ glm::mat3 R_alignAxes(glm::vec3 X1, glm::vec3 Y1, glm::vec3 Z1, glm::vec3 X2, gl
     glm::vec3 z2 = normalize(Z2);
     glm::vec3 w = (float)M_PI*glm::normalize(z1 + z2);
     glm::mat3 RalignZ = (float)(2 / M_PI / M_PI)*glm::outerProduct(w, w) - glm::mat3();
-    glm::vec3 y1 = RalignZ*y1;
+    y1 = RalignZ*y1;
     float theta = glm::dot(glm::cross(y2, y1), z2);
     w = theta*z2;
     glm::mat3 wCrossMat;
@@ -674,6 +702,8 @@ glm::mat3 R_alignAxes(glm::vec3 X1, glm::vec3 Y1, glm::vec3 Z1, glm::vec3 X2, gl
     glm::mat3 RalignY = (float)((1 - cos(theta)) / M_PI / M_PI)*glm::outerProduct(w,w) + cos(theta)*glm::mat3()+sin(theta)/theta*wCrossMat;
     return RalignY*RalignZ;
 }
+
+/*
 // (x,y,z) is orientation of the patch normal (e.g. icosahedral directions) relative to the envMap
 // Compute the viewpoint for such a patch from every theta (polar), phi (azimuthal) relative to the normal
 warpEnvMap(glm::vec3 patchNormal_E) {
@@ -731,3 +761,4 @@ warpEnvMap(glm::vec3 patchNormal_E) {
         }
     }
 }
+*/
