@@ -51,6 +51,12 @@
     <None Include="specSphere.vert">
       <Filter>Source Files</Filter>
     </None>
+    <None Include="warp.vert">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="warp.frag">
+      <Filter>Source Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GlutDraw.h">
