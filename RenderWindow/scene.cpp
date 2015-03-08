@@ -493,24 +493,26 @@ void ObjGeometry::doDraw()
     EnvMap * envMap = _world->getEnvMap();
 
     envMap->bind();
-    GLuint vertexbuffer;
-    glGenVertexArrays(1, &vertexbuffer);
-    glBindVertexArray(vertexbuffer);
+    glGenVertexArrays(1, &_vertexArrayID);
+    glBindVertexArray(_vertexArrayID);
     glBufferData(GL_ARRAY_BUFFER, _vertices.size() * sizeof(glm::vec3), &_vertices[0], GL_STATIC_DRAW);
 
     glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, _vertexArrayID);
     glVertexAttribPointer(0, _vertices.size(), GL_FLOAT, GL_FALSE, 0,(void*) 0);
 
-    // Draw the triangle !
-    glDrawArrays(GL_QUADS, 0, _vertices.size());
+    std::cout << "Draw triangles." << std::endl;
+    check_gl_error();
+    glDrawArrays(GL_TRIANGLES, 0, 100);
     glDisableVertexAttribArray(0);
+
 
 //    Doesn't work yet.
 //    envMap->unbind();
     return;
 }
 
+// Adopted from http://www.opengl-tutorial.org/beginners-tutorials/tutorial-7-model-loading/
 int ObjGeometry::_readGeom()
 {
     std::vector< unsigned int > vertexIndices, uvIndices, normalIndices;
@@ -536,9 +538,9 @@ int ObjGeometry::_readGeom()
         {
             glm::vec3 vertex;
             linestream >> type >> vertex.x >> vertex.y >> vertex.z;
-            vertex.x = 0.01 * vertex.x;
-            vertex.y = 0.01 * vertex.y;
-            vertex.z = 0.01 * vertex.z;
+            vertex.x = vertex.x;
+            vertex.y = vertex.y;
+            vertex.z = vertex.z;
             tempVertices.push_back(vertex);
         }
         else if (line.find("vt ") == 0)
@@ -555,14 +557,13 @@ int ObjGeometry::_readGeom()
         }
         else if (line.find("f ") == 0)
         {
-            unsigned int vertexIndex[4], uvIndex[4];
+            unsigned int vertexIndex[3], uvIndex[3];
             char delim;
             linestream >> type >> vertexIndex[0] >> delim >> uvIndex[0] >>
                 vertexIndex[1] >> delim >> uvIndex[1] >>
-                vertexIndex[2] >> delim >> uvIndex[2] >>
-                vertexIndex[3] >> delim >> uvIndex[3];
+                vertexIndex[2] >> delim >> uvIndex[2];
 
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < 3; i++)
             {
                 vertexIndices.push_back(vertexIndex[i]);
                 uvIndices.push_back(uvIndex[i]);
@@ -578,12 +579,14 @@ int ObjGeometry::_readGeom()
     std::cout << std::endl;
     file.close();
 
+    std::cout << "Organizing faces." << std::endl;
     for (unsigned int i = 0; i < vertexIndices.size(); i++)
     {
         unsigned int vertexIndex = vertexIndices[i];
         glm::vec3 vertex = tempVertices[vertexIndex - 1];
         _vertices.push_back(vertex);
     }
+    std::cout << "Organizing uvs." << std::endl;
     for (unsigned int i = 0; i < uvIndices.size(); i++)
     {
         unsigned int uvIndex = uvIndices[i];
@@ -662,33 +665,6 @@ void Shader::link()
 void Shader::unlink()
 {
     glUseProgram(0);
-}
-
-/* Utility Functions */
-char * textFileRead(const char * fn)
-{
-    FILE * fp;
-    char * content = nullptr;
-
-    int count = 0;
-    if (fn != nullptr)
-    {
-        fopen_s(&fp, fn, "rt");
-        if (fp != nullptr)
-        {
-            fseek(fp, 0, SEEK_END);
-            count = ftell(fp);
-            rewind(fp);
-            if (count > 0)
-            {
-                content = (char *) malloc(sizeof(char) * (count + 1));
-                count = fread(content, sizeof(char), count, fp);
-                content[count] = '\0';
-            }
-            fclose(fp);
-        }
-    }
-    return content;
 }
 
 glm::mat3 R_alignAxes(glm::vec3 X1, glm::vec3 Y1, glm::vec3 Z1, glm::vec3 X2, glm::vec3 Y2, glm::vec3 Z2) {
@@ -847,3 +823,50 @@ void CookTorranceIcosMap::_precomputeMap()
         }
     }
 }
+
+/* Utility Functions */
+char * textFileRead(const char * fn)
+{
+    FILE * fp;
+    char * content = nullptr;
+
+    int count = 0;
+    if (fn != nullptr)
+    {
+        fopen_s(&fp, fn, "rt");
+        if (fp != nullptr)
+        {
+            fseek(fp, 0, SEEK_END);
+            count = ftell(fp);
+            rewind(fp);
+            if (count > 0)
+            {
+                content = (char *) malloc(sizeof(char) * (count + 1));
+                count = fread(content, sizeof(char), count, fp);
+                content[count] = '\0';
+            }
+            fclose(fp);
+        }
+    }
+    return content;
+}
+
+void _check_gl_error(const char *file, int line) {
+        GLenum err (glGetError());
+ 
+        while(err!=GL_NO_ERROR) {
+                std::string error;
+ 
+                switch(err) {
+                        case GL_INVALID_OPERATION:      error="INVALID_OPERATION";      break;
+                        case GL_INVALID_ENUM:           error="INVALID_ENUM";           break;
+                        case GL_INVALID_VALUE:          error="INVALID_VALUE";          break;
+                        case GL_OUT_OF_MEMORY:          error="OUT_OF_MEMORY";          break;
+                        case GL_INVALID_FRAMEBUFFER_OPERATION:  error="INVALID_FRAMEBUFFER_OPERATION";  break;
+                }
+ 
+                std::cerr << "GL_" << error.c_str() <<" - "<<file<<":"<<line<<std::endl;
+                err=glGetError();
+        }
+}
+

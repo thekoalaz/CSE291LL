@@ -66,11 +66,13 @@ int main(int argc, char* argv[])
     Scene::Shader * envShader = new Scene::Shader("tonemap.vert", "tonemap.frag");
     world.assignShader(envMap, envShader);
 
+    /*
     Scene::EnvMap * envMapVis = new Scene::EnvMap(envmapfile, 5,20,20);
     world.addObject(envMapVis);
     world.assignShader(envMapVis, envShader);
     envMapVis->setRotx(90);
     envMapVis->setTx(-7);
+    */
 
     /*
     Scene::CookTorranceIcosMap * ctMap00 = new Scene::CookTorranceIcosMap(*envMapVis, 0.3, 0.8, 0);
@@ -123,11 +125,9 @@ int main(int argc, char* argv[])
     diffuseMap->setTx(7);
     */
 
-    /*
-    Scene::ObjGeometry * kevin = new Scene::ObjGeometry("kevin_lim_C03_med_PRINT.OBJ");
+    Scene::ObjGeometry * kevin = new Scene::ObjGeometry("kevin.obj");
     world.addObject(kevin);
     world.assignShader(kevin, sphereShader);
-    */
     //world.setEnvMap(diffuseMap);
 
     mainPanel.setWorld(&world);

@@ -311,6 +311,12 @@ public:
     ObjGeometry(std::string filename) : Object() { _filename = filename; };
     void doDraw();
 
+    ~ObjGeometry()
+    {
+        glBindVertexArray(0);
+        glDeleteVertexArrays(1, &_vertexArrayID);
+    }
+
 private:
     bool _geomReady;
     int _readGeom();
@@ -318,6 +324,8 @@ private:
     std::string _filename;
     std::vector<glm::vec3> _vertices;
     std::vector<glm::vec2> _uvs;
+
+    GLuint _vertexArrayID;
 };
 
 class World
@@ -349,3 +357,20 @@ private:
 World & createWorld();
 
 };
+
+// Utility functions
+char * textFileRead(const char);
+
+#ifndef GLERROR_H
+#define GLERROR_H
+ 
+void _check_gl_error(const char *file, int line);
+ 
+///
+/// Usage
+/// [... some opengl calls]
+/// glCheckError();
+///
+#define check_gl_error() _check_gl_error(__FILE__,__LINE__)
+ 
+#endif // GLERROR_H
