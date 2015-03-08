@@ -8,7 +8,7 @@ void main()
     vec3 normal = vec3(gl_NormalMatrix*gl_Normal);
     vec3 vertex = vec3(gl_Position);
     
-    vec3 incident = normalize(vertex);
+    vec3 incident = normalize(-vertex);
     vec3 refDir = normalize(reflect(incident,normal));
     refDir = vec3(inverse(gl_NormalMatrix)*refDir);
     float theta = atan(refDir.x,-refDir.z);

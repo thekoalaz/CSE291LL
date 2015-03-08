@@ -24,6 +24,49 @@ const double ICOSAHEDRON_VERTS[][3] = {
     {  1,  0, -GOLDEN_RATIO },
     { -1,  0, -GOLDEN_RATIO }
 };
+const glm::vec3 ICOS_ZAXES[] = {
+    glm::normalize(glm::vec3(0, 1, GOLDEN_RATIO)),
+    glm::normalize(glm::vec3(0, -1, GOLDEN_RATIO)),
+    glm::normalize(glm::vec3(0, 1, -GOLDEN_RATIO)),
+    glm::normalize(glm::vec3(0, -1, -GOLDEN_RATIO)),
+    glm::normalize(glm::vec3(1, GOLDEN_RATIO, 0)),
+    glm::normalize(glm::vec3(-1, GOLDEN_RATIO, 0)),
+    glm::normalize(glm::vec3(1, -GOLDEN_RATIO, 0)),
+    glm::normalize(glm::vec3(-1, -GOLDEN_RATIO, 0)),
+    glm::normalize(glm::vec3(1, 0, GOLDEN_RATIO)),
+    glm::normalize(glm::vec3(-1, 0, GOLDEN_RATIO)),
+    glm::normalize(glm::vec3(1, 0, -GOLDEN_RATIO)),
+    glm::normalize(glm::vec3(-1, 0, -GOLDEN_RATIO))
+};
+const glm::vec3 ICOS_YAXES[] = {
+    glm::vec3(1.0f, 0.0f, 0.0f),
+    glm::vec3(-1.0f, 0.0f, 0.0f),
+    glm::vec3(-1.0f, 0.0f, 0.0f),
+    glm::vec3(1.0f, 0.0f, 0.0f),
+    glm::vec3(0.0f, 0.0f, 1.0f),
+    glm::vec3(0.0f, 0.0f, -1.0f),
+    glm::vec3(0.0f, 0.0f, -1.0f),
+    glm::vec3(0.0f, 0.0f, 1.0f),
+    glm::vec3(0.0f, 1.0f, 0.0f),
+    glm::vec3(0.0f, -1.0f, 0.0f),
+    glm::vec3(0.0f, -1.0f, 0.0f),
+    glm::vec3(0.0f, 1.0f, 0.0f)
+};
+const glm::vec3 ICOS_XAXES[] = {
+    glm::cross(ICOS_YAXES[0], ICOS_ZAXES[0]),
+    glm::cross(ICOS_YAXES[1], ICOS_ZAXES[1]),
+    glm::cross(ICOS_YAXES[2], ICOS_ZAXES[2]),
+    glm::cross(ICOS_YAXES[3], ICOS_ZAXES[3]),
+    glm::cross(ICOS_YAXES[4], ICOS_ZAXES[4]),
+    glm::cross(ICOS_YAXES[5], ICOS_ZAXES[5]),
+    glm::cross(ICOS_YAXES[6], ICOS_ZAXES[6]),
+    glm::cross(ICOS_YAXES[7], ICOS_ZAXES[7]),
+    glm::cross(ICOS_YAXES[8], ICOS_ZAXES[8]),
+    glm::cross(ICOS_YAXES[9], ICOS_ZAXES[9]),
+    glm::cross(ICOS_YAXES[10], ICOS_ZAXES[10]),
+    glm::cross(ICOS_YAXES[11], ICOS_ZAXES[11])
+};
+
 
 class World;
 
@@ -212,9 +255,11 @@ protected:
 class CookTorranceMap : public PrecomputeMap
 {
 public:
-    CookTorranceMap(EnvMap & envMap) : _roughness(0.3), _reflCoeff(0.8), PrecomputeMap(envMap) {};
+    CookTorranceMap(EnvMap & envMap, float r1, float r2, glm::vec3 v) : _roughness(r1), _reflCoeff(r2), _zAxis(v), PrecomputeMap(envMap) {};
     CookTorranceMap(EnvMap & envMap, double radius, int n, int m) : _roughness(0.3), _reflCoeff(0.8),
-        _zAxis(glm::vec3(5.0f,2.0f,1.0f)), PrecomputeMap(envMap, radius, n, m){};
+        _zAxis(glm::vec3(Scene::ICOSAHEDRON_VERTS[1][0], Scene::ICOSAHEDRON_VERTS[1][1], Scene::ICOSAHEDRON_VERTS[1][2])),
+        PrecomputeMap(envMap, radius, n, m){};
+
 private:
     float _roughness;
     float _reflCoeff;
@@ -224,6 +269,21 @@ private:
 protected:
     void _precomputeMap();
 };
+
+
+class CookTorranceIcosMap : public PrecomputeMap
+{
+public:
+    CookTorranceIcosMap(EnvMap & envMap, float r1, float r2, int i) : _roughness(r1), _reflCoeff(r2), _vertexIndex(i), PrecomputeMap(envMap) {};
+private:
+    float _roughness;
+    float _reflCoeff;
+    int _vertexIndex;
+protected:
+    void _precomputeMap();
+};
+
+
 
 class DiffuseEnvMap : public PrecomputeMap
 {
