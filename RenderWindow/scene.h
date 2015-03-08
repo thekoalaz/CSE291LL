@@ -361,6 +361,7 @@ World & createWorld();
 // Utility functions
 char * textFileRead(const char);
 
+// From http://blog.nobel-joergensen.com/2013/01/29/debugging-opengl-using-glgeterror/
 #ifndef GLERROR_H
 #define GLERROR_H
  

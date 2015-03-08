@@ -76,6 +76,11 @@ void World::draw()
 
 void Object::draw()
 {
+    if (!_visible)
+    {
+        return;
+    }
+
     glPushMatrix();
     glTranslated(_tx, _ty, _tz);
     glRotated(_rotx,1,0,0);
@@ -493,18 +498,16 @@ void ObjGeometry::doDraw()
     EnvMap * envMap = _world->getEnvMap();
 
     envMap->bind();
-    glGenVertexArrays(1, &_vertexArrayID);
-    glBindVertexArray(_vertexArrayID);
-    glBufferData(GL_ARRAY_BUFFER, _vertices.size() * sizeof(glm::vec3), &_vertices[0], GL_STATIC_DRAW);
+    //glGenVertexArrays(1, &_vertexArrayID);
+    //glBindVertexArray(_vertexArrayID);
 
-    glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, _vertexArrayID);
-    glVertexAttribPointer(0, _vertices.size(), GL_FLOAT, GL_FALSE, 0,(void*) 0);
+    // Enable vertex arrays
+    glEnableClientState(GL_VERTEX_ARRAY);
 
-    std::cout << "Draw triangles." << std::endl;
+    glVertexPointer(3, GL_FLOAT, sizeof(glm::vec3), &_vertices[0]);
+
     check_gl_error();
-    glDrawArrays(GL_TRIANGLES, 0, 100);
-    glDisableVertexAttribArray(0);
+    glDrawArrays(GL_TRIANGLES, 0, _vertices.size());
 
 
 //    Doesn't work yet.
