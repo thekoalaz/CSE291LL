@@ -125,9 +125,11 @@ int main(int argc, char* argv[])
     diffuseMap->setTx(7);
     */
 
+    Scene::Shader * kevinShader = new Scene::Shader("diffuse.vert", "diffuse.frag");
+
     Scene::ObjGeometry * kevin = new Scene::ObjGeometry("kevin.obj");
+    world.assignShader(kevin, kevinShader);
     world.addObject(kevin);
-    world.assignShader(kevin, sphereShader);
     //world.setEnvMap(diffuseMap);
 
     mainPanel.setWorld(&world);

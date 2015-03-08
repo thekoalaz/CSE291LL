@@ -50,11 +50,11 @@ void World::setEnvMap(EnvMap * envMap)
 
 void World::assignShader(Object * obj, Shader * shader)
 {
-    _shaderMap[obj->getId()] = shader;
+    _shaderMap[obj->getID()] = shader;
 }
 Shader * World::findShader(Object * obj)
 {
-    return _shaderMap[obj->getId()];
+    return _shaderMap[obj->getID()];
 }
 
 void World::draw()
@@ -62,10 +62,10 @@ void World::draw()
     for(std::vector<Object *>::const_iterator object = _objects.begin() ;
         object < _objects.end() ; object++)
     {
-        auto shader = _shaderMap.find((*object)->getId());
+        auto shader = _shaderMap.find((*object)->getID());
         if (shader != _shaderMap.end())
         {
-            (*object)->draw(_shaderMap[(*object)->getId()]);
+            (*object)->draw(_shaderMap[(*object)->getID()]);
         }
         else
         {
@@ -149,7 +149,7 @@ int EnvMap::_readMap()
 
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, _width, _height, 0, GL_RGB, GL_FLOAT, _data);
 
-    return 0;
+    return _textureID;
 }
 
 int EnvMap::_writeMap()
@@ -252,7 +252,7 @@ int PrecomputeMap::_readMap()
         read = EnvMap::_readMap();
     }
 
-    if (read == 0)
+    if (read > 0)
     {
         std::cout << "Read diffuse map cache from " << _filename << std::endl;
     }
@@ -503,8 +503,11 @@ void ObjGeometry::doDraw()
 
     // Enable vertex arrays
     glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_NORMAL_ARRAY);
 
     glVertexPointer(3, GL_FLOAT, sizeof(glm::vec3), &_vertices[0]);
+    glNormalPointer(GL_FLOAT, sizeof(glm::vec3), &_normals[0]);
+    //glTexCoordPointer(3, GL_FLOAT, sizeof(glm::vec3), &_uvs[0]);
 
     check_gl_error();
     glDrawArrays(GL_TRIANGLES, 0, _vertices.size());
@@ -546,29 +549,31 @@ int ObjGeometry::_readGeom()
             vertex.z = vertex.z;
             tempVertices.push_back(vertex);
         }
+        else if (line.find("vn ") == 0)
+        {
+            glm::vec3 normal;
+            linestream >> type >> normal.x >> normal.y >> normal.z;
+            tempNormals.push_back(normal);
+        }
         else if (line.find("vt ") == 0)
         {
             glm::vec2 uv;
             linestream >> type >> uv.x >> uv.y;
             tempUVs.push_back(uv);
         }
-        else if (line.find("n ") == 0)
-        {
-            glm::vec3 normal;
-            linestream >> type >> normal.x >> normal.y >> normal.z;
-            tempNormals.push_back(normal);
-        }
         else if (line.find("f ") == 0)
         {
-            unsigned int vertexIndex[3], uvIndex[3];
+            unsigned int vertexIndex[3], normalIndex[3], uvIndex[3];
             char delim;
-            linestream >> type >> vertexIndex[0] >> delim >> uvIndex[0] >>
-                vertexIndex[1] >> delim >> uvIndex[1] >>
-                vertexIndex[2] >> delim >> uvIndex[2];
+            linestream >> type >>
+                vertexIndex[0] >> delim >> normalIndex[0] >> delim >> uvIndex[0] >>
+                vertexIndex[1] >> delim >> normalIndex[1] >> delim >> uvIndex[1] >>
+                vertexIndex[2] >> delim >> normalIndex[2] >> delim >> uvIndex[2];
 
             for (int i = 0; i < 3; i++)
             {
                 vertexIndices.push_back(vertexIndex[i]);
+                normalIndices.push_back(normalIndex[i]);
                 uvIndices.push_back(uvIndex[i]);
             }
         }
@@ -579,7 +584,7 @@ int ObjGeometry::_readGeom()
         std::cout << "Parsing obj line: " << lineCount << "\r";
     }
     }
-    std::cout << std::endl;
+    std::cout << "Parsing obj line: " << lineCount << std::endl;
     file.close();
 
     std::cout << "Organizing faces." << std::endl;
@@ -589,13 +594,20 @@ int ObjGeometry::_readGeom()
         glm::vec3 vertex = tempVertices[vertexIndex - 1];
         _vertices.push_back(vertex);
     }
-    std::cout << "Organizing uvs." << std::endl;
+    for (unsigned int i = 0; i < normalIndices.size(); i++)
+    {
+        unsigned int normalIndex = normalIndices[i];
+        glm::vec3 normal = tempNormals[normalIndex - 1];
+        _normals.push_back(normal);
+    }
+    /*
     for (unsigned int i = 0; i < uvIndices.size(); i++)
     {
         unsigned int uvIndex = uvIndices[i];
         glm::vec2 uv = tempUVs[uvIndex - 1];
         _uvs.push_back(uv);
     }
+    */
 
     return lineCount;
 }
@@ -872,4 +884,3 @@ void _check_gl_error(const char *file, int line) {
                 err=glGetError();
         }
 }
-

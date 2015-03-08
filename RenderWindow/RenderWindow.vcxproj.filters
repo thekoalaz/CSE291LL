@@ -57,6 +57,12 @@
     <None Include="warp.frag">
       <Filter>Source Files</Filter>
     </None>
+    <None Include="diffuse.vert">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="diffuse.frag">
+      <Filter>Source Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GlutDraw.h">
