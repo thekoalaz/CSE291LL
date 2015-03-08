@@ -52,13 +52,13 @@ int main(int argc, char* argv[])
     cam->setTz(30);
     world.addObject(cam);
 
-    //Scene::Sphere * sphere = new Scene::Sphere();
-    //world.addObject(sphere);
+    Scene::Sphere * sphere = new Scene::Sphere();
+    world.addObject(sphere);
     Scene::Shader * sphereShader = new Scene::Shader("sphere.vert", "sphere.frag");
-    //world.assignShader(sphere, sphereShader);
-    //sphere->setTx(7);
+    world.assignShader(sphere, sphereShader);
+    sphere->setTx(7);
     
-    std::string envmapfile = "grace-mini.hdr";
+    std::string envmapfile = "grace-new.hdr";
     //envmapfile = "half.hdr";
     //envmapfile = "quarter.hdr";
     Scene::EnvMap * envMap = new Scene::EnvMap(envmapfile);
@@ -71,14 +71,49 @@ int main(int argc, char* argv[])
     world.assignShader(envMapVis, envShader);
     envMapVis->setRotx(90);
     envMapVis->setTx(-7);
-    
-    Scene::CookTorranceMap * ctMap = new Scene::CookTorranceMap(*envMapVis, 5, 50, 50);
-    world.addObject(ctMap);
-    ctMap->useCache("test.hdr");
-    world.assignShader(ctMap, envShader);
-    ctMap->setRotx(90);
-    ctMap->setTx(7);
-   
+
+    /*
+    Scene::CookTorranceIcosMap * ctMap00 = new Scene::CookTorranceIcosMap(*envMapVis, 0.3, 0.8, 0);
+    Scene::CookTorranceIcosMap * ctMap01 = new Scene::CookTorranceIcosMap(*envMapVis, 0.3, 0.8, 1);
+    Scene::CookTorranceIcosMap * ctMap02 = new Scene::CookTorranceIcosMap(*envMapVis, 0.3, 0.8, 2);
+    Scene::CookTorranceIcosMap * ctMap03 = new Scene::CookTorranceIcosMap(*envMapVis, 0.3, 0.8, 3);
+    Scene::CookTorranceIcosMap * ctMap04 = new Scene::CookTorranceIcosMap(*envMapVis, 0.3, 0.8, 4);
+    Scene::CookTorranceIcosMap * ctMap05 = new Scene::CookTorranceIcosMap(*envMapVis, 0.3, 0.8, 5);
+    Scene::CookTorranceIcosMap * ctMap06 = new Scene::CookTorranceIcosMap(*envMapVis, 0.3, 0.8, 6);
+    Scene::CookTorranceIcosMap * ctMap07 = new Scene::CookTorranceIcosMap(*envMapVis, 0.3, 0.8, 7);
+    Scene::CookTorranceIcosMap * ctMap08 = new Scene::CookTorranceIcosMap(*envMapVis, 0.3, 0.8, 8);
+    Scene::CookTorranceIcosMap * ctMap09 = new Scene::CookTorranceIcosMap(*envMapVis, 0.3, 0.8, 9);
+    Scene::CookTorranceIcosMap * ctMap10 = new Scene::CookTorranceIcosMap(*envMapVis, 0.3, 0.8, 10);
+    Scene::CookTorranceIcosMap * ctMap11 = new Scene::CookTorranceIcosMap(*envMapVis, 0.3, 0.8, 11);
+    ctMap00->useCache("ctIcos00.hdr");
+    ctMap01->useCache("ctIcos01.hdr");
+    ctMap02->useCache("ctIcos02.hdr");
+    ctMap03->useCache("ctIcos03.hdr");
+    ctMap04->useCache("ctIcos04.hdr");
+    ctMap05->useCache("ctIcos05.hdr");
+    ctMap06->useCache("ctIcos06.hdr");
+    ctMap07->useCache("ctIcos07.hdr");
+    ctMap08->useCache("ctIcos08.hdr");
+    ctMap09->useCache("ctIcos09.hdr");
+    ctMap10->useCache("ctIcos10.hdr");
+    ctMap11->useCache("ctIcos11.hdr");
+    world.addObject(ctMap00);
+    world.addObject(ctMap01);
+    world.addObject(ctMap02);
+    world.addObject(ctMap03);
+    world.addObject(ctMap04);
+    world.addObject(ctMap05);
+    world.addObject(ctMap06);
+    world.addObject(ctMap07);
+    world.addObject(ctMap08);
+    world.addObject(ctMap09);
+    world.addObject(ctMap10);
+    world.addObject(ctMap11);
+    //world.assignShader(ctMap, envShader);
+    //ctMap->setRotx(90);
+    //ctMap->setTx(7);
+    */
+
     /*
     Scene::DiffuseEnvMap * diffuseMap = new Scene::DiffuseEnvMap(*envMapVis, 5, 50, 50);
     world.addObject(diffuseMap);
