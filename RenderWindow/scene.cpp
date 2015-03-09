@@ -3,6 +3,7 @@
 using namespace Scene;
 /** Global variables **/
 int Object::NEXTID = 0;
+int EnvMap::NEXTMAPID = 0;
 
 /* Utility Functions */
 char * textFileRead(const char * fn);
@@ -230,7 +231,7 @@ void EnvMap::bind()
         _readMap();
         _mapReady = true;
     }
-    glActiveTexture(GL_TEXTURE0 + 0);
+    glActiveTexture(GL_TEXTURE0 + _mapId);
     glBindTexture(GL_TEXTURE_2D, _textureID);
 }
 

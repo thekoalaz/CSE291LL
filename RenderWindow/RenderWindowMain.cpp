@@ -66,11 +66,13 @@ int main(int argc, char* argv[])
     Scene::Shader * envShader = new Scene::Shader("tonemap.vert", "tonemap.frag");
     world.assignShader(envMap, envShader);
 
+    /*
     Scene::EnvMap * envMapVis = new Scene::EnvMap(envmapfile, 5,20,20);
     world.addObject(envMapVis);
     world.assignShader(envMapVis, envShader);
     envMapVis->setRotx(90);
     envMapVis->setTx(-7);
+    */
 
     /*
     Scene::CookTorranceIcosMap * ctMap00 = new Scene::CookTorranceIcosMap(*envMapVis, 0.3, 0.8, 0);
@@ -129,6 +131,43 @@ int main(int argc, char* argv[])
     world.assignShader(kevin, sphereShader);
     */
     //world.setEnvMap(diffuseMap);
+
+    /*
+    Scene::EnvMap * radMap00 = new Scene::EnvMap("ctIcos00.hdr");
+    Scene::EnvMap * radMap01 = new Scene::EnvMap("ctIcos01.hdr");
+    Scene::EnvMap * radMap02 = new Scene::EnvMap("ctIcos02.hdr");
+    Scene::EnvMap * radMap03 = new Scene::EnvMap("ctIcos03.hdr");
+    Scene::EnvMap * radMap04 = new Scene::EnvMap("ctIcos04.hdr");
+    Scene::EnvMap * radMap05 = new Scene::EnvMap("ctIcos05.hdr");
+    Scene::EnvMap * radMap06 = new Scene::EnvMap("ctIcos06.hdr");
+    Scene::EnvMap * radMap07 = new Scene::EnvMap("ctIcos07.hdr");
+    Scene::EnvMap * radMap08 = new Scene::EnvMap("ctIcos08.hdr");
+    Scene::EnvMap * radMap09 = new Scene::EnvMap("ctIcos09.hdr");
+    Scene::EnvMap * radMap10 = new Scene::EnvMap("ctIcos10.hdr");
+    Scene::EnvMap * radMap11 = new Scene::EnvMap("ctIcos11.hdr");
+    world.addObject(radMap00);
+    world.addObject(radMap01);
+    world.addObject(radMap02);
+    world.addObject(radMap03);
+    world.addObject(radMap04);
+    world.addObject(radMap05);
+    world.addObject(radMap06);
+    world.addObject(radMap07);
+    world.addObject(radMap08);
+    world.addObject(radMap09);
+    world.addObject(radMap10);
+    world.addObject(radMap11);
+    */
+    Scene::Sphere * ctSphere = new Scene::Sphere(5,100,100);
+    world.addObject(ctSphere);
+    Scene::Shader * ctSphereShader = new Scene::Shader("warp.vert", "warp.frag");
+    
+    //GLint texLoc = glGetUniformLocation(ctSphereShader->getProgram(), "radMaps");
+    //int texInd[12] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
+    //glUniform1iv(texLoc, 12, texInd);
+    world.assignShader(ctSphere, ctSphereShader);
+    ctSphere->setTx(-7);
+    
 
     mainPanel.setWorld(&world);
     mainPanel.setCamera(cam);
