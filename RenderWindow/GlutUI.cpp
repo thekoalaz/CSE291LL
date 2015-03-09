@@ -12,6 +12,7 @@ int UIElement::NEXTID = 0;
 //TODO Hacks. Make sure these are actually the right window and controls.
 Window * mainWindow;
 Controls::Mouse * mainMouse;
+Controls::Keyboard * mainKeyboard;
 
 //char * textFileRead(const char * fn);
 
@@ -332,3 +333,56 @@ void Controls::Mouse::motionFuncWrapper(int x, int y)
 }
 
 //TODO Keyboard functions
+void Controls::Keyboard::init()
+{
+    mainKeyboard = this;
+    glutKeyboardFunc(Controls::Keyboard::keyboardFuncWrapper);
+    glutSpecialFunc(Controls::Keyboard::keyboardSpecialFuncWrapper);
+}
+
+void Controls::Keyboard::keyPress(unsigned char key, int x, int y)
+{
+    switch(key)
+    {
+    case 'q':
+        exit(0);
+        break;
+    case 'm':
+        std::cout << "Switching to mirror." << std::endl;
+        _panel->getWorld()->setEnvMap((unsigned int) 0);
+        break;
+    case 'd':
+        std::cout << "Switching to mirror." << std::endl;
+        _panel->getWorld()->setEnvMap((unsigned int) 1);
+        break;
+    case 'p':
+        std::cout << "Switching to phong." << std::endl;
+        _panel->getWorld()->setEnvMap((unsigned int) 2);
+        break;
+
+    default:
+        break;
+    }
+
+    glutPostRedisplay();
+}
+
+void Controls::Keyboard::specialPress(int key, int x, int y)
+{
+    switch(key)
+    {
+    default:
+        break;
+    }
+
+    glutPostRedisplay();
+}
+void Controls::Keyboard::keyboardFuncWrapper(unsigned char key, int x, int y)
+{
+    mainKeyboard->keyPress(key, x, y);
+}
+
+void Controls::Keyboard::keyboardSpecialFuncWrapper(int key, int x, int y)
+{
+    mainKeyboard->specialPress(key, x, y);
+}

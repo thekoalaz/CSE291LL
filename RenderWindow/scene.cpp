@@ -30,18 +30,23 @@ void World::addObject(Camera * cam)
 
 void World::addObject(EnvMap * envMap)
 {
+    _objects.push_back(envMap);
+    envMap->setWorld(this);
+    _envMaps.push_back(envMap);
+
     if (_envMap == nullptr)
     {
-        _objects.push_back(envMap);
-        envMap->setWorld(this);
         setEnvMap(envMap);
     }
     else
     {
         std::cout << "Env map already set!" << std::endl;
-        _objects.push_back(envMap);
-        envMap->setWorld(this);
     }
+}
+
+void World::setEnvMap(unsigned int index)
+{
+    if (index < _envMaps.size()) _envMap = _envMaps[index];
 }
 
 void World::setEnvMap(EnvMap * envMap)
@@ -258,6 +263,8 @@ int ObjGeometry::_readGeom()
     std::vector< glm::vec2 > tempUVs;
     std::vector< glm::vec3 > tempNormals;
     int lineCount=0;
+    int faceCount=0;
+    int vertCount=0;
 
     std::ifstream file;
     file.open(_filename, std::ios::in);
@@ -280,6 +287,7 @@ int ObjGeometry::_readGeom()
             vertex.y = vertex.y;
             vertex.z = vertex.z;
             tempVertices.push_back(vertex);
+            vertCount++;
         }
         else if (line.find("vn ") == 0)
         {
@@ -308,6 +316,7 @@ int ObjGeometry::_readGeom()
                 normalIndices.push_back(normalIndex[i]);
                 uvIndices.push_back(uvIndex[i]);
             }
+            faceCount++;
         }
 
         lineCount++;
@@ -316,10 +325,9 @@ int ObjGeometry::_readGeom()
         std::cout << "Parsing obj line: " << lineCount << "\r";
     }
     }
-    std::cout << "Parsing obj line: " << lineCount << std::endl;
+    std::cout << "Parsed " << lineCount << " lines Verts: " << vertCount << " Triangles: " << faceCount << std::endl;
     file.close();
 
-    std::cout << "Organizing faces." << std::endl;
     for (unsigned int i = 0; i < vertexIndices.size(); i++)
     {
         unsigned int vertexIndex = vertexIndices[i];
@@ -332,14 +340,12 @@ int ObjGeometry::_readGeom()
         glm::vec3 normal = tempNormals[normalIndex - 1];
         _normals.push_back(normal);
     }
-    /*
     for (unsigned int i = 0; i < uvIndices.size(); i++)
     {
         unsigned int uvIndex = uvIndices[i];
         glm::vec2 uv = tempUVs[uvIndex - 1];
         _uvs.push_back(uv);
     }
-    */
 
     return lineCount;
 }

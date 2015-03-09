@@ -11,7 +11,7 @@ int main(int argc, char* argv[])
     MANAGER.init(argc, argv);
 
     GlutUI::Window & mainWindow = MANAGER.createWindow(640,480, "Render Window");
-    GlutUI::Panel & mainPanel = MANAGER.createPanel(mainWindow, 640,480, "TestPanel");
+    GlutUI::Panel & mainPanel = MANAGER.createPanel(mainWindow, 640,480, "Render Panel");
     Scene::World world = Scene::createWorld();
     std::cout << std::string((char *) glGetString(GL_VENDOR)) << std::endl;
     std::cout << std::string((char *) glGetString(GL_RENDERER)) << std::endl;
@@ -85,15 +85,15 @@ int main(int argc, char* argv[])
     ctMap->setTx(7);
     */
 
-    //Scene::DiffuseEnvMap * diffuseMap = new Scene::DiffuseEnvMap(*envMap, 5, 50, 50);
-    //world.addObject(diffuseMap);
-    //diffuseMap->useCache("test_diffuse.hdr");
-    //world.assignShader(diffuseMap, envShader);
-    //diffuseMap->setRotx(90);
-    //diffuseMap->setXSkip(64);
-    //diffuseMap->setYSkip(8);
-    //diffuseMap->setVisible(false);
-    //world.setEnvMap(diffuseMap);
+    Scene::DiffuseEnvMap * diffuseMap = new Scene::DiffuseEnvMap(*envMap, 5, 50, 50);
+    world.addObject(diffuseMap);
+    diffuseMap->useCache("test_diffuse.hdr");
+    world.assignShader(diffuseMap, envShader);
+    diffuseMap->setRotx(90);
+    diffuseMap->setXSkip(64);
+    diffuseMap->setYSkip(8);
+    diffuseMap->setVisible(false);
+    world.setEnvMap(diffuseMap);
 
     Scene::PhongEnvMap * phongMap = new Scene::PhongEnvMap(*envMap, 5, 50, 50);
     phongMap->setSpecCoeffecient(80);
@@ -169,7 +169,9 @@ int main(int argc, char* argv[])
 
     mainPanel.setWorld(&world);
     mainPanel.setCamera(cam);
-    GlutUI::Controls::Mouse(mainPanel.getCamera());
+
+    GlutUI::Controls::Keyboard keyboard(&mainPanel);
+    GlutUI::Controls::Mouse mouse(&mainPanel, mainPanel.getCamera());
 
     MANAGER.drawElements();
 

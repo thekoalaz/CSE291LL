@@ -378,12 +378,14 @@ public:
 
     Camera * getCam() { return _cam; }
     EnvMap * getEnvMap() { return _envMap; }
+    void setEnvMap(unsigned int);
     void setEnvMap(EnvMap *);
 
     void draw();
 private:
     std::vector<Object *> _objects;
     std::unordered_map<int, Shader *> _shaderMap;
+    std::vector<EnvMap *> _envMaps;
 
     Camera * _cam;
     EnvMap * _envMap;
