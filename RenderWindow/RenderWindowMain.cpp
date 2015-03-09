@@ -36,11 +36,12 @@ int main(int argc, char* argv[])
     Scene::Shader * envShader = new Scene::Shader("tonemap_vert.glsl", "tonemap_frag.glsl");
     world.assignShader(envMap, envShader);
 
-    Scene::Sphere * sphere = new Scene::Sphere();
-    world.addObject(sphere);
     Scene::Shader * sphereShader = new Scene::Shader("sphere_vert.glsl", "sphere_frag.glsl");
-    world.assignShader(sphere, sphereShader);
+
+    Scene::Sphere * sphere = new Scene::Sphere();
     sphere->setTx(7);
+    world.addObject(sphere);
+    world.assignShader(sphere, sphereShader);
 
     /*
     Scene::CookTorranceIcosMap * ctMap00 = new Scene::CookTorranceIcosMap(*envMapVis, 0.3, 0.8, 0);
@@ -84,22 +85,24 @@ int main(int argc, char* argv[])
     ctMap->setTx(7);
     */
 
-    Scene::DiffuseEnvMap * diffuseMap = new Scene::DiffuseEnvMap(*envMap, 5, 50, 50);
-    world.addObject(diffuseMap);
-    diffuseMap->useCache("test_diffuse.hdr");
-    world.assignShader(diffuseMap, envShader);
-    diffuseMap->setRotx(90);
-    diffuseMap->setTx(7);
-    diffuseMap->setVisible(false);
-    world.setEnvMap(diffuseMap);
+    //Scene::DiffuseEnvMap * diffuseMap = new Scene::DiffuseEnvMap(*envMap, 5, 50, 50);
+    //world.addObject(diffuseMap);
+    //diffuseMap->useCache("test_diffuse.hdr");
+    //world.assignShader(diffuseMap, envShader);
+    //diffuseMap->setRotx(90);
+    //diffuseMap->setXSkip(64);
+    //diffuseMap->setYSkip(8);
+    //diffuseMap->setVisible(false);
+    //world.setEnvMap(diffuseMap);
 
     Scene::PhongEnvMap * phongMap = new Scene::PhongEnvMap(*envMap, 5, 50, 50);
     phongMap->setSpecCoeffecient(80);
     world.addObject(phongMap);
     phongMap->useCache("test_phong.hdr");
     world.assignShader(phongMap, envShader);
+    phongMap->setXSkip(64);
+    phongMap->setYSkip(8);
     phongMap->setRotx(90);
-    phongMap->setTx(7);
     phongMap->setVisible(false);
     world.setEnvMap(phongMap);
 
@@ -161,20 +164,12 @@ int main(int argc, char* argv[])
     //glUniform1i(radMapLocation10, radMap10->_getTextureID());
     //glUniform1i(radMapLocation11, radMap11->_getTextureID());
     //world.assignShader(ctSphere, ctSphereShader);
+    //world.assignShader(ctSphere, sphereShader);
     //ctSphere->setTx(-7);
 
     mainPanel.setWorld(&world);
     mainPanel.setCamera(cam);
     GlutUI::Controls::Mouse(mainPanel.getCamera());
-
-    /* New window test*/
-    //GlutUI::Window & renderWindow = MANAGER.createWindow(320,480, "RenderWindow");
-    //GlutUI::Panel & renderPanel = MANAGER.createPanel(renderWindow, 320,480, "RenderPanel");
-    //Scene::World renderWorld = Scene::createWorld();
-    //renderPanel.setWorld(&renderWorld);
-    //renderPanel.setCamera(new Scene::Camera());
-
-    //GlutUI::Button & renderButton = MANAGER.createButton(renderPanel, 80, 20, 10, 10, "RenderButton");
 
     MANAGER.drawElements();
 

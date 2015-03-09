@@ -267,8 +267,8 @@ public:
     void useCache(std::string filename) { _cached = true; _filename = filename; }
     void disableCache() { _cached = false; }
 
-    int setXSkip(int xSkip) { _xSkip = xSkip; }
-    int setYSkip(int ySkip) { _ySkip = ySkip; }
+    void setXSkip(int xSkip) { _xSkip = xSkip; }
+    void setYSkip(int ySkip) { _ySkip = ySkip; }
 
 protected:
     virtual int _readMap();

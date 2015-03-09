@@ -92,6 +92,11 @@ void Object::draw()
 
 void Object::draw(Shader * shader)
 {
+    if (!_visible)
+    {
+        return;
+    }
+
     glPushMatrix();
     glTranslated(_tx, _ty, _tz);
     glRotated(_rotx,1,0,0);
@@ -201,8 +206,11 @@ void Sphere::doDraw()
 
     envMap->bind();
 
-    GLint texLoc = glGetUniformLocation(shader->getProgram(), "envMap");
-    glUniform1i(texLoc, envMap->_getTextureID());
+    if (shader != nullptr)
+    {
+        GLint texLoc = glGetUniformLocation(shader->getProgram(), "envMap");
+        glUniform1i(texLoc, envMap->_getTextureID());
+    }
 
     GlutDraw::drawSphere(_r,_n,_m);
 
@@ -223,8 +231,11 @@ void ObjGeometry::doDraw()
     envMap->bind();
 
     //TODO Move this to the shader.
-    GLint texLoc = glGetUniformLocation(shader->getProgram(), "envMap");
-    glUniform1i(texLoc, envMap->_getTextureID());
+    if (shader != nullptr)
+    {
+        GLint texLoc = glGetUniformLocation(shader->getProgram(), "envMap");
+        glUniform1i(texLoc, envMap->_getTextureID());
+    }
 
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_NORMAL_ARRAY);
@@ -442,7 +453,7 @@ void DiffuseEnvMap::_precomputeMap()
     for (int jj = 0; jj < _height-_height%_ySkip+_ySkip ; jj += _ySkip)
     {
         int j = std::min(jj,_height-1);
-        std::cout << "We're on y " << j << "\r";
+        std::cout << "We're on height " << j << "/" << _height << "\r";
         double phiN = M_PI*(double)j / (double)_height;
         double yN = cos(phiN);
         for (int i = 0; i < _width; i += _xSkip)
@@ -515,7 +526,6 @@ void DiffuseEnvMap::_precomputeMap()
             _setPixelB(i, j, B);;
         }
     }
-
 }
 
 
