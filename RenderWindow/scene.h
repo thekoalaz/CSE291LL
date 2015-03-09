@@ -95,6 +95,7 @@ private:
     bool _initialized;
 
     void _initShaders();
+    int _checkShaderError(GLuint);
 };
 
 class Object

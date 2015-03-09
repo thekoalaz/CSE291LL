@@ -647,9 +647,12 @@ void Shader::_initShaders()
         glShaderSource(_vertex, 1, &vv,NULL);
         free(vs);
         glCompileShader(_vertex);
-        glAttachShader(_program,_vertex);
+        if (_checkShaderError(_vertex) == 0)
+        {
+            std::cout << _vertfile << " compiled successfully." << std::endl;
+            glAttachShader(_program,_vertex);
+        }
     }
-
     if (_fragfile != "")
     {
         _frag = glCreateShader(GL_FRAGMENT_SHADER);
@@ -658,7 +661,11 @@ void Shader::_initShaders()
         glShaderSource(_frag, 1, &ff, NULL);
         free(fs);
         glCompileShader(_frag);
-        glAttachShader(_program, _frag);
+        if (_checkShaderError(_frag) == 0)
+        {
+            std::cout << _fragfile << " compiled successfully." << std::endl;
+            glAttachShader(_program, _frag);
+        }
     }
 
     glLinkProgram(_program);
@@ -667,6 +674,22 @@ void Shader::_initShaders()
     glDetachShader(_program, _frag);
     glDeleteShader(_vertex);
     glDeleteShader(_frag);
+}
+
+int Shader::_checkShaderError(GLuint shader)
+{
+    GLint result = 0;
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &result);
+
+    if (result == GL_TRUE) return 0;
+
+    GLint logsize = 0;
+    char * log;
+    glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &logsize);
+    log = (char *) malloc(logsize + 1);
+    glGetShaderInfoLog(shader, logsize, &result, log);
+
+    std::cout << log << std::endl;
 }
 
 void Shader::link()
