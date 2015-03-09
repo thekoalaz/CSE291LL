@@ -95,6 +95,7 @@ private:
     bool _initialized;
 
     void _initShaders();
+    int _checkShaderError(GLuint);
 };
 
 class Object
@@ -102,10 +103,10 @@ class Object
 public:
 /* Constructors */
     Object() : _tx(0), _ty(0), _tz(0), _rotx(0), _roty(0), _rotz(0), _visible(true)
-        { _objectId = nextId(); }
+        { _objectID = nextID(); }
     Object(double tx, double ty, double tz, double rotx, double roty, double rotz) : _tx(tx), _ty(ty), _tz(tz),
         _rotx(rotx), _roty(roty), _rotz(rotz), _visible(true)
-        { _objectId = nextId(); }
+        { _objectID = nextID(); }
     void draw();
     void draw(Shader *);
     virtual void doDraw() = 0;
@@ -119,7 +120,7 @@ public:
     double getRotz() { return _rotz; } const
     bool getVisible() { return _visible; } const
     World* getWorld() { return _world; } const
-    int getId() { return _objectId; } const
+    int getID() { return _objectID; } const
 
     /* setters */
     void setTx(double tx) { _tx = tx; }
@@ -132,11 +133,11 @@ public:
     void setWorld(World * world) { _world = world; }
 
     /* Single line functions */
-    int nextId() { return NEXTID++; }
+    int nextID() { return NEXTID++; }
 
 protected:
     World * _world;
-    int _objectId;
+    int _objectID;
     double _tx, _ty, _tz;
     double _rotx, _roty, _rotz;
     bool _visible;
@@ -322,13 +323,22 @@ public:
     ObjGeometry(std::string filename) : Object() { _filename = filename; };
     void doDraw();
 
+    ~ObjGeometry()
+    {
+        glBindVertexArray(0);
+        glDeleteVertexArrays(1, &_vertexArrayID);
+    }
+
 private:
     bool _geomReady;
     int _readGeom();
 
     std::string _filename;
     std::vector<glm::vec3> _vertices;
+    std::vector<glm::vec3> _normals;
     std::vector<glm::vec2> _uvs;
+
+    GLuint _vertexArrayID;
 };
 
 class World
@@ -360,3 +370,21 @@ private:
 World & createWorld();
 
 };
+
+// Utility functions
+char * textFileRead(const char);
+
+// From http://blog.nobel-joergensen.com/2013/01/29/debugging-opengl-using-glgeterror/
+#ifndef GLERROR_H
+#define GLERROR_H
+ 
+void _check_gl_error(const char *file, int line);
+ 
+///
+/// Usage
+/// [... some opengl calls]
+/// glCheckError();
+///
+#define check_gl_error() _check_gl_error(__FILE__,__LINE__)
+ 
+#endif // GLERROR_H

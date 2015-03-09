@@ -51,11 +51,11 @@ void World::setEnvMap(EnvMap * envMap)
 
 void World::assignShader(Object * obj, Shader * shader)
 {
-    _shaderMap[obj->getId()] = shader;
+    _shaderMap[obj->getID()] = shader;
 }
 Shader * World::findShader(Object * obj)
 {
-    return _shaderMap[obj->getId()];
+    return _shaderMap[obj->getID()];
 }
 
 void World::draw()
@@ -63,10 +63,10 @@ void World::draw()
     for(std::vector<Object *>::const_iterator object = _objects.begin() ;
         object < _objects.end() ; object++)
     {
-        auto shader = _shaderMap.find((*object)->getId());
+        auto shader = _shaderMap.find((*object)->getID());
         if (shader != _shaderMap.end())
         {
-            (*object)->draw(_shaderMap[(*object)->getId()]);
+            (*object)->draw(_shaderMap[(*object)->getID()]);
         }
         else
         {
@@ -77,6 +77,11 @@ void World::draw()
 
 void Object::draw()
 {
+    if (!_visible)
+    {
+        return;
+    }
+
     glPushMatrix();
     glTranslated(_tx, _ty, _tz);
     glRotated(_rotx,1,0,0);
@@ -145,7 +150,7 @@ int EnvMap::_readMap()
 
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, _width, _height, 0, GL_RGB, GL_FLOAT, _data);
 
-    return 0;
+    return _textureID;
 }
 
 int EnvMap::_writeMap()
@@ -248,7 +253,7 @@ int PrecomputeMap::_readMap()
         read = EnvMap::_readMap();
     }
 
-    if (read == 0)
+    if (read > 0)
     {
         std::cout << "Read diffuse map cache from " << _filename << std::endl;
     }
@@ -284,12 +289,12 @@ void PhongEnvMap::_precomputeMap()
     _height = _envMap._getHeight();
     _data = new float[3 * _width * (_height/2)];
 
-        int s = 5; // Phong exponent
+    int s = 5; // Phong exponent
     int xStep = 1;
     int yStep = xStep;
-        int xSkip = 256;
-        int ySkip = 64;
-        double a = (1+s) * M_PI / (double)(_width*_height) * (double)(xStep * yStep);
+    int xSkip = 256;
+    int ySkip = 64;
+    double a = (1+s) * M_PI / (double)(_width*_height) * (double)(xStep * yStep);
     
     for (int jj = 0; jj < _height-_height%ySkip+ySkip ; jj += ySkip)
     {
@@ -327,19 +332,19 @@ void PhongEnvMap::_precomputeMap()
             _setPixelR(i, j, a*Rsum);
             _setPixelG(i, j, a*Gsum);
             _setPixelB(i, j, a*Bsum);
-                // if we are at the poles, set row (top or bottom) to the same value, and skip to next row j
+            // if we are at the poles, set row (top or bottom) to the same value, and skip to next row j
             if (j == 0 || j == _height - 1)
             {
                 for (int iPole = 1; iPole < _width; iPole++)
                 {
-                        _setPixelR(iPole, j, a*Rsum);
-                        _setPixelG(iPole, j, a*Gsum);
-                        _setPixelB(iPole, j, a*Bsum);
-        }
-                    break;
-    }
+                    _setPixelR(iPole, j, a*Rsum);
+                    _setPixelG(iPole, j, a*Gsum);
+                    _setPixelB(iPole, j, a*Bsum);
+                }
+                break;
             }
         }
+    }
 
     // interpolate if integration was not done on that patch
     for (int i = 0; i < _width; i++)
@@ -484,13 +489,34 @@ void Sphere::doDraw()
 
 void ObjGeometry::doDraw()
 {
-    if (!_geomReady) _readGeom();
+    if (!_geomReady)
+    {
+        _readGeom();
+        _geomReady = true;
+    }
 
-    glBufferData(GL_ARRAY_BUFFER, _vertices.size() * sizeof(glm::vec3), &_vertices[0], GL_STATIC_DRAW);
+    Shader * shader = _world->findShader(this);
+    EnvMap * envMap = _world->getEnvMap();
 
+//    envMap->bind();
+    // Enable vertex arrays
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_NORMAL_ARRAY);
+
+    glVertexPointer(3, GL_FLOAT, 0, &_vertices[0]);
+    glNormalPointer(GL_FLOAT, 0, &_normals[0]);
+    //glTexCoordPointer(3, GL_FLOAT, sizeof(glm::vec3), &_uvs[0]);
+
+    check_gl_error();
+    glDrawArrays(GL_TRIANGLES, 0, _vertices.size());
+
+
+//    Doesn't work yet.
+//    envMap->unbind();
     return;
 }
 
+// Adopted from http://www.opengl-tutorial.org/beginners-tutorials/tutorial-7-model-loading/
 int ObjGeometry::_readGeom()
 {
     std::vector< unsigned int > vertexIndices, uvIndices, normalIndices;
@@ -516,7 +542,16 @@ int ObjGeometry::_readGeom()
         {
             glm::vec3 vertex;
             linestream >> type >> vertex.x >> vertex.y >> vertex.z;
+            vertex.x = vertex.x;
+            vertex.y = vertex.y;
+            vertex.z = vertex.z;
             tempVertices.push_back(vertex);
+        }
+        else if (line.find("vn ") == 0)
+        {
+            glm::vec3 normal;
+            linestream >> type >> normal.x >> normal.y >> normal.z;
+            tempNormals.push_back(normal);
         }
         else if (line.find("vt ") == 0)
         {
@@ -524,45 +559,53 @@ int ObjGeometry::_readGeom()
             linestream >> type >> uv.x >> uv.y;
             tempUVs.push_back(uv);
         }
-        else if (line.find("n ") == 0)
-        {
-            glm::vec3 normal;
-            linestream >> type >> normal.x >> normal.y >> normal.z;
-            tempNormals.push_back(normal);
-        }
         else if (line.find("f ") == 0)
         {
-            unsigned int vertexIndex[4], uvIndex[4];
+            unsigned int vertexIndex[3], normalIndex[3], uvIndex[3];
             char delim;
-            linestream >> type >> vertexIndex[0] >> delim >> uvIndex[0] >>
-                vertexIndex[1] >> delim >> uvIndex[1] >>
-                vertexIndex[2] >> delim >> uvIndex[2] >>
-                vertexIndex[3] >> delim >> uvIndex[3];
+            linestream >> type >>
+                vertexIndex[0] >> delim >> uvIndex[0] >> delim >> normalIndex[0] >>
+                vertexIndex[1] >> delim >> uvIndex[1] >> delim >> normalIndex[1] >>
+                vertexIndex[2] >> delim >> uvIndex[2] >> delim >> normalIndex[2];
 
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < 3; i++)
             {
                 vertexIndices.push_back(vertexIndex[i]);
+                normalIndices.push_back(normalIndex[i]);
                 uvIndices.push_back(uvIndex[i]);
             }
         }
 
         lineCount++;
+        if (lineCount % 1000 == 0)
+        {
         std::cout << "Parsing obj line: " << lineCount << "\r";
     }
+    }
+    std::cout << "Parsing obj line: " << lineCount << std::endl;
     file.close();
 
+    std::cout << "Organizing faces." << std::endl;
     for (unsigned int i = 0; i < vertexIndices.size(); i++)
     {
         unsigned int vertexIndex = vertexIndices[i];
         glm::vec3 vertex = tempVertices[vertexIndex - 1];
         _vertices.push_back(vertex);
     }
+    for (unsigned int i = 0; i < normalIndices.size(); i++)
+    {
+        unsigned int normalIndex = normalIndices[i];
+        glm::vec3 normal = tempNormals[normalIndex - 1];
+        _normals.push_back(normal);
+    }
+    /*
     for (unsigned int i = 0; i < uvIndices.size(); i++)
     {
         unsigned int uvIndex = uvIndices[i];
         glm::vec2 uv = tempUVs[uvIndex - 1];
         _uvs.push_back(uv);
     }
+    */
 
     return lineCount;
 }
@@ -605,9 +648,12 @@ void Shader::_initShaders()
         glShaderSource(_vertex, 1, &vv,NULL);
         free(vs);
         glCompileShader(_vertex);
-        glAttachShader(_program,_vertex);
+        if (_checkShaderError(_vertex) == 0)
+        {
+            std::cout << _vertfile << " compiled successfully." << std::endl;
+            glAttachShader(_program,_vertex);
+        }
     }
-
     if (_fragfile != "")
     {
         _frag = glCreateShader(GL_FRAGMENT_SHADER);
@@ -616,7 +662,11 @@ void Shader::_initShaders()
         glShaderSource(_frag, 1, &ff, NULL);
         free(fs);
         glCompileShader(_frag);
-        glAttachShader(_program, _frag);
+        if (_checkShaderError(_frag) == 0)
+        {
+            std::cout << _fragfile << " compiled successfully." << std::endl;
+            glAttachShader(_program, _frag);
+        }
     }
 
     glLinkProgram(_program);
@@ -627,6 +677,22 @@ void Shader::_initShaders()
     glDeleteShader(_frag);
 }
 
+int Shader::_checkShaderError(GLuint shader)
+{
+    GLint result = 0;
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &result);
+
+    if (result == GL_TRUE) return 0;
+
+    GLint logsize = 0;
+    char * log;
+    glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &logsize);
+    log = (char *) malloc(logsize + 1);
+    glGetShaderInfoLog(shader, logsize, &result, log);
+
+    std::cout << log << std::endl;
+}
+
 void Shader::link()
 {
     glUseProgram(_program);
@@ -635,33 +701,6 @@ void Shader::link()
 void Shader::unlink()
 {
     glUseProgram(0);
-}
-
-/* Utility Functions */
-char * textFileRead(const char * fn)
-{
-    FILE * fp;
-    char * content = nullptr;
-
-    int count = 0;
-    if (fn != nullptr)
-    {
-        fopen_s(&fp, fn, "rt");
-        if (fp != nullptr)
-        {
-            fseek(fp, 0, SEEK_END);
-            count = ftell(fp);
-            rewind(fp);
-            if (count > 0)
-            {
-                content = (char *) malloc(sizeof(char) * (count + 1));
-                count = fread(content, sizeof(char), count, fp);
-                content[count] = '\0';
-            }
-            fclose(fp);
-        }
-    }
-    return content;
 }
 
 glm::mat3 R_alignAxes(glm::vec3 X1, glm::vec3 Y1, glm::vec3 Z1, glm::vec3 X2, glm::vec3 Y2, glm::vec3 Z2) {
@@ -819,4 +858,50 @@ void CookTorranceIcosMap::_precomputeMap()
             _setPixelB(i, j, a*Bsum);
         }
     }
+}
+
+/* Utility Functions */
+char * textFileRead(const char * fn)
+{
+    FILE * fp;
+    char * content = nullptr;
+
+    int count = 0;
+    if (fn != nullptr)
+    {
+        fopen_s(&fp, fn, "rt");
+        if (fp != nullptr)
+        {
+            fseek(fp, 0, SEEK_END);
+            count = ftell(fp);
+            rewind(fp);
+            if (count > 0)
+            {
+                content = (char *) malloc(sizeof(char) * (count + 1));
+                count = fread(content, sizeof(char), count, fp);
+                content[count] = '\0';
+            }
+            fclose(fp);
+        }
+    }
+    return content;
+}
+
+void _check_gl_error(const char *file, int line) {
+        GLenum err (glGetError());
+ 
+        while(err!=GL_NO_ERROR) {
+                std::string error;
+ 
+                switch(err) {
+                        case GL_INVALID_OPERATION:      error="INVALID_OPERATION";      break;
+                        case GL_INVALID_ENUM:           error="INVALID_ENUM";           break;
+                        case GL_INVALID_VALUE:          error="INVALID_VALUE";          break;
+                        case GL_OUT_OF_MEMORY:          error="OUT_OF_MEMORY";          break;
+                        case GL_INVALID_FRAMEBUFFER_OPERATION:  error="INVALID_FRAMEBUFFER_OPERATION";  break;
+                }
+ 
+                std::cerr << "GL_" << error.c_str() <<" - "<<file<<":"<<line<<std::endl;
+                err=glGetError();
+        }
 }
