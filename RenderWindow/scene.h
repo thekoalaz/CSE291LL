@@ -192,19 +192,19 @@ public:
 /* Constructors */
     EnvMap() :
         Sphere(1000.0, 20, 20), _filename(DEFAULT_ENV_MAP), _mapReady(false) {
-        _mapId = nextMapId();
+        _textureID = nextTextureID();
     }
     EnvMap(std::string  filename) :
         Sphere(1000.0, 20, 20), _filename(filename), _mapReady(false) {
-        _mapId = nextMapId();
+        _textureID = nextTextureID();
     }
     EnvMap(double radius, int n, int m) :
         Sphere(radius, n, m), _filename(DEFAULT_ENV_MAP), _mapReady(false) {
-        _mapId = nextMapId();
+        _textureID = nextTextureID();
     }
     EnvMap(std::string  filename, double radius, int n, int m) :
         Sphere(radius, n, m), _filename(filename), _mapReady(false) {
-        _mapId = nextMapId();
+        _textureID = nextTextureID();
     }
 
     virtual void doDraw();
@@ -221,13 +221,14 @@ public:
     const float _getPixelB(double x, double y) { return _bilinearInterpolate(&_data[2], x, y); };
     const int _getWidth() { return _width; };
     const int _getHeight() { return _height; };
-    const int _getMapId() { return _mapId; };
-    int nextMapId() { return NEXTMAPID++; };
+    const int _getTextureID() { return _textureID; };
+    int nextTextureID() { return NEXTTEXTUREID++; };
 
 /* Destructors */
     ~EnvMap() { if(_data != nullptr) delete _data; }
 
 protected:
+    bool _mapReady;
     virtual int _readMap();
     int _writeMap();
     int _writeMap(std::string filename);
@@ -239,12 +240,21 @@ protected:
     int _width, _height;
     GLuint _textureID;
     std::string _filename;
-    int _mapId;
     
 private:
-    bool _mapReady;
     float _bilinearInterpolate(const float * _colors, const double x, const double y);
-    static int NEXTMAPID;
+    static int NEXTTEXTUREID;
+};
+
+class RadMap : public EnvMap
+{
+public:
+    RadMap(std::string  filename) :
+        EnvMap(filename) {
+        _textureID = nextTextureID();
+        _readMap();
+        _mapReady = true;
+    }
 };
 
 class PrecomputeMap : public EnvMap
