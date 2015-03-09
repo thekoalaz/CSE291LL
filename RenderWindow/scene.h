@@ -253,7 +253,7 @@ public:
         EnvMap(filename) {
         _textureID = nextTextureID();
         _readMap();
-        _mapReady = true;
+        setVisible(false);
     }
 };
 

@@ -33,34 +33,28 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <None Include="tonemap.frag">
+    <None Include="diffuse_frag.glsl">
       <Filter>Source Files</Filter>
     </None>
-    <None Include="tonemap.vert">
+    <None Include="diffuse_vert.glsl">
       <Filter>Source Files</Filter>
     </None>
-    <None Include="sphere.vert">
+    <None Include="sphere_frag.glsl">
       <Filter>Source Files</Filter>
     </None>
-    <None Include="sphere.frag">
+    <None Include="sphere_vert.glsl">
       <Filter>Source Files</Filter>
     </None>
-    <None Include="specSphere.frag">
+    <None Include="tonemap_frag.glsl">
       <Filter>Source Files</Filter>
     </None>
-    <None Include="specSphere.vert">
+    <None Include="tonemap_vert.glsl">
       <Filter>Source Files</Filter>
     </None>
-    <None Include="warp.vert">
+    <None Include="warp_frag.glsl">
       <Filter>Source Files</Filter>
     </None>
-    <None Include="warp.frag">
-      <Filter>Source Files</Filter>
-    </None>
-    <None Include="diffuse.vert">
-      <Filter>Source Files</Filter>
-    </None>
-    <None Include="diffuse.frag">
+    <None Include="warp_vert.glsl">
       <Filter>Source Files</Filter>
     </None>
   </ItemGroup>

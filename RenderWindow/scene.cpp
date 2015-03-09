@@ -151,6 +151,8 @@ int EnvMap::_readMap()
 
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, _width, _height, 0, GL_RGB, GL_FLOAT, _data);
 
+    _mapReady = true;
+
     return _textureID;
 }
 
@@ -190,6 +192,145 @@ void EnvMap::doDraw()
 
     glDisable(GL_TEXTURE_2D);
     unbind();
+}
+
+void Sphere::doDraw()
+{
+    Shader * shader = _world->findShader(this);
+    EnvMap * envMap = _world->getEnvMap();
+
+    envMap->bind();
+
+    GLint texLoc = glGetUniformLocation(shader->getProgram(), "envMap");
+    glUniform1i(texLoc, envMap->_getTextureID());
+
+    GlutDraw::drawSphere(_r,_n,_m);
+
+    envMap->unbind();
+}
+
+void ObjGeometry::doDraw()
+{
+    if (!_geomReady)
+    {
+        _readGeom();
+        _geomReady = true;
+    }
+
+    Shader * shader = _world->findShader(this);
+    EnvMap * envMap = _world->getEnvMap();
+
+    envMap->bind();
+
+    //TODO Move this to the shader.
+    GLint texLoc = glGetUniformLocation(shader->getProgram(), "envMap");
+    glUniform1i(texLoc, envMap->_getTextureID());
+
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_NORMAL_ARRAY);
+
+    glVertexPointer(3, GL_FLOAT, 0, &_vertices[0]);
+    glNormalPointer(GL_FLOAT, 0, &_normals[0]);
+
+    check_gl_error();
+    glDrawArrays(GL_TRIANGLES, 0, _vertices.size());
+
+    envMap->unbind();
+    return;
+}
+
+// Adopted from http://www.opengl-tutorial.org/beginners-tutorials/tutorial-7-model-loading/
+int ObjGeometry::_readGeom()
+{
+    std::vector< unsigned int > vertexIndices, uvIndices, normalIndices;
+    std::vector< glm::vec3 > tempVertices;
+    std::vector< glm::vec2 > tempUVs;
+    std::vector< glm::vec3 > tempNormals;
+    int lineCount=0;
+
+    std::ifstream file;
+    file.open(_filename, std::ios::in);
+    if (!file.is_open())
+    {
+        std::cout << "Could not open " << _filename << std::endl;
+        return -1;
+    }
+
+    std::string line;
+    while (std::getline(file, line))
+    {
+        std::istringstream linestream(line);
+        std::string type;
+        if (line.find("v ") == 0)
+        {
+            glm::vec3 vertex;
+            linestream >> type >> vertex.x >> vertex.y >> vertex.z;
+            vertex.x = vertex.x;
+            vertex.y = vertex.y;
+            vertex.z = vertex.z;
+            tempVertices.push_back(vertex);
+        }
+        else if (line.find("vn ") == 0)
+        {
+            glm::vec3 normal;
+            linestream >> type >> normal.x >> normal.y >> normal.z;
+            tempNormals.push_back(normal);
+        }
+        else if (line.find("vt ") == 0)
+        {
+            glm::vec2 uv;
+            linestream >> type >> uv.x >> uv.y;
+            tempUVs.push_back(uv);
+        }
+        else if (line.find("f ") == 0)
+        {
+            unsigned int vertexIndex[3], normalIndex[3], uvIndex[3];
+            char delim;
+            linestream >> type >>
+                vertexIndex[0] >> delim >> uvIndex[0] >> delim >> normalIndex[0] >>
+                vertexIndex[1] >> delim >> uvIndex[1] >> delim >> normalIndex[1] >>
+                vertexIndex[2] >> delim >> uvIndex[2] >> delim >> normalIndex[2];
+
+            for (int i = 0; i < 3; i++)
+            {
+                vertexIndices.push_back(vertexIndex[i]);
+                normalIndices.push_back(normalIndex[i]);
+                uvIndices.push_back(uvIndex[i]);
+            }
+        }
+
+        lineCount++;
+        if (lineCount % 1000 == 0)
+        {
+        std::cout << "Parsing obj line: " << lineCount << "\r";
+    }
+    }
+    std::cout << "Parsing obj line: " << lineCount << std::endl;
+    file.close();
+
+    std::cout << "Organizing faces." << std::endl;
+    for (unsigned int i = 0; i < vertexIndices.size(); i++)
+    {
+        unsigned int vertexIndex = vertexIndices[i];
+        glm::vec3 vertex = tempVertices[vertexIndex - 1];
+        _vertices.push_back(vertex);
+    }
+    for (unsigned int i = 0; i < normalIndices.size(); i++)
+    {
+        unsigned int normalIndex = normalIndices[i];
+        glm::vec3 normal = tempNormals[normalIndex - 1];
+        _normals.push_back(normal);
+    }
+    /*
+    for (unsigned int i = 0; i < uvIndices.size(); i++)
+    {
+        unsigned int uvIndex = uvIndices[i];
+        glm::vec2 uv = tempUVs[uvIndex - 1];
+        _uvs.push_back(uv);
+    }
+    */
+
+    return lineCount;
 }
 
 std::tuple<float, float, float> EnvMap::map(const double theta, const double phi)
@@ -235,7 +376,6 @@ void EnvMap::bind()
     if (!_mapReady)
     {
         _readMap();
-        _mapReady = true;
     }
     glActiveTexture(GL_TEXTURE0 + _textureID);
     glBindTexture(GL_TEXTURE_2D, _textureID);
@@ -243,6 +383,7 @@ void EnvMap::bind()
 
 void EnvMap::unbind()
 {
+    //TODO
 }
 
 int PrecomputeMap::_readMap()
@@ -281,6 +422,9 @@ int PrecomputeMap::_readMap()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, _width, _height, 0, GL_RGB, GL_FLOAT, _data);
+
+    _mapReady = true;
+
     return 0;
 }
 
@@ -471,142 +615,6 @@ World & Scene::createWorld()
 {
     World * new_world = new World();
     return *new_world;
-}
-
-void Sphere::doDraw()
-{
-    Shader * shader = _world->findShader(this);
-    EnvMap * envMap = _world->getEnvMap();
-
-    envMap->bind();
-
-    GlutDraw::drawSphere(_r,_n,_m);
-
-//    Doesn't work yet.
-//    envMap->unbind();
-}
-
-void ObjGeometry::doDraw()
-{
-    if (!_geomReady)
-    {
-        _readGeom();
-        _geomReady = true;
-    }
-
-    Shader * shader = _world->findShader(this);
-    EnvMap * envMap = _world->getEnvMap();
-
-//    envMap->bind();
-    // Enable vertex arrays
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glEnableClientState(GL_NORMAL_ARRAY);
-
-    glVertexPointer(3, GL_FLOAT, 0, &_vertices[0]);
-    glNormalPointer(GL_FLOAT, 0, &_normals[0]);
-    //glTexCoordPointer(3, GL_FLOAT, sizeof(glm::vec3), &_uvs[0]);
-
-    check_gl_error();
-    glDrawArrays(GL_TRIANGLES, 0, _vertices.size());
-
-
-//    Doesn't work yet.
-//    envMap->unbind();
-    return;
-}
-
-// Adopted from http://www.opengl-tutorial.org/beginners-tutorials/tutorial-7-model-loading/
-int ObjGeometry::_readGeom()
-{
-    std::vector< unsigned int > vertexIndices, uvIndices, normalIndices;
-    std::vector< glm::vec3 > tempVertices;
-    std::vector< glm::vec2 > tempUVs;
-    std::vector< glm::vec3 > tempNormals;
-    int lineCount=0;
-
-    std::ifstream file;
-    file.open(_filename, std::ios::in);
-    if (!file.is_open())
-    {
-        std::cout << "Could not open " << _filename << std::endl;
-        return -1;
-    }
-
-    std::string line;
-    while (std::getline(file, line))
-    {
-        std::istringstream linestream(line);
-        std::string type;
-        if (line.find("v ") == 0)
-        {
-            glm::vec3 vertex;
-            linestream >> type >> vertex.x >> vertex.y >> vertex.z;
-            vertex.x = vertex.x;
-            vertex.y = vertex.y;
-            vertex.z = vertex.z;
-            tempVertices.push_back(vertex);
-        }
-        else if (line.find("vn ") == 0)
-        {
-            glm::vec3 normal;
-            linestream >> type >> normal.x >> normal.y >> normal.z;
-            tempNormals.push_back(normal);
-        }
-        else if (line.find("vt ") == 0)
-        {
-            glm::vec2 uv;
-            linestream >> type >> uv.x >> uv.y;
-            tempUVs.push_back(uv);
-        }
-        else if (line.find("f ") == 0)
-        {
-            unsigned int vertexIndex[3], normalIndex[3], uvIndex[3];
-            char delim;
-            linestream >> type >>
-                vertexIndex[0] >> delim >> uvIndex[0] >> delim >> normalIndex[0] >>
-                vertexIndex[1] >> delim >> uvIndex[1] >> delim >> normalIndex[1] >>
-                vertexIndex[2] >> delim >> uvIndex[2] >> delim >> normalIndex[2];
-
-            for (int i = 0; i < 3; i++)
-            {
-                vertexIndices.push_back(vertexIndex[i]);
-                normalIndices.push_back(normalIndex[i]);
-                uvIndices.push_back(uvIndex[i]);
-            }
-        }
-
-        lineCount++;
-        if (lineCount % 1000 == 0)
-        {
-        std::cout << "Parsing obj line: " << lineCount << "\r";
-    }
-    }
-    std::cout << "Parsing obj line: " << lineCount << std::endl;
-    file.close();
-
-    std::cout << "Organizing faces." << std::endl;
-    for (unsigned int i = 0; i < vertexIndices.size(); i++)
-    {
-        unsigned int vertexIndex = vertexIndices[i];
-        glm::vec3 vertex = tempVertices[vertexIndex - 1];
-        _vertices.push_back(vertex);
-    }
-    for (unsigned int i = 0; i < normalIndices.size(); i++)
-    {
-        unsigned int normalIndex = normalIndices[i];
-        glm::vec3 normal = tempNormals[normalIndex - 1];
-        _normals.push_back(normal);
-    }
-    /*
-    for (unsigned int i = 0; i < uvIndices.size(); i++)
-    {
-        unsigned int uvIndex = uvIndices[i];
-        glm::vec2 uv = tempUVs[uvIndex - 1];
-        _uvs.push_back(uv);
-    }
-    */
-
-    return lineCount;
 }
 
 void Shader::_initShaders()
