@@ -128,7 +128,7 @@ int main(int argc, char* argv[])
     Scene::Shader * kevinShader = new Scene::Shader("diffuse.vert", "diffuse.frag");
 
     Scene::ObjGeometry * kevin = new Scene::ObjGeometry("kevin.obj");
-    world.assignShader(kevin, kevinShader);
+    world.assignShader(kevin, sphereShader);
     world.addObject(kevin);
     //world.setEnvMap(diffuseMap);
 

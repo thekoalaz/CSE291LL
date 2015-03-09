@@ -497,16 +497,13 @@ void ObjGeometry::doDraw()
     Shader * shader = _world->findShader(this);
     EnvMap * envMap = _world->getEnvMap();
 
-    envMap->bind();
-    //glGenVertexArrays(1, &_vertexArrayID);
-    //glBindVertexArray(_vertexArrayID);
-
+//    envMap->bind();
     // Enable vertex arrays
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_NORMAL_ARRAY);
 
-    glVertexPointer(3, GL_FLOAT, sizeof(glm::vec3), &_vertices[0]);
-    glNormalPointer(GL_FLOAT, sizeof(glm::vec3), &_normals[0]);
+    glVertexPointer(3, GL_FLOAT, 0, &_vertices[0]);
+    glNormalPointer(GL_FLOAT, 0, &_normals[0]);
     //glTexCoordPointer(3, GL_FLOAT, sizeof(glm::vec3), &_uvs[0]);
 
     check_gl_error();
@@ -566,9 +563,9 @@ int ObjGeometry::_readGeom()
             unsigned int vertexIndex[3], normalIndex[3], uvIndex[3];
             char delim;
             linestream >> type >>
-                vertexIndex[0] >> delim >> normalIndex[0] >> delim >> uvIndex[0] >>
-                vertexIndex[1] >> delim >> normalIndex[1] >> delim >> uvIndex[1] >>
-                vertexIndex[2] >> delim >> normalIndex[2] >> delim >> uvIndex[2];
+                vertexIndex[0] >> delim >> uvIndex[0] >> delim >> normalIndex[0] >>
+                vertexIndex[1] >> delim >> uvIndex[1] >> delim >> normalIndex[1] >>
+                vertexIndex[2] >> delim >> uvIndex[2] >> delim >> normalIndex[2];
 
             for (int i = 0; i < 3; i++)
             {
