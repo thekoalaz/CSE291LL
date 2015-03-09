@@ -75,9 +75,9 @@ class Shader
 {
 public:
 /* Constructors */
-    Shader() : _vertfile(), _fragfile() { };
+    Shader() : _vertfile(), _fragfile(), _initialized(false) { };
     Shader(std::string vertfile, std::string fragfile)
-        : _vertfile(vertfile), _fragfile(fragfile)
+        : _vertfile(vertfile), _fragfile(fragfile), _initialized(false)
         { _initShaders(); };
 
     void link();
@@ -250,24 +250,31 @@ private:
 class PrecomputeMap : public EnvMap
 {
 public:
-    PrecomputeMap(EnvMap & envMap) : EnvMap(), _envMap(envMap) {};
-    PrecomputeMap(EnvMap & envMap, double radius, int n, int m) : EnvMap(radius, n, m), _envMap(envMap) {};
+    PrecomputeMap(EnvMap & envMap) : EnvMap(), _envMap(envMap), _xSkip(256), _ySkip(64) {};
+    PrecomputeMap(EnvMap & envMap, double radius, int n, int m) :
+        EnvMap(radius, n, m), _envMap(envMap), _xSkip(256), _ySkip(64) {};
 
     void useCache(std::string filename) { _cached = true; _filename = filename; }
     void disableCache() { _cached = false; }
 
+    int setXSkip(int xSkip) { _xSkip = xSkip; }
+    int setYSkip(int ySkip) { _ySkip = ySkip; }
+
 protected:
     virtual int _readMap();
     virtual void _precomputeMap() = 0;
+    virtual std::string _mapType() { return "Precompute"; }
 
     EnvMap & _envMap;
     bool _cached;
+    int _xSkip, _ySkip;
 };
 
 class CookTorranceMap : public PrecomputeMap
 {
 public:
-    CookTorranceMap(EnvMap & envMap, float r1, float r2, glm::vec3 v) : _roughness(r1), _reflCoeff(r2), _zAxis(v), PrecomputeMap(envMap) {};
+    CookTorranceMap(EnvMap & envMap, float r1, float r2, glm::vec3 v) :
+        _roughness(r1), _reflCoeff(r2), _zAxis(v), PrecomputeMap(envMap) {};
     CookTorranceMap(EnvMap & envMap, double radius, int n, int m) : _roughness(0.3), _reflCoeff(0.8),
         _zAxis(glm::vec3(Scene::ICOSAHEDRON_VERTS[1][0], Scene::ICOSAHEDRON_VERTS[1][1], Scene::ICOSAHEDRON_VERTS[1][2])),
         PrecomputeMap(envMap, radius, n, m){};
@@ -296,7 +303,6 @@ protected:
 };
 
 
-
 class DiffuseEnvMap : public PrecomputeMap
 {
 public:
@@ -305,16 +311,22 @@ public:
 
 protected:
     void _precomputeMap();
+    std::string _mapType() { return "Diffuse"; }
 };
 
 class PhongEnvMap : public PrecomputeMap
 {
 public:
-    PhongEnvMap(EnvMap & envMap) : PrecomputeMap(envMap) {};
-    PhongEnvMap(EnvMap & envMap, double radius, int n, int m) : PrecomputeMap(envMap, radius, n, m){};
+    PhongEnvMap(EnvMap & envMap) : PrecomputeMap(envMap), _s(15) {};
+    PhongEnvMap(EnvMap & envMap, double radius, int n, int m) : PrecomputeMap(envMap, radius, n, m), _s(15) {};
+
+    void setSpecCoeffecient(int s) { _s = s; }
 
 protected:
+    int _s;
+
     void _precomputeMap();
+    std::string _mapType() { return "Phong"; }
 };
 
 class ObjGeometry : public Object

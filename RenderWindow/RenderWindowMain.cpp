@@ -52,19 +52,17 @@ int main(int argc, char* argv[])
     cam->setTz(30);
     world.addObject(cam);
 
+    std::string envmapfile = "grace-new.hdr";
+    Scene::EnvMap * envMap = new Scene::EnvMap(envmapfile);
+    world.addObject(envMap);
+    Scene::Shader * envShader = new Scene::Shader("tonemap.vert", "tonemap.frag");
+    world.assignShader(envMap, envShader);
+
     Scene::Sphere * sphere = new Scene::Sphere();
     world.addObject(sphere);
     Scene::Shader * sphereShader = new Scene::Shader("sphere.vert", "sphere.frag");
     world.assignShader(sphere, sphereShader);
     sphere->setTx(7);
-    
-    std::string envmapfile = "grace-new.hdr";
-    //envmapfile = "half.hdr";
-    //envmapfile = "quarter.hdr";
-    Scene::EnvMap * envMap = new Scene::EnvMap(envmapfile);
-    world.addObject(envMap);
-    Scene::Shader * envShader = new Scene::Shader("tonemap.vert", "tonemap.frag");
-    world.assignShader(envMap, envShader);
 
     /*
     Scene::EnvMap * envMapVis = new Scene::EnvMap(envmapfile, 5,20,20);
@@ -116,21 +114,30 @@ int main(int argc, char* argv[])
     //ctMap->setTx(7);
     */
 
-    /*
-    Scene::DiffuseEnvMap * diffuseMap = new Scene::DiffuseEnvMap(*envMapVis, 5, 50, 50);
-    world.addObject(diffuseMap);
-    diffuseMap->useCache("test.hdr");
-    world.assignShader(diffuseMap, envShader);
-    diffuseMap->setRotx(90);
-    diffuseMap->setTx(7);
-    */
+    //Scene::DiffuseEnvMap * diffuseMap = new Scene::DiffuseEnvMap(*envMap, 5, 50, 50);
+    //world.addObject(diffuseMap);
+    //diffuseMap->useCache("test_diffuse.hdr");
+    //world.assignShader(diffuseMap, envShader);
+    //diffuseMap->setRotx(90);
+    //diffuseMap->setTx(7);
+    //diffuseMap->setVisible(false);
+    //world.setEnvMap(diffuseMap);
+
+    //Scene::PhongEnvMap * phongMap = new Scene::PhongEnvMap(*envMap, 5, 50, 50);
+    //phongMap->setSpecCoeffecient(80);
+    //world.addObject(phongMap);
+    //phongMap->useCache("test_phong.hdr");
+    //world.assignShader(phongMap, envShader);
+    //phongMap->setRotx(90);
+    //phongMap->setTx(7);
+    //phongMap->setVisible(false);
+    //world.setEnvMap(phongMap);
 
     Scene::Shader * kevinShader = new Scene::Shader("diffuse.vert", "diffuse.frag");
 
     Scene::ObjGeometry * kevin = new Scene::ObjGeometry("kevin.obj");
     world.assignShader(kevin, sphereShader);
     world.addObject(kevin);
-    //world.setEnvMap(diffuseMap);
 
     /*
     Scene::EnvMap * radMap00 = new Scene::EnvMap("ctIcos00.hdr");

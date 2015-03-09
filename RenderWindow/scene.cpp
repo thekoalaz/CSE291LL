@@ -60,17 +60,16 @@ Shader * World::findShader(Object * obj)
 
 void World::draw()
 {
-    for(std::vector<Object *>::const_iterator object = _objects.begin() ;
-        object < _objects.end() ; object++)
+    for(auto object : _objects)
     {
-        auto shader = _shaderMap.find((*object)->getID());
+        auto shader = _shaderMap.find(object->getID());
         if (shader != _shaderMap.end())
         {
-            (*object)->draw(_shaderMap[(*object)->getID()]);
+            object->draw(_shaderMap[object->getID()]);
         }
         else
         {
-            (*object)->draw();
+            object->draw();
         }
     }
 }
@@ -141,6 +140,8 @@ int EnvMap::_readMap()
     {
         return -1;
     }
+
+    std::cout << "Env map " << _filename << " has width: " << _width << " height: " << _height << std::endl;
 
     glGenTextures(1, &_textureID);
     glBindTexture(GL_TEXTURE_2D, _textureID);
@@ -255,12 +256,12 @@ int PrecomputeMap::_readMap()
 
     if (read > 0)
     {
-        std::cout << "Read diffuse map cache from " << _filename << std::endl;
+        std::cout << "Read map cache from " << _filename << std::endl;
     }
     else
     {
         int integrationStart = glutGet(GLUT_ELAPSED_TIME);
-        std::cout << "Starting integration." << std::endl;
+        std::cout << "Starting integration " << _mapType() << std::endl;
         _precomputeMap();
 
         int integrationEnd = glutGet(GLUT_ELAPSED_TIME);
@@ -283,99 +284,6 @@ int PrecomputeMap::_readMap()
     return 0;
 }
 
-void PhongEnvMap::_precomputeMap()
-{
-    _width = _envMap._getWidth();
-    _height = _envMap._getHeight();
-    _data = new float[3 * _width * (_height/2)];
-
-    int s = 5; // Phong exponent
-    int xStep = 1;
-    int yStep = xStep;
-    int xSkip = 256;
-    int ySkip = 64;
-    double a = (1+s) * M_PI / (double)(_width*_height) * (double)(xStep * yStep);
-    
-    for (int jj = 0; jj < _height-_height%ySkip+ySkip ; jj += ySkip)
-    {
-        int j = std::min(jj,_height-1);
-        std::cout << "Integration Progress: y " << j << "\r";
-        double phiN = M_PI*(double)j / (double)_height;
-        double yN = cos(phiN);
-        for (int i = 0; i < _width; i += xSkip)
-        {
-            double thetaN = M_PI*(2 * (double)i / (double)_width - 1);
-            double xN = sin(phiN)*sin(thetaN);
-            double zN = -sin(phiN)*cos(thetaN);
-            double Rsum = 0;
-            double Gsum = 0;
-            double Bsum = 0;
-            for (int l = 0; l < _height; l += yStep)
-            {
-                double phiE = M_PI*(double)l / (double)_height;
-                double yE = cos(phiE);
-                for (int k = 0; k < _width; k += xStep)
-                {
-                    double thetaE = M_PI*(2 * (double)k / (double)_width - 1);
-                    double xE = sin(phiE)*sin(thetaE);
-                    double zE = -sin(phiE)*cos(thetaE);
-                    double R = _envMap._getPixelR(k, l);
-                    double G = _envMap._getPixelG(k, l);
-                    double B = _envMap._getPixelB(k, l);
-                        double cosAng = pow(xE*xN + yE*yN + zE*zN,s);
-                    if (cosAng <= 0) continue;
-                    Rsum += R*cosAng*sin(phiE);
-                    Gsum += G*cosAng*sin(phiE);
-                    Bsum += B*cosAng*sin(phiE);
-                }
-            }
-            _setPixelR(i, j, a*Rsum);
-            _setPixelG(i, j, a*Gsum);
-            _setPixelB(i, j, a*Bsum);
-            // if we are at the poles, set row (top or bottom) to the same value, and skip to next row j
-            if (j == 0 || j == _height - 1)
-            {
-                for (int iPole = 1; iPole < _width; iPole++)
-                {
-                    _setPixelR(iPole, j, a*Rsum);
-                    _setPixelG(iPole, j, a*Gsum);
-                    _setPixelB(iPole, j, a*Bsum);
-                }
-                break;
-            }
-        }
-    }
-
-    // interpolate if integration was not done on that patch
-    for (int i = 0; i < _width; i++)
-    {
-        int i1 = i - i%xSkip;
-        int i2 = i1 + xSkip;
-        double dTheta1 = 2 * M_PI * (double)(i - i1) / _width;
-        double dTheta2 = 2 * M_PI * (double)(i2 - i) / _width;
-        i2 = i2%_width;
-        for (int j = 0; j < _height; j++)
-        {
-            int j1 = j - j%ySkip;
-            int j2 = std::min(j1 + ySkip, _height - 1);
-            double phi = M_PI*(double)j / _height;
-            double phi1 = M_PI*(double)j1 / _height;
-            double phi2 = M_PI*(double)j2 / _height;
-            double a11 = dTheta1*(cos(phi1) - cos(phi));
-            double a12 = dTheta1*(cos(phi) - cos(phi2));
-            double a21 = dTheta2*(cos(phi1) - cos(phi));
-            double a22 = dTheta2*(cos(phi) - cos(phi2));
-            if (j1 == j2) a11, a12, a21, a22 = 1;
-            double A = a11 + a12 + a21 + a22;
-            double R = (a22*_getPixelR(i1, j1) + a21*_getPixelR(i1, j2) + a12*_getPixelR(i2, j1) + a11*_getPixelR(i2, j2)) / A;
-            double G = (a22*_getPixelG(i1, j1) + a21*_getPixelG(i1, j2) + a12*_getPixelG(i2, j1) + a11*_getPixelG(i2, j2)) / A;
-            double B = (a22*_getPixelB(i1, j1) + a21*_getPixelB(i1, j2) + a12*_getPixelB(i2, j1) + a11*_getPixelB(i2, j2)) / A;
-            _setPixelR(i, j, R);
-            _setPixelG(i, j, G);
-            _setPixelB(i, j, B);
-        }
-    }
-}
 
 void DiffuseEnvMap::_precomputeMap()
 {
@@ -385,17 +293,15 @@ void DiffuseEnvMap::_precomputeMap()
 
     int xStep = 1;
     int yStep = xStep;
-    int xSkip = 1;
-    int ySkip = xSkip;
     double a = 2 * M_PI / (double)(_width*_height) * (double)(xStep * yStep);
     
-    for (int jj = 0; jj < _height-_height%ySkip+ySkip ; jj += ySkip)
+    for (int jj = 0; jj < _height-_height%_ySkip+_ySkip ; jj += _ySkip)
     {
         int j = std::min(jj,_height-1);
         std::cout << "We're on y " << j << "\r";
         double phiN = M_PI*(double)j / (double)_height;
         double yN = cos(phiN);
-        for (int i = 0; i < _width; i += xSkip)
+        for (int i = 0; i < _width; i += _xSkip)
         {
             
             double thetaN = M_PI*(2 * (double)i / (double)_width - 1);
@@ -440,14 +346,14 @@ void DiffuseEnvMap::_precomputeMap()
 
     // interpolate if integration was not done on that patch
     for (int i = 0; i < _width; i++){
-        int i1 = i - i%xSkip;
-        int i2 = i1 + xSkip;
+        int i1 = i - i%_xSkip;
+        int i2 = i1 + _xSkip;
         double dTheta1 = 2 * M_PI * (double)(i - i1) / _width;
         double dTheta2 = 2 * M_PI * (double)(i2 - i) / _width;
         i2 = i2%_width;
         for (int j = 0; j < _height; j++){
-            int j1 = j - j%ySkip;
-            int j2 = std::min(j1 + ySkip, _height - 1);
+            int j1 = j - j%_ySkip;
+            int j2 = std::min(j1 + _ySkip, _height - 1);
             double phi = M_PI*(double)j / _height;
             double phi1 = M_PI*(double)j1 / _height;
             double phi2 = M_PI*(double)j2 / _height;
@@ -467,6 +373,99 @@ void DiffuseEnvMap::_precomputeMap()
     }
 
 }
+
+
+void PhongEnvMap::_precomputeMap()
+{
+    _width = _envMap._getWidth();
+    _height = _envMap._getHeight();
+    _data = new float[3 * _width * _height];
+
+    int xStep = 1;
+    int yStep = xStep;
+    double a = (1+_s) * M_PI / (double)(_width*_height) * (double)(xStep * yStep);
+    
+    for (int jj = 0; jj < _height-_height%_ySkip+_ySkip ; jj += _ySkip)
+    {
+        int j = std::min(jj,_height-1);
+        std::cout << "Integration Progress: y " << j << "\r";
+        double phiN = M_PI*(double)j / (double)_height;
+        double yN = cos(phiN);
+        for (int i = 0; i < _width; i += _xSkip)
+        {
+            double thetaN = M_PI*(2 * (double)i / (double)_width - 1);
+            double xN = sin(phiN)*sin(thetaN);
+            double zN = -sin(phiN)*cos(thetaN);
+            double Rsum = 0;
+            double Gsum = 0;
+            double Bsum = 0;
+            for (int l = 0; l < _height; l += yStep)
+            {
+                double phiE = M_PI*(double)l / (double)_height;
+                double yE = cos(phiE);
+                for (int k = 0; k < _width; k += xStep)
+                {
+                    double thetaE = M_PI*(2 * (double)k / (double)_width - 1);
+                    double xE = sin(phiE)*sin(thetaE);
+                    double zE = -sin(phiE)*cos(thetaE);
+                    double R = _envMap._getPixelR(k, l);
+                    double G = _envMap._getPixelG(k, l);
+                    double B = _envMap._getPixelB(k, l);
+                    double cosAng = pow(xE*xN + yE*yN + zE*zN,_s);
+                    if (cosAng <= 0) continue;
+                    Rsum += R*cosAng*sin(phiE);
+                    Gsum += G*cosAng*sin(phiE);
+                    Bsum += B*cosAng*sin(phiE);
+                }
+            }
+            _setPixelR(i, j, a*Rsum);
+            _setPixelG(i, j, a*Gsum);
+            _setPixelB(i, j, a*Bsum);
+            // if we are at the poles, set row (top or bottom) to the same value, and skip to next row j
+            if (j == 0 || j == _height - 1)
+            {
+                for (int iPole = 1; iPole < _width; iPole++)
+                {
+                    _setPixelR(iPole, j, a*Rsum);
+                    _setPixelG(iPole, j, a*Gsum);
+                    _setPixelB(iPole, j, a*Bsum);
+                }
+                break;
+            }
+        }
+    }
+
+    // interpolate if integration was not done on that patch
+    for (int i = 0; i < _width; i++)
+    {
+        int i1 = i - i%_xSkip;
+        int i2 = i1 + _xSkip;
+        double dTheta1 = 2 * M_PI * (double)(i - i1) / _width;
+        double dTheta2 = 2 * M_PI * (double)(i2 - i) / _width;
+        i2 = i2%_width;
+        for (int j = 0; j < _height; j++)
+        {
+            int j1 = j - j%_ySkip;
+            int j2 = std::min(j1 + _ySkip, _height - 1);
+            double phi = M_PI*(double)j / _height;
+            double phi1 = M_PI*(double)j1 / _height;
+            double phi2 = M_PI*(double)j2 / _height;
+            double a11 = dTheta1*(cos(phi1) - cos(phi));
+            double a12 = dTheta1*(cos(phi) - cos(phi2));
+            double a21 = dTheta2*(cos(phi1) - cos(phi));
+            double a22 = dTheta2*(cos(phi) - cos(phi2));
+            if (j1 == j2) a11, a12, a21, a22 = 1;
+            double A = a11 + a12 + a21 + a22;
+            double R = (a22*_getPixelR(i1, j1) + a21*_getPixelR(i1, j2) + a12*_getPixelR(i2, j1) + a11*_getPixelR(i2, j2)) / A;
+            double G = (a22*_getPixelG(i1, j1) + a21*_getPixelG(i1, j2) + a12*_getPixelG(i2, j1) + a11*_getPixelG(i2, j2)) / A;
+            double B = (a22*_getPixelB(i1, j1) + a21*_getPixelB(i1, j2) + a12*_getPixelB(i2, j1) + a11*_getPixelB(i2, j2)) / A;
+            _setPixelR(i, j, R);
+            _setPixelG(i, j, G);
+            _setPixelB(i, j, B);
+        }
+    }
+}
+
 
 World & Scene::createWorld()
 {
@@ -628,7 +627,7 @@ void Shader::_initShaders()
     }
     else if (_initialized)
     {
-        std::cout << "Already initialized." << std::endl;
+        std::cout << "Shader has already initialized." << std::endl;
     }
     else
     {
