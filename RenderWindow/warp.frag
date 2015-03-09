@@ -1,4 +1,4 @@
-uniform sampler2D radMaps[12];
+uniform sampler2D radMaps[2];
 
 varying float V[3];
 varying float w[3];
@@ -12,15 +12,16 @@ vec4 tonemap(vec4 x)
 
 	return vec4(r,g,b,x[3]);
 }
-int V0 = int(V[0]);
-int V1 = int(V[1]);
-int V2 = int(V[2]);
+int V0 = int(V[0])%2;
+int V1 = int(V[1])%2;
+int V2 = int(V[2])%2;
 void main()
 {
-    //vec4 env = w[0]*texture2D(radMaps[V0], uv[0]);
+    vec4 env = w[0]*texture2D(radMaps[V0], uv[0]);
     //env += w[1]*texture2D(radMaps[V1],uv[1]);
     //env += w[2]*texture2D(radMaps[V2],uv[2]); 
     //gl_FragColor = tonemap(env/(w[0]+w[1]+w[2])) * 5;
     float soccer = exp((V[0]-5.5)/2)+exp((V[1]-5.5)/2)+exp((V[2]-5.5)/2);
-    gl_FragColor = tonemap(0.5*vec4(soccer,soccer,soccer,1.0f));
+    //gl_FragColor = tonemap(0.5*vec4(soccer,soccer,soccer,1.0f));
+    gl_FragColor = tonemap(vec4(w[0],w[1],w[2],1.0f));
 }

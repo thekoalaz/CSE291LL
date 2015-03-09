@@ -51,7 +51,7 @@ int main(int argc, char* argv[])
     cam->setTy(0);
     cam->setTz(30);
     world.addObject(cam);
-
+    /*
     Scene::Sphere * sphere = new Scene::Sphere();
     world.addObject(sphere);
     Scene::Shader * sphereShader = new Scene::Shader("sphere.vert", "sphere.frag");
@@ -65,7 +65,7 @@ int main(int argc, char* argv[])
     world.addObject(envMap);
     Scene::Shader * envShader = new Scene::Shader("tonemap.vert", "tonemap.frag");
     world.assignShader(envMap, envShader);
-
+    */
     /*
     Scene::EnvMap * envMapVis = new Scene::EnvMap(envmapfile, 5,20,20);
     world.addObject(envMapVis);
@@ -125,26 +125,27 @@ int main(int argc, char* argv[])
     diffuseMap->setTx(7);
     */
 
+    /*
     Scene::Shader * kevinShader = new Scene::Shader("diffuse.vert", "diffuse.frag");
-
     Scene::ObjGeometry * kevin = new Scene::ObjGeometry("kevin.obj");
     world.assignShader(kevin, sphereShader);
     world.addObject(kevin);
     //world.setEnvMap(diffuseMap);
+    */
 
-    /*
-    Scene::EnvMap * radMap00 = new Scene::EnvMap("ctIcos00.hdr");
-    Scene::EnvMap * radMap01 = new Scene::EnvMap("ctIcos01.hdr");
-    Scene::EnvMap * radMap02 = new Scene::EnvMap("ctIcos02.hdr");
-    Scene::EnvMap * radMap03 = new Scene::EnvMap("ctIcos03.hdr");
-    Scene::EnvMap * radMap04 = new Scene::EnvMap("ctIcos04.hdr");
-    Scene::EnvMap * radMap05 = new Scene::EnvMap("ctIcos05.hdr");
-    Scene::EnvMap * radMap06 = new Scene::EnvMap("ctIcos06.hdr");
-    Scene::EnvMap * radMap07 = new Scene::EnvMap("ctIcos07.hdr");
-    Scene::EnvMap * radMap08 = new Scene::EnvMap("ctIcos08.hdr");
-    Scene::EnvMap * radMap09 = new Scene::EnvMap("ctIcos09.hdr");
-    Scene::EnvMap * radMap10 = new Scene::EnvMap("ctIcos10.hdr");
-    Scene::EnvMap * radMap11 = new Scene::EnvMap("ctIcos11.hdr");
+    
+    Scene::RadMap * radMap00 = new Scene::RadMap("ctIcos00.hdr");
+    Scene::RadMap * radMap01 = new Scene::RadMap("ctIcos01.hdr");
+    Scene::RadMap * radMap02 = new Scene::RadMap("ctIcos02.hdr");
+    Scene::RadMap * radMap03 = new Scene::RadMap("ctIcos03.hdr");
+    Scene::RadMap * radMap04 = new Scene::RadMap("ctIcos04.hdr");
+    Scene::RadMap * radMap05 = new Scene::RadMap("ctIcos05.hdr");
+    Scene::RadMap * radMap06 = new Scene::RadMap("ctIcos06.hdr");
+    Scene::RadMap * radMap07 = new Scene::RadMap("ctIcos07.hdr");
+    Scene::RadMap * radMap08 = new Scene::RadMap("ctIcos08.hdr");
+    Scene::RadMap * radMap09 = new Scene::RadMap("ctIcos09.hdr");
+    Scene::RadMap * radMap10 = new Scene::RadMap("ctIcos10.hdr");
+    Scene::RadMap * radMap11 = new Scene::RadMap("ctIcos11.hdr");
     world.addObject(radMap00);
     world.addObject(radMap01);
     world.addObject(radMap02);
@@ -157,14 +158,35 @@ int main(int argc, char* argv[])
     world.addObject(radMap09);
     world.addObject(radMap10);
     world.addObject(radMap11);
-    */
+    
     Scene::Sphere * ctSphere = new Scene::Sphere(5,100,100);
     world.addObject(ctSphere);
     Scene::Shader * ctSphereShader = new Scene::Shader("warp.vert", "warp.frag");
-    
-    //GLint texLoc = glGetUniformLocation(ctSphereShader->getProgram(), "radMaps");
-    //int texInd[12] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
-    //glUniform1iv(texLoc, 12, texInd);
+
+    GLint radMapLocation00 = glGetUniformLocation(ctSphereShader->getProgram(), "radMaps[0]");
+    GLint radMapLocation01 = glGetUniformLocation(ctSphereShader->getProgram(), "radMaps[1]");
+    GLint radMapLocation02 = glGetUniformLocation(ctSphereShader->getProgram(), "radMaps[2]");
+    GLint radMapLocation03 = glGetUniformLocation(ctSphereShader->getProgram(), "radMaps[3]");
+    GLint radMapLocation04 = glGetUniformLocation(ctSphereShader->getProgram(), "radMaps[4]");
+    GLint radMapLocation05 = glGetUniformLocation(ctSphereShader->getProgram(), "radMaps[5]");
+    GLint radMapLocation06 = glGetUniformLocation(ctSphereShader->getProgram(), "radMaps[6]");
+    GLint radMapLocation07 = glGetUniformLocation(ctSphereShader->getProgram(), "radMaps[7]");
+    GLint radMapLocation08 = glGetUniformLocation(ctSphereShader->getProgram(), "radMaps[8]");
+    GLint radMapLocation09 = glGetUniformLocation(ctSphereShader->getProgram(), "radMaps[9]");
+    GLint radMapLocation10 = glGetUniformLocation(ctSphereShader->getProgram(), "radMaps[10]");
+    GLint radMapLocation11 = glGetUniformLocation(ctSphereShader->getProgram(), "radMaps[11]");
+    glUniform1i(radMapLocation00, radMap00->_getTextureID());
+    glUniform1i(radMapLocation01, radMap01->_getTextureID());
+    glUniform1i(radMapLocation02, radMap02->_getTextureID());
+    glUniform1i(radMapLocation03, radMap03->_getTextureID());
+    glUniform1i(radMapLocation04, radMap04->_getTextureID());
+    glUniform1i(radMapLocation05, radMap05->_getTextureID());
+    glUniform1i(radMapLocation06, radMap06->_getTextureID());
+    glUniform1i(radMapLocation07, radMap07->_getTextureID());
+    glUniform1i(radMapLocation08, radMap08->_getTextureID());
+    glUniform1i(radMapLocation09, radMap09->_getTextureID());
+    glUniform1i(radMapLocation10, radMap10->_getTextureID());
+    glUniform1i(radMapLocation11, radMap11->_getTextureID());
     world.assignShader(ctSphere, ctSphereShader);
     ctSphere->setTx(-7);
     
