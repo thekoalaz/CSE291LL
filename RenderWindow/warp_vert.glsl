@@ -1,5 +1,5 @@
 #version 330 compatibility
-#define M_PI 3.1415926535897932384626433832795
+#define M_PI 3.1415926535897932384626433832795f
 float GOLDEN_RATIO = (1 + sqrt(5)) / 2;
 vec3 ICOS_ZAXES[12] = vec3[](
     normalize(vec3(0.0f ,  1.0f,  GOLDEN_RATIO)),

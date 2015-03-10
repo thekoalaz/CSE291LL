@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <tchar.h>
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <sstream>
 #include <vector>
@@ -22,8 +23,9 @@
 #include <algorithm>
 #include <functional>
 
-#define _USE_MATH_DEFINES
-#include <math.h>
+//#define _USE_MATH_DEFINES
+//#include <math.h>
+#define M_PI 3.1415926535897932384626433832795f
 
 #include <GL/glew.h>
 #include <GL/glut.h>

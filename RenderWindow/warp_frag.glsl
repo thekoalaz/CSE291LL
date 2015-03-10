@@ -65,8 +65,8 @@ void main()
     if (V[2]==10) c += w[2]*texture2D(radMap10, uv[2]);
     if (V[2]==11) c += w[2]*texture2D(radMap11, uv[2]);
     c /= w[0]+w[1]+w[2];
-    c[3] = 1;
-    gl_FragColor = c;
+    c[3] = 1.0;
+    gl_FragColor = tonemap(c*2);
     
     //float soccer;
     //soccer = exp((V[0]-5.5)/2)+exp((V[1]-5.5)/2)+exp((V[2]-5.5)/2);

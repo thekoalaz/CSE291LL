@@ -250,8 +250,8 @@ void Panel::draw()
 void Button::draw()
 {
     //glPushMatrix();
-    glColor4d(1.0, 1.0, 1.0, 0.2);
-    GlutDraw::drawRectangle(getXPos(), getYPos(), getWidth(), getHeight());
+    //glColor4d(1.0, 1.0, 1.0, 0.2);
+    //GlutDraw::drawRectangle(getXPos(), getYPos(), getWidth(), getHeight());
     //
     //glColor4d(1.0, 1.0, 1.0, 0.2);
     //glBegin(GL_QUADS);
@@ -354,7 +354,11 @@ void Controls::Keyboard::register_specialkey(int key,  std::function<void (void)
 void Controls::Keyboard::_keyPress(unsigned char key, int x, int y)
 {
     auto func = hotkey_map[key];
-    if (func != nullptr) func();
+    if (func != nullptr)
+    {
+        std::cout << key << " pressed" << std::endl;
+        func();
+    }
 
     glutPostRedisplay();
 }
@@ -362,7 +366,11 @@ void Controls::Keyboard::_keyPress(unsigned char key, int x, int y)
 void Controls::Keyboard::_specialPress(int key, int x, int y)
 {
     auto func = specialkey_map[key];
-    if (func != nullptr) func();
+    if (func != nullptr)
+    {
+        std::cout << key << " pressed" << std::endl;
+        func();
+    }
 
     glutPostRedisplay();
 }

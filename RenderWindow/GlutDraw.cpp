@@ -1,7 +1,7 @@
 #include "GlutDraw.h"
 
-void GlutDraw::drawLine(double x1, double y1, double z1,
-        double x2, double y2, double z2)
+void GlutDraw::drawLine(float x1, float y1, float z1,
+        float x2, float y2, float z2)
 {
     glBegin(GL_LINES);
         glVertex3d(x1, y1, z1);
@@ -10,8 +10,8 @@ void GlutDraw::drawLine(double x1, double y1, double z1,
 }
 
 //TODO PRIO: drawRectangle so that we can do buttons.
-void GlutDraw::drawRectangle(double x, double y,
-        double width, double height)
+void GlutDraw::drawRectangle(float x, float y,
+        float width, float height)
 {
     glBegin(GL_QUADS);
         glVertex2d(x, y);
@@ -21,7 +21,7 @@ void GlutDraw::drawRectangle(double x, double y,
     glEnd();
 }
 
-void GlutDraw::drawSphere(double r,double n, double m/*, float* outR, float* outG, float* outB*/)
+void GlutDraw::drawSphere(float r,GLint n, GLint m/*, float* outR, float* outG, float* outB*/)
 {
     glutSolidSphere(r, n, m);
 }

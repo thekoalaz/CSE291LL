@@ -108,7 +108,7 @@ private:
         _width, _height;
     std::string _name;
     bool _ortho;
-    double _opacity;
+    float _opacity;
     unsigned int _UIElemId;
     std::vector<UIElement *> _children;
 

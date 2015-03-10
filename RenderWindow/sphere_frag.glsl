@@ -13,5 +13,5 @@ vec4 tonemap(vec4 x)
 void main()
 {
     vec4 env = texture2D(envMap, xy);
-    gl_FragColor = tonemap(env) * 2;
+    gl_FragColor = tonemap(env * 5);
 }
