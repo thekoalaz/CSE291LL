@@ -9,10 +9,10 @@ vec3 ICOS_ZAXES[12] = {
     normalize(vec3(-1.0f,  GOLDEN_RATIO, 0.0f)),
     normalize(vec3(1.0f , -GOLDEN_RATIO, 0.0f)),
     normalize(vec3(-1.0f, -GOLDEN_RATIO, 0.0f)),
-    normalize(vec3(GOLDEN_RATIO , 0.0,  1.0)),
-    normalize(vec3(-GOLDEN_RATIO, 0.0,  1.0)),
-    normalize(vec3(GOLDEN_RATIO , 0.0, -1.0)),
-    normalize(vec3(-GOLDEN_RATIO, 0.0, -1.0))
+    normalize(vec3(GOLDEN_RATIO , 0.0,  1.0f)),
+    normalize(vec3(-GOLDEN_RATIO, 0.0,  1.0f)),
+    normalize(vec3(GOLDEN_RATIO , 0.0, -1.0f)),
+    normalize(vec3(-GOLDEN_RATIO, 0.0, -1.0f))
 };
 vec3 ICOS_YAXES[12] = {
     vec3(1.0f, 0.0f, 0.0f),
@@ -49,6 +49,28 @@ varying vec2 uv[3];
 
 ivec3 closestViews(float p0, float p1, float p2, float p3, float p4, float p5, float p6, float p7, float p8, float p9, float p10, float p11)
 {
+    //float prox[12] = {p0,p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11};
+    //int index[12] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
+
+    //for (int cur = 0; cur < 12; cur++)
+    //{
+    //    int cur_max = cur;
+    //    for (int compare = cur; compare < 12; compare++)
+    //    {
+    //        if (prox[cur_max] < prox[compare])
+    //        {
+    //            cur_max = compare;
+    //        }
+    //    }
+    //    float prox_temp = prox[cur];
+    //    prox[cur] = prox[cur_max];
+    //    prox[cur_max] = prox_temp;
+
+    //    int index_temp = index[cur];
+    //    index[cur] = index[cur_max];
+    //    index[cur_max] = index_temp;
+    //}
+    //return ivec3(index[0],index[1],index[2]);
     int views[3];
     float prox[12] = {p0,p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11};
     float m = 0;
@@ -81,7 +103,7 @@ void main()
     
     vec3 n = normalize(gl_NormalMatrix*gl_Normal);
     vec3 vertexPosition = vec3(gl_ModelViewMatrix*gl_Vertex);
-    vec3 viewDir = normalize(-vertexPosition);
+    vec3 viewDir = normalize(vertexPosition);
     vec3 r = normalize(reflect(viewDir,n)); // INDEX INTO REFLECTED DIRECTION
     r = inverse(gl_NormalMatrix)*r;
     vec3 vd = inverse(gl_NormalMatrix)*vec3(0.0f,0.0f,1.0f);
