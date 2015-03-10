@@ -29,13 +29,19 @@ int main(int argc, char* argv[])
     cam->setTy(0);
     cam->setTz(30);
     world.addObject(cam);
-    /*
-    std::string envmapfile = "grace-mini.hdr";
-    Scene::EnvMap * envMap = new Scene::EnvMap(envmapfile);
-    Scene::EnvShader * envShader = new Scene::EnvShader(envMap, "tonemap_vert.glsl", "tonemap_frag.glsl");
-    world.addObject(envMap);
-    world.assignShader(envMap, envShader);
-    */
+
+    mainPanel.setWorld(&world);
+    mainPanel.setCamera(cam);
+
+    GlutUI::Controls::Keyboard keyboard(&mainPanel);
+    GlutUI::Controls::Mouse mouse(&mainPanel, mainPanel.getCamera());
+
+    //std::string envmapfile = "grace-new.hdr";
+    //Scene::EnvMap * envMap = new Scene::EnvMap(envmapfile);
+    //Scene::EnvShader * envShader = new Scene::EnvShader(envMap, "tonemap_vert.glsl", "tonemap_frag.glsl");
+    //world.addObject(envMap);
+    //world.assignShader(envMap, envShader);
+
     //Scene::EnvShader * sphereShader = new Scene::EnvShader(envMap, "sphere_vert.glsl", "sphere_frag.glsl");
     //Scene::Sphere * sphere = new Scene::Sphere();
     //sphere->setTx(10);
@@ -125,7 +131,7 @@ int main(int argc, char* argv[])
     //phongMap->setRotx(90);
     //phongMap->setVisible(false);
     //world.addObject(phongMap);
-    
+
     Scene::RadMap * diffMap = new Scene::RadMap("test_diffuse.hdr");
     Scene::RadMap * radMap00 = new Scene::RadMap("ctIcos00.hdr");
     Scene::RadMap * radMap01 = new Scene::RadMap("ctIcos01.hdr");
@@ -181,27 +187,25 @@ int main(int argc, char* argv[])
     glUniform1i(radMapLocation11, radMap11->_getTextureID());
     Scene::Sphere * ctSphere = new Scene::Sphere();
     world.assignShader(ctSphere, ctSphereShader);
+    ctSphere->setTx(-5);
     world.addObject(ctSphere);
     ctSphere->setTx(0);
 
-    //Scene::ObjGeometry * kevin = new Scene::ObjGeometry("kevin.obj");
-    //Scene::EnvShader * mirrorShader = new Scene::EnvShader(phongMap, "sphere_vert.glsl", "sphere_frag.glsl");
-    //Scene::EnvShader * diffuseShader = new Scene::EnvShader(diffuseMap, "tonemap_vert.glsl", "tonemap_frag.glsl");
-    //Scene::EnvShader * phongShader = new Scene::EnvShader(phongMap, "sphere_vert.glsl", "sphere_frag.glsl");
-    //world.assignShader(kevin, ctSphereShader);
-    //world.addObject(kevin);
+    Scene::ObjGeometry * kevin = new Scene::ObjGeometry("kevin.obj");
+    world.assignShader(kevin, ctSphereShader);
+    kevin->setTx(5);
+    world.addObject(kevin);
 
-    mainPanel.setWorld(&world);
-    mainPanel.setCamera(cam);
 
-    GlutUI::Controls::Keyboard keyboard(&mainPanel);
-    GlutUI::Controls::Mouse mouse(&mainPanel, mainPanel.getCamera());
-
-    //auto mlambda = [&]() { world.assignShader(kevin, mirrorShader); world.setEnvMap(envMap); };
+    /* Keyboard hotkey assignments */
+    //auto mlambda = [&]() { world.assignShader(kevin, mirrorShader);
+    //    world.assignShader(sphere, mirrorShader); world.setEnvMap(envMap); };
     //keyboard.register_hotkey('m', mlambda);
-    //auto dlambda = [&]() { world.assignShader(kevin, diffuseShader); world.setEnvMap(diffuseMap); };
+    //auto dlambda = [&]() { world.assignShader(kevin, diffuseShader);
+    //    world.assignShader(sphere, diffuseShader); world.setEnvMap(diffuseMap); };
     //keyboard.register_hotkey('d', dlambda);
-    //auto plambda = [&]() { world.assignShader(kevin, phongShader); world.setEnvMap(phongMap); };
+    //auto plambda = [&]() { world.assignShader(kevin, phongShader);
+    //    world.assignShader(sphere, phongShader); world.setEnvMap(phongMap); };
     //keyboard.register_hotkey('p', plambda);
     //auto clambda = [&]() { world.assignShader(kevin, ctSphereShader); world.setEnvMap(envMap); };
     //keyboard.register_hotkey('c', clambda);
