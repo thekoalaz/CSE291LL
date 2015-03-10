@@ -67,6 +67,32 @@ int main(int argc, char* argv[])
     ctMap09->useCache("ctIcos09.hdr");
     ctMap10->useCache("ctIcos10.hdr");
     ctMap11->useCache("ctIcos11.hdr");
+    
+    ctMap00->setXSkip(64);
+    ctMap01->setXSkip(64);
+    ctMap02->setXSkip(64);
+    ctMap03->setXSkip(64);
+    ctMap04->setXSkip(64);
+    ctMap05->setXSkip(64);
+    ctMap06->setXSkip(64);
+    ctMap07->setXSkip(64);
+    ctMap08->setXSkip(64);
+    ctMap09->setXSkip(64);
+    ctMap10->setXSkip(64);
+    ctMap11->setXSkip(64);
+    ctMap00->setYSkip(8);
+    ctMap01->setYSkip(8);
+    ctMap02->setYSkip(8);
+    ctMap03->setYSkip(8);
+    ctMap04->setYSkip(8);
+    ctMap05->setYSkip(8);
+    ctMap06->setYSkip(8);
+    ctMap07->setYSkip(8);
+    ctMap08->setYSkip(8);
+    ctMap09->setYSkip(8);
+    ctMap10->setYSkip(8);
+    ctMap11->setYSkip(8);
+    
     world.addObject(ctMap00);
     world.addObject(ctMap01);
     world.addObject(ctMap02);

@@ -280,27 +280,25 @@ protected:
     int _xSkip, _ySkip;
 };
 
-class CookTorranceMap : public PrecomputeMap
+class InterpolateMap : public PrecomputeMap
 {
 public:
-    CookTorranceMap(EnvMap & envMap, float r1, float r2, glm::vec3 v) :
-        _roughness(r1), _reflCoeff(r2), _zAxis(v), PrecomputeMap(envMap) {};
-
+    InterpolateMap(EnvMap & envMap, int w, int h) : _newWidth(w), _newHeight(h), PrecomputeMap(envMap) {};
 private:
-    float _roughness;
-    float _reflCoeff;
-    glm::vec3 _xAxis;
-    glm::vec3 _yAxis;
-    glm::vec3 _zAxis; // in the coordinates of envMap
+    float _newWidth;
+    float _newHeight;
 protected:
     void _precomputeMap();
 };
 
-
 class CookTorranceIcosMap : public PrecomputeMap
 {
 public:
-    CookTorranceIcosMap(EnvMap & envMap, float r1, float r2, int i) : _roughness(r1), _reflCoeff(r2), _vertexIndex(i), PrecomputeMap(envMap) {};
+    CookTorranceIcosMap(EnvMap & envMap, float r1, float r2, int i) :_roughness(r1), _reflCoeff(r2), _vertexIndex(i), PrecomputeMap(envMap)
+    {
+        _xSkip = 1;
+        _ySkip = 1;
+    };
 private:
     float _roughness;
     float _reflCoeff;
