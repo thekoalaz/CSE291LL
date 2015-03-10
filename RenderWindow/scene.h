@@ -19,11 +19,12 @@ const double ICOSAHEDRON_VERTS[][3] = {
     { -1,  GOLDEN_RATIO,  0 },
     {  1, -GOLDEN_RATIO,  0 },
     { -1, -GOLDEN_RATIO,  0 },
-    {  1,  0,  GOLDEN_RATIO },
-    { -1,  0,  GOLDEN_RATIO },
-    {  1,  0, -GOLDEN_RATIO },
-    { -1,  0, -GOLDEN_RATIO }
+    {  GOLDEN_RATIO,  0,  1.0 },
+    { -GOLDEN_RATIO,  0,  1.0 },
+    {  GOLDEN_RATIO,  0, -1.0 },
+    { -GOLDEN_RATIO,  0, -1.0 }
 };
+
 const glm::vec3 ICOS_ZAXES[] = {
     glm::normalize(glm::vec3(0, 1, GOLDEN_RATIO)),
     glm::normalize(glm::vec3(0, -1, GOLDEN_RATIO)),

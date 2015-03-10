@@ -9,10 +9,10 @@ vec3 ICOS_ZAXES[12] = {
     normalize(vec3(-1.0f,  GOLDEN_RATIO, 0.0f)),
     normalize(vec3(1.0f , -GOLDEN_RATIO, 0.0f)),
     normalize(vec3(-1.0f, -GOLDEN_RATIO, 0.0f)),
-    normalize(vec3(1.0f , 0.0f,  GOLDEN_RATIO)),
-    normalize(vec3(-1.0f, 0.0f,  GOLDEN_RATIO)),
-    normalize(vec3(1.0f , 0.0f, -GOLDEN_RATIO)),
-    normalize(vec3(-1.0f, 0.0f, -GOLDEN_RATIO))
+    normalize(vec3(GOLDEN_RATIO , 0.0,  1.0)),
+    normalize(vec3(-GOLDEN_RATIO, 0.0,  1.0)),
+    normalize(vec3(GOLDEN_RATIO , 0.0, -1.0)),
+    normalize(vec3(-GOLDEN_RATIO, 0.0, -1.0))
 };
 vec3 ICOS_YAXES[12] = {
     vec3(1.0f, 0.0f, 0.0f),
@@ -43,35 +43,34 @@ vec3 ICOS_XAXES[12] = {
     cross(ICOS_YAXES[11], ICOS_ZAXES[11])
 };
 
-varying float V[3];
+flat varying ivec3 V;
 varying float w[3];
 varying vec2 uv[3];
 
-vec3 closestViews(float p0, float p1, float p2, float p3, float p4, float p5, float p6, float p7, float p8, float p9, float p10, float p11)
+ivec3 closestViews(float p0, float p1, float p2, float p3, float p4, float p5, float p6, float p7, float p8, float p9, float p10, float p11)
 {
-    int views[3];
     float prox[12] = {p0,p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11};
-    float m = 0;
-    for (int i=0; i<12; i++) {
-        if (prox[i]<=m) continue;
-        m = prox[i];
-        views[0] = i;
+    int index[12] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
+
+    for (int cur = 0; cur < 12; cur++)
+    {
+        int cur_max = cur;
+        for (int compare = cur; compare < 12; compare++)
+        {
+            if (prox[cur_max] < prox[compare])
+            {
+                cur_max = compare;
+            }
+        }
+        float prox_temp = prox[cur];
+        prox[cur] = prox[cur_max];
+        prox[cur_max] = prox_temp;
+
+        int index_temp = index[cur];
+        index[cur] = index[cur_max];
+        index[cur_max] = index_temp;
     }
-    prox[views[0]] = 0;
-    m = 0;
-    for (int i=0; i<12; i++) {
-        if (prox[i]<=m) continue;
-        m = prox[i];
-        views[1] = i;
-    }
-    prox[views[1]] = 0;
-    m = 0;
-    for (int i=0; i<12; i++) {
-        if (prox[i]<=m) continue;
-        m = prox[i];
-        views[2] = i;
-    }
-    return vec3(float(views[0]),float(views[1]),float(views[2]));
+    return ivec3(index[0],index[1],index[2]);
 }
 
 void main()
@@ -89,35 +88,13 @@ void main()
     float prox[12];
     for (int i=0; i<12; i++) prox[i] = dot(vd,ICOS_ZAXES[i]);
 
-    /*
-    int view[3] = {0, 1, 2};
-    int runt;
-    if (prox[0]<prox[1] && prox[0]<prox[2]) runt = 0;
-    else if (prox[1]<prox[2] && prox[1]<prox[0]) runt = 1;
-    else runt = 2;
-    float runtProx = prox[runt];
-    for (int i=3; i<12; i++)
-    {
-        if (prox[i]<=runtProx) continue;
-        view[runt] = i;
-        if      (prox[view[(runt+1)%3]]<prox[view[(runt+2)%3]] && prox[view[(runt+1)%3]]<prox[view[(runt+0)%3]]) runt=(runt+1)%3;
-        else if (prox[view[(runt+2)%3]]<prox[view[(runt+0)%3]] && prox[view[(runt+2)%3]]<prox[view[(runt+1)%3]]) runt=(runt+2)%3;
-        runtProx = prox[view[runt]];
-    }
-    V[0] = float(view[0]);
-    V[1] = float(view[1]);
-    V[2] = float(view[2]);
-    */
-    
-    vec3 views = closestViews(  prox[0],prox[1],prox[2],prox[3],prox[4],prox[5],
+    ivec3 views = closestViews(  prox[0],prox[1],prox[2],prox[3],prox[4],prox[5],
                                 prox[6],prox[7],prox[8],prox[9],prox[10],prox[11]   );
-    V[0] = views[0];
-    V[1] = views[1];
-    V[2] = views[2];
+    V = views;
     
-    vec3 x[3] = { ICOS_XAXES[int(V[0])], ICOS_XAXES[int(V[1])], ICOS_XAXES[int(V[2])] };
-    vec3 y[3] = { ICOS_YAXES[int(V[0])], ICOS_YAXES[int(V[1])], ICOS_YAXES[int(V[2])] };
-    vec3 z[3] = { ICOS_ZAXES[int(V[0])], ICOS_ZAXES[int(V[1])], ICOS_ZAXES[int(V[2])] };
+    vec3 x[3] = { ICOS_XAXES[V[0]], ICOS_XAXES[V[1]], ICOS_XAXES[V[2]] };
+    vec3 y[3] = { ICOS_YAXES[V[0]], ICOS_YAXES[V[1]], ICOS_YAXES[V[2]] };
+    vec3 z[3] = { ICOS_ZAXES[V[0]], ICOS_ZAXES[V[1]], ICOS_ZAXES[V[2]] };
     
     for (int i=0; i<3; i++)
     {
