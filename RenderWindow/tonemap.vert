@@ -11,7 +11,7 @@ void main()
     vec3 refDir = normalize(inverse(gl_NormalMatrix)*normal);
     float theta = atan(refDir.x,-refDir.z);
     float phi = acos(refDir.y);
-    float x = (1+theta/M_PI)/2;
+    float x = (1+theta/M_PI)/4;
     float y = phi/M_PI;
     xy = vec2(x,y);
 }

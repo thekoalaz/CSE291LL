@@ -795,7 +795,7 @@ void CookTorranceMap::_precomputeMap()
         }
     }
 }
-
+/*
 void CookTorranceIcosMap::_precomputeMap()
 {
     _width = _envMap._getWidth();
@@ -845,6 +845,69 @@ void CookTorranceIcosMap::_precomputeMap()
                     float F = _reflCoeff + (1 - _reflCoeff)*pow(1 - VdotH, 5);
                     float brdf = F*D*G / (M_PI*NdotL*NdotV);
                     // integrate
+                    double envR = _envMap._getPixelR(k, l);
+                    double envG = _envMap._getPixelG(k, l);
+                    double envB = _envMap._getPixelB(k, l);
+                    Rsum += envR*brdf*NdotL*sin(phiL_E);
+                    Gsum += envG*brdf*NdotL*sin(phiL_E);
+                    Bsum += envB*brdf*NdotL*sin(phiL_E);
+                }
+            }
+            _setPixelR(i, j, a*Rsum);
+            _setPixelG(i, j, a*Gsum);
+            _setPixelB(i, j, a*Bsum);
+        }
+    }
+}
+*/
+
+void CookTorranceIcosMap::_precomputeMap()
+{
+    _width = _envMap._getWidth();
+    _height = _envMap._getHeight();
+    _data = new float[3 * _width * _height];
+    glm::mat3 R_alignEV;
+    glm::vec3 xAxV_E = Scene::ICOS_XAXES[_vertexIndex];
+    glm::vec3 yAxV_E = Scene::ICOS_YAXES[_vertexIndex];
+    glm::vec3 zAxV_E = Scene::ICOS_ZAXES[_vertexIndex];
+    glm::vec3 xAxE_E(1.0f, 0.0f, 0.0f);
+    glm::vec3 yAxE_E(0.0f, 1.0f, 0.0f);
+    glm::vec3 zAxE_E(0.0f, 0.0f, 1.0f);
+    R_alignEV[0] = xAxV_E;
+    R_alignEV[1] = yAxV_E;
+    R_alignEV[2] = zAxV_E;
+    R_alignEV = glm::transpose(R_alignEV);
+    glm::vec3 V_V(0.0f, 0.0f, 1.0f);
+    float a = 2 * M_PI*M_PI / (double)(_width*_height);
+    for (int i = 0; i < _width; i++){
+        std::cout << "We're on x " << i << "\r";
+        float thetaN_V = 2 * M_PI*((double)i / _width - 1);
+        for (int j = 0; j <= _height / 2; j++)
+        {
+            float phiN_V = M_PI*(double)j / _height;
+            glm::vec3 N_V(sin(phiN_V)*cos(thetaN_V), sin(phiN_V)*sin(thetaN_V), cos(phiN_V));
+            float NdotV = N_V.z;
+            double Rsum = 0;
+            double Gsum = 0;
+            double Bsum = 0;
+            for (int k = 0; k < _width; k++){
+                float thetaL_E = 2 * M_PI*((double)k / _width - 1);
+                for (int l = 0; l < _height; l++){
+                    float phiL_E = M_PI*(double)l / _height;
+                    glm::vec3 L_E(sin(phiL_E)*sin(thetaL_E), cos(phiL_E), -sin(phiL_E)*cos(thetaL_E));
+                    glm::vec3 L_V = R_alignEV*L_E;
+                    glm::vec3 H_V = glm::normalize(L_V + V_V);
+                    float NdotL = glm::dot(N_V,L_V);
+                    if (NdotL <= 0) continue;
+                    float NdotH = glm::dot(N_V,H_V);
+                    float VdotH = glm::dot(V_V,H_V);
+                    float LdotH = glm::dot(L_V,H_V);
+                    float G = std::min(2 * NdotH*NdotV / VdotH, 2 * NdotH*NdotL / LdotH);
+                    G = std::min((float)1.0, G);
+                    float D = exp((NdotH*NdotH - 1) / (_roughness*_roughness*NdotH*NdotH));
+                    D /= M_PI*_roughness*_roughness*pow(NdotH, 4);
+                    float F = _reflCoeff + (1 - _reflCoeff)*pow(1 - VdotH, 5);
+                    float brdf = F*D*G / (M_PI*NdotL*NdotV);
                     double envR = _envMap._getPixelR(k, l);
                     double envG = _envMap._getPixelG(k, l);
                     double envB = _envMap._getPixelB(k, l);

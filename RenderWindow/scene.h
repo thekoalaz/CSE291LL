@@ -254,6 +254,7 @@ public:
         _textureID = nextTextureID();
         _readMap();
         _mapReady = true;
+        _visible = false;
     }
 };
 
