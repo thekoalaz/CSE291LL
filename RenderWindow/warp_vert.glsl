@@ -47,6 +47,8 @@ flat varying ivec3 V;
 varying float w[3];
 varying vec2 uv[3];
 
+varying vec2 uvD;
+
 ivec3 closestViews(float p0, float p1, float p2, float p3, float p4, float p5, float p6, float p7, float p8, float p9, float p10, float p11)
 {
     int views[3];
@@ -81,7 +83,7 @@ void main()
     
     vec3 n = normalize(gl_NormalMatrix*gl_Normal);
     vec3 vertexPosition = vec3(gl_ModelViewMatrix*gl_Vertex);
-    vec3 viewDir = normalize(-vertexPosition);
+    vec3 viewDir = normalize(vertexPosition);
     vec3 r = normalize(reflect(viewDir,n)); // INDEX INTO REFLECTED DIRECTION
     r = inverse(gl_NormalMatrix)*r;
     vec3 vd = inverse(gl_NormalMatrix)*vec3(0.0f,0.0f,1.0f);
@@ -101,13 +103,22 @@ void main()
     {
         int im1 = (i+2)%3; // i-1 MOD 3
         int ip1 = (i+1)%3;
+        //int ip1 = i+1;
+        //int im1 = i-1;
+        //if (ip1>2) ip1 = 0;
+        //if (im1<0) im1 = 2;
         float alpha = acos(dot(normalize(cross(vd,z[im1])),normalize(cross(z[ip1],z[im1])))); // DIHEDRAL ANGLES
         float beta  = acos(dot(normalize(cross(z[ip1],vd)),normalize(cross(z[ip1],z[im1]))));
         float gamma = acos(dot(normalize(cross(z[ip1],vd)),normalize(cross(z[im1],vd))));
         w[i] = alpha + beta + gamma - M_PI;
         vec3 h = normalize(r+z[i]);
+        //vec3 h = r;
         float phi = acos(dot(h,z[i]));
         float theta = atan(dot(h,y[i]),dot(h,x[i]));
         uv[i] = vec2((1+theta/M_PI)/2,phi/M_PI); // U,V COORDINATES ON RADIANCE MAP
     }
+    
+    float thetaD = atan(gl_Normal.x,-gl_Normal.z);
+    float phiD = acos(gl_Normal.y);
+    uvD = vec2((1+thetaD/M_PI)/2,phiD/M_PI);
 }

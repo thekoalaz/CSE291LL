@@ -29,13 +29,13 @@ int main(int argc, char* argv[])
     cam->setTy(0);
     cam->setTz(30);
     world.addObject(cam);
-
-    //std::string envmapfile = "grace-new.hdr";
-    //Scene::EnvMap * envMap = new Scene::EnvMap(envmapfile);
-    //Scene::EnvShader * envShader = new Scene::EnvShader(envMap, "tonemap_vert.glsl", "tonemap_frag.glsl");
-    //world.addObject(envMap);
-    //world.assignShader(envMap, envShader);
-
+    /*
+    std::string envmapfile = "grace-mini.hdr";
+    Scene::EnvMap * envMap = new Scene::EnvMap(envmapfile);
+    Scene::EnvShader * envShader = new Scene::EnvShader(envMap, "tonemap_vert.glsl", "tonemap_frag.glsl");
+    world.addObject(envMap);
+    world.assignShader(envMap, envShader);
+    */
     //Scene::EnvShader * sphereShader = new Scene::EnvShader(envMap, "sphere_vert.glsl", "sphere_frag.glsl");
     //Scene::Sphere * sphere = new Scene::Sphere();
     //sphere->setTx(10);
@@ -43,18 +43,18 @@ int main(int argc, char* argv[])
     //world.assignShader(sphere, sphereShader);
 
     /*
-    Scene::CookTorranceIcosMap * ctMap00 = new Scene::CookTorranceIcosMap(*envMapVis, 0.3, 0.8, 0);
-    Scene::CookTorranceIcosMap * ctMap01 = new Scene::CookTorranceIcosMap(*envMapVis, 0.3, 0.8, 1);
-    Scene::CookTorranceIcosMap * ctMap02 = new Scene::CookTorranceIcosMap(*envMapVis, 0.3, 0.8, 2);
-    Scene::CookTorranceIcosMap * ctMap03 = new Scene::CookTorranceIcosMap(*envMapVis, 0.3, 0.8, 3);
-    Scene::CookTorranceIcosMap * ctMap04 = new Scene::CookTorranceIcosMap(*envMapVis, 0.3, 0.8, 4);
-    Scene::CookTorranceIcosMap * ctMap05 = new Scene::CookTorranceIcosMap(*envMapVis, 0.3, 0.8, 5);
-    Scene::CookTorranceIcosMap * ctMap06 = new Scene::CookTorranceIcosMap(*envMapVis, 0.3, 0.8, 6);
-    Scene::CookTorranceIcosMap * ctMap07 = new Scene::CookTorranceIcosMap(*envMapVis, 0.3, 0.8, 7);
-    Scene::CookTorranceIcosMap * ctMap08 = new Scene::CookTorranceIcosMap(*envMapVis, 0.3, 0.8, 8);
-    Scene::CookTorranceIcosMap * ctMap09 = new Scene::CookTorranceIcosMap(*envMapVis, 0.3, 0.8, 9);
-    Scene::CookTorranceIcosMap * ctMap10 = new Scene::CookTorranceIcosMap(*envMapVis, 0.3, 0.8, 10);
-    Scene::CookTorranceIcosMap * ctMap11 = new Scene::CookTorranceIcosMap(*envMapVis, 0.3, 0.8, 11);
+    Scene::CookTorranceIcosMap * ctMap00 = new Scene::CookTorranceIcosMap(*envMap, 0.3, 0.8, 0);
+    Scene::CookTorranceIcosMap * ctMap01 = new Scene::CookTorranceIcosMap(*envMap, 0.3, 0.8, 1);
+    Scene::CookTorranceIcosMap * ctMap02 = new Scene::CookTorranceIcosMap(*envMap, 0.3, 0.8, 2);
+    Scene::CookTorranceIcosMap * ctMap03 = new Scene::CookTorranceIcosMap(*envMap, 0.3, 0.8, 3);
+    Scene::CookTorranceIcosMap * ctMap04 = new Scene::CookTorranceIcosMap(*envMap, 0.3, 0.8, 4);
+    Scene::CookTorranceIcosMap * ctMap05 = new Scene::CookTorranceIcosMap(*envMap, 0.3, 0.8, 5);
+    Scene::CookTorranceIcosMap * ctMap06 = new Scene::CookTorranceIcosMap(*envMap, 0.3, 0.8, 6);
+    Scene::CookTorranceIcosMap * ctMap07 = new Scene::CookTorranceIcosMap(*envMap, 0.3, 0.8, 7);
+    Scene::CookTorranceIcosMap * ctMap08 = new Scene::CookTorranceIcosMap(*envMap, 0.3, 0.8, 8);
+    Scene::CookTorranceIcosMap * ctMap09 = new Scene::CookTorranceIcosMap(*envMap, 0.3, 0.8, 9);
+    Scene::CookTorranceIcosMap * ctMap10 = new Scene::CookTorranceIcosMap(*envMap, 0.3, 0.8, 10);
+    Scene::CookTorranceIcosMap * ctMap11 = new Scene::CookTorranceIcosMap(*envMap, 0.3, 0.8, 11);
     ctMap00->useCache("ctIcos00.hdr");
     ctMap01->useCache("ctIcos01.hdr");
     ctMap02->useCache("ctIcos02.hdr");
@@ -99,7 +99,8 @@ int main(int argc, char* argv[])
     //phongMap->setRotx(90);
     //phongMap->setVisible(false);
     //world.addObject(phongMap);
-
+    
+    Scene::RadMap * diffMap = new Scene::RadMap("test_diffuse.hdr");
     Scene::RadMap * radMap00 = new Scene::RadMap("ctIcos00.hdr");
     Scene::RadMap * radMap01 = new Scene::RadMap("ctIcos01.hdr");
     Scene::RadMap * radMap02 = new Scene::RadMap("ctIcos02.hdr");
@@ -112,6 +113,7 @@ int main(int argc, char* argv[])
     Scene::RadMap * radMap09 = new Scene::RadMap("ctIcos09.hdr");
     Scene::RadMap * radMap10 = new Scene::RadMap("ctIcos10.hdr");
     Scene::RadMap * radMap11 = new Scene::RadMap("ctIcos11.hdr");
+    world.addObject(diffMap);
     world.addObject(radMap00);
     world.addObject(radMap01);
     world.addObject(radMap02);
@@ -125,6 +127,7 @@ int main(int argc, char* argv[])
     world.addObject(radMap10);
     world.addObject(radMap11);
     Scene::Shader * ctSphereShader = new Scene::Shader("warp_vert.glsl", "warp_frag.glsl");
+    GLint diffMapLocation = glGetUniformLocation(ctSphereShader->getProgram(), "diffMap");
     GLint radMapLocation00 = glGetUniformLocation(ctSphereShader->getProgram(), "radMap00");
     GLint radMapLocation01 = glGetUniformLocation(ctSphereShader->getProgram(), "radMap01");
     GLint radMapLocation02 = glGetUniformLocation(ctSphereShader->getProgram(), "radMap02");
@@ -137,6 +140,7 @@ int main(int argc, char* argv[])
     GLint radMapLocation09 = glGetUniformLocation(ctSphereShader->getProgram(), "radMap09");
     GLint radMapLocation10 = glGetUniformLocation(ctSphereShader->getProgram(), "radMap10");
     GLint radMapLocation11 = glGetUniformLocation(ctSphereShader->getProgram(), "radMap11");
+    glUniform1i(diffMapLocation, diffMap->_getTextureID());
     glUniform1i(radMapLocation00, radMap00->_getTextureID());
     glUniform1i(radMapLocation01, radMap01->_getTextureID());
     glUniform1i(radMapLocation02, radMap02->_getTextureID());
@@ -152,12 +156,13 @@ int main(int argc, char* argv[])
     Scene::Sphere * ctSphere = new Scene::Sphere();
     world.assignShader(ctSphere, ctSphereShader);
     world.addObject(ctSphere);
+    ctSphere->setTx(0);
 
     //Scene::ObjGeometry * kevin = new Scene::ObjGeometry("kevin.obj");
     //Scene::EnvShader * mirrorShader = new Scene::EnvShader(phongMap, "sphere_vert.glsl", "sphere_frag.glsl");
     //Scene::EnvShader * diffuseShader = new Scene::EnvShader(diffuseMap, "tonemap_vert.glsl", "tonemap_frag.glsl");
     //Scene::EnvShader * phongShader = new Scene::EnvShader(phongMap, "sphere_vert.glsl", "sphere_frag.glsl");
-    //world.assignShader(kevin, mirrorShader);
+    //world.assignShader(kevin, ctSphereShader);
     //world.addObject(kevin);
 
     mainPanel.setWorld(&world);

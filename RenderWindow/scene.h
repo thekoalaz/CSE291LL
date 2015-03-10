@@ -10,21 +10,6 @@ namespace Scene
 {
 /** Global variables **/
 const double GOLDEN_RATIO = (1 + sqrt(5)) / 2;
-const double ICOSAHEDRON_VERTS[][3] = {
-    {  0,  1,  GOLDEN_RATIO },
-    {  0, -1,  GOLDEN_RATIO },
-    {  0,  1, -GOLDEN_RATIO },
-    {  0, -1, -GOLDEN_RATIO },
-    {  1,  GOLDEN_RATIO,  0 },
-    { -1,  GOLDEN_RATIO,  0 },
-    {  1, -GOLDEN_RATIO,  0 },
-    { -1, -GOLDEN_RATIO,  0 },
-    {  GOLDEN_RATIO,  0,  1.0 },
-    { -GOLDEN_RATIO,  0,  1.0 },
-    {  GOLDEN_RATIO,  0, -1.0 },
-    { -GOLDEN_RATIO,  0, -1.0 }
-};
-
 const glm::vec3 ICOS_ZAXES[] = {
     glm::normalize(glm::vec3(0, 1, GOLDEN_RATIO)),
     glm::normalize(glm::vec3(0, -1, GOLDEN_RATIO)),
@@ -34,10 +19,10 @@ const glm::vec3 ICOS_ZAXES[] = {
     glm::normalize(glm::vec3(-1, GOLDEN_RATIO, 0)),
     glm::normalize(glm::vec3(1, -GOLDEN_RATIO, 0)),
     glm::normalize(glm::vec3(-1, -GOLDEN_RATIO, 0)),
-    glm::normalize(glm::vec3(1, 0, GOLDEN_RATIO)),
-    glm::normalize(glm::vec3(-1, 0, GOLDEN_RATIO)),
-    glm::normalize(glm::vec3(1, 0, -GOLDEN_RATIO)),
-    glm::normalize(glm::vec3(-1, 0, -GOLDEN_RATIO))
+    glm::normalize(glm::vec3(GOLDEN_RATIO, 0.0, 1.0)),
+    glm::normalize(glm::vec3(-GOLDEN_RATIO, 0.0, 1.0)),
+    glm::normalize(glm::vec3(GOLDEN_RATIO, 0.0, -1.0)),
+    glm::normalize(glm::vec3(-GOLDEN_RATIO, 0.0, -1.0))
 };
 const glm::vec3 ICOS_YAXES[] = {
     glm::vec3(1.0f, 0.0f, 0.0f),
@@ -300,9 +285,6 @@ class CookTorranceMap : public PrecomputeMap
 public:
     CookTorranceMap(EnvMap & envMap, float r1, float r2, glm::vec3 v) :
         _roughness(r1), _reflCoeff(r2), _zAxis(v), PrecomputeMap(envMap) {};
-    CookTorranceMap(EnvMap & envMap, double radius, int n, int m) : _roughness(0.3), _reflCoeff(0.8),
-        _zAxis(glm::vec3(Scene::ICOSAHEDRON_VERTS[1][0], Scene::ICOSAHEDRON_VERTS[1][1], Scene::ICOSAHEDRON_VERTS[1][2])),
-        PrecomputeMap(envMap, radius, n, m){};
 
 private:
     float _roughness;

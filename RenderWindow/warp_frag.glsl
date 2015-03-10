@@ -1,4 +1,4 @@
-uniform sampler2D envMap;
+uniform sampler2D diffMap;
 uniform sampler2D radMap00;
 uniform sampler2D radMap01;
 uniform sampler2D radMap02;
@@ -16,6 +16,8 @@ flat varying ivec3 V;
 varying float w[3];
 varying vec2 uv[3];
 
+varying vec2 uvD;
+
 vec4 tonemap(vec4 x)
 {
     float r = x[0] / (1.0 + x[0]);
@@ -26,6 +28,7 @@ vec4 tonemap(vec4 x)
 
 void main()
 {
+
     vec4 c;
     if (V[0]==0) c = w[0]*texture2D(radMap00, uv[0]);
     if (V[0]==1) c = w[0]*texture2D(radMap01, uv[0]);
@@ -65,11 +68,13 @@ void main()
     if (V[2]==11) c += w[2]*texture2D(radMap11, uv[2]);
     c /= w[0]+w[1]+w[2];
     c[3] = 1;
-    gl_FragColor = c;
+
+    vec4 cD = texture2D(diffMap,uvD);
+    gl_FragColor = tonemap(c+0*cD);
     
     //float soccer;
     //soccer = exp((V[0]-5.5)/2)+exp((V[1]-5.5)/2)+exp((V[2]-5.5)/2);
     //gl_FragColor = tonemap(0.5*vec4(soccer,soccer,soccer,1.0f));
     //gl_FragColor = tonemap(vec4(w[0],w[1],w[2],1.0f));
-    //gl_FragColor = tonemap(vec4(exp((V[0]-5.5)/6),exp((V[1]-5.5)/6),exp((V[2]-5.5)/6),1.0f));
+    //gl_FragColor = tonemap(vec4(exp((float(V[0])-5.5)/6),exp((float(V[1])-5.5)/6),exp((float(V[2])-5.5)/6),1.0f));
 }
