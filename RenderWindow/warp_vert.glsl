@@ -130,6 +130,6 @@ void main()
         vec3 h = normalize(r+z[i]);
         float phi = acos(dot(h,z[i]));
         float theta = atan(dot(h,y[i]),dot(h,x[i]));
-        uv[i] = vec2((1+theta/M_PI)/4,phi/M_PI); // U,V COORDINATES ON RADIANCE MAP
+        uv[i] = vec2((1+theta/M_PI)/2,phi/M_PI); // U,V COORDINATES ON RADIANCE MAP
     }
 }

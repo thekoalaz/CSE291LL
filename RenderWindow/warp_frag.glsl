@@ -27,7 +27,6 @@ int V1 = int(V[1]);
 int V2 = int(V[2]);
 void main()
 {
-    
     vec4 c;
     if (V0==0) c = w[0]*texture2D(radMap00, uv[0]);
     if (V0==1) c = w[0]*texture2D(radMap01, uv[0]);

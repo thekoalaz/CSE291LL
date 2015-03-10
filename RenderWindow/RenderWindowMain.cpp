@@ -11,67 +11,40 @@ int main(int argc, char* argv[])
     MANAGER.init(argc, argv);
 
     GlutUI::Window & mainWindow = MANAGER.createWindow(640,480, "Render Window");
-    GlutUI::Panel & mainPanel = MANAGER.createPanel(mainWindow, 640,480, "TestPanel");
+    GlutUI::Panel & mainPanel = MANAGER.createPanel(mainWindow, 640,480, "Render Panel");
     Scene::World world = Scene::createWorld();
     std::cout << std::string((char *) glGetString(GL_VENDOR)) << std::endl;
     std::cout << std::string((char *) glGetString(GL_RENDERER)) << std::endl;
     std::cout << "OpenGL " << std::string((char *) glGetString(GL_VERSION)) << std::endl;
     std::cout << "====================================================" << std::endl;
 
-    //GlutUI::Button & testButton = MANAGER.createButton(mainPanel, 40, 20, 10, 10, "TestButton");
-
     Scene::Grid * gridXZ = new Scene::Grid(20,20,2.0);
     world.addObject(gridXZ);
     gridXZ->setTy(-7.5);
 
-    /* Only draw XZ grid.
-    Scene::Grid * gridXY = new Scene::Grid();
-    world.addObject(gridXY);
-    gridXY->setRotx(90);
-    gridXY->setTz(-5);
-
-    Scene::Grid * gridYZ = new Scene::Grid();
-    world.addObject(gridYZ);
-    gridYZ->setRotz(90);
-    gridYZ->setTx(-5);
-    */
-
     Scene::Camera * cam = new Scene::Camera();
-    /*
-    cam->setRoty(-45);
-    cam->setRotx(45);
-    cam->setTx(0);
-    cam->setTy(0);
-    cam->setTz(40);
-    */
     cam->setRotz(0);
-    //cam->setRoty(-90);
     cam->setRotx(0);
     cam->setTx(0);
     cam->setTy(0);
     cam->setTz(30);
     world.addObject(cam);
     /*
-    Scene::Sphere * sphere = new Scene::Sphere();
-    world.addObject(sphere);
-    Scene::Shader * sphereShader = new Scene::Shader("sphere.vert", "sphere.frag");
-    world.assignShader(sphere, sphereShader);
-    sphere->setTx(7);
-    */
-
-    
-    std::string envmapfile = "grace-new2.hdr";
-    Scene::Shader * envShader = new Scene::Shader("tonemap.vert", "tonemap.frag");
+    std::string envmapfile = "grace-new.hdr";
     Scene::EnvMap * envMap = new Scene::EnvMap(envmapfile);
     world.addObject(envMap);
+    Scene::Shader * envShader = new Scene::Shader("tonemap_vert.glsl", "tonemap_frag.glsl");
     world.assignShader(envMap, envShader);
-   
+
+    Scene::Shader * sphereShader = new Scene::Shader("sphere_vert.glsl", "sphere_frag.glsl");
+    
+    Scene::Sphere * sphere = new Scene::Sphere();
+    sphere->setTx(7);
+    world.addObject(sphere);
+    world.assignShader(sphere, sphereShader);
+    */
+
     /*
-    Scene::EnvMap * envMapVis = new Scene::EnvMap(envmapfile, 5,20,20);
-    world.addObject(envMapVis);
-    world.assignShader(envMapVis, envShader);
-    envMapVis->setRotx(90);
-    envMapVis->setTx(-7);
     Scene::CookTorranceIcosMap * ctMap00 = new Scene::CookTorranceIcosMap(*envMapVis, 0.3, 0.8, 0);
     Scene::CookTorranceIcosMap * ctMap01 = new Scene::CookTorranceIcosMap(*envMapVis, 0.3, 0.8, 1);
     Scene::CookTorranceIcosMap * ctMap02 = new Scene::CookTorranceIcosMap(*envMapVis, 0.3, 0.8, 2);
@@ -109,24 +82,31 @@ int main(int argc, char* argv[])
     world.addObject(ctMap10);
     world.addObject(ctMap11);
     */
+
     /*
-    Scene::DiffuseEnvMap * diffuseMap = new Scene::DiffuseEnvMap(*envMapVis, 5, 50, 50);
+    Scene::DiffuseEnvMap * diffuseMap = new Scene::DiffuseEnvMap(*envMap, 5, 50, 50);
     world.addObject(diffuseMap);
-    diffuseMap->useCache("test.hdr");
+    diffuseMap->useCache("test_diffuse.hdr");
     world.assignShader(diffuseMap, envShader);
     diffuseMap->setRotx(90);
-    diffuseMap->setTx(7);
+    diffuseMap->setXSkip(64);
+    diffuseMap->setYSkip(8);
+    diffuseMap->setVisible(false);
+    world.setEnvMap(diffuseMap);
+
+    Scene::PhongEnvMap * phongMap = new Scene::PhongEnvMap(*envMap, 5, 50, 50);
+    phongMap->setSpecCoeffecient(80);
+    world.addObject(phongMap);
+    phongMap->useCache("test_phong.hdr");
+    world.assignShader(phongMap, envShader);
+    phongMap->setXSkip(64);
+    phongMap->setYSkip(8);
+    phongMap->setRotx(90);
+    phongMap->setVisible(false);
+    world.setEnvMap(phongMap);
     */
-
-    
-    //Scene::Shader * kevinShader = new Scene::Shader("diffuse.vert", "diffuse.frag");
-    //Scene::ObjGeometry * kevin = new Scene::ObjGeometry("kevin.obj");
-    //world.assignShader(kevin, sphereShader);
-    //world.addObject(kevin);
-    //world.setEnvMap(diffuseMap);
     
 
-    
     Scene::RadMap * radMap00 = new Scene::RadMap("ctIcos00.hdr");
     Scene::RadMap * radMap01 = new Scene::RadMap("ctIcos01.hdr");
     Scene::RadMap * radMap02 = new Scene::RadMap("ctIcos02.hdr");
@@ -151,11 +131,7 @@ int main(int argc, char* argv[])
     world.addObject(radMap09);
     world.addObject(radMap10);
     world.addObject(radMap11);
-    
-    Scene::Sphere * ctSphere = new Scene::Sphere(5,100,100);
-    world.addObject(ctSphere);
-    Scene::Shader * ctSphereShader = new Scene::Shader("warp.vert", "warp.frag");
-
+    Scene::Shader * ctSphereShader = new Scene::Shader("warp_vert.glsl", "warp_frag.glsl");
     GLint radMapLocation00 = glGetUniformLocation(ctSphereShader->getProgram(), "radMap00");
     GLint radMapLocation01 = glGetUniformLocation(ctSphereShader->getProgram(), "radMap01");
     GLint radMapLocation02 = glGetUniformLocation(ctSphereShader->getProgram(), "radMap02");
@@ -180,21 +156,22 @@ int main(int argc, char* argv[])
     glUniform1i(radMapLocation09, radMap09->_getTextureID());
     glUniform1i(radMapLocation10, radMap10->_getTextureID());
     glUniform1i(radMapLocation11, radMap11->_getTextureID());
+    Scene::Sphere * ctSphere = new Scene::Sphere();
     world.assignShader(ctSphere, ctSphereShader);
-    ctSphere->setTx(0);
-    
+    //world.addObject(ctSphere);
+    ctSphere->setTy(7);
+
+
+    Scene::ObjGeometry * kevin = new Scene::ObjGeometry("kevin.obj");
+    world.assignShader(kevin, ctSphereShader);
+    world.addObject(kevin);
+
+
     mainPanel.setWorld(&world);
     mainPanel.setCamera(cam);
-    GlutUI::Controls::Mouse(mainPanel.getCamera());
 
-    /* New window test*/
-    //GlutUI::Window & renderWindow = MANAGER.createWindow(320,480, "RenderWindow");
-    //GlutUI::Panel & renderPanel = MANAGER.createPanel(renderWindow, 320,480, "RenderPanel");
-    //Scene::World renderWorld = Scene::createWorld();
-    //renderPanel.setWorld(&renderWorld);
-    //renderPanel.setCamera(new Scene::Camera());
-
-    //GlutUI::Button & renderButton = MANAGER.createButton(renderPanel, 80, 20, 10, 10, "RenderButton");
+    GlutUI::Controls::Keyboard keyboard(&mainPanel);
+    GlutUI::Controls::Mouse mouse(&mainPanel, mainPanel.getCamera());
 
     MANAGER.drawElements();
 

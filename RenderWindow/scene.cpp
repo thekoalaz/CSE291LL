@@ -30,18 +30,23 @@ void World::addObject(Camera * cam)
 
 void World::addObject(EnvMap * envMap)
 {
+    _objects.push_back(envMap);
+    envMap->setWorld(this);
+    _envMaps.push_back(envMap);
+
     if (_envMap == nullptr)
     {
-        _objects.push_back(envMap);
-        envMap->setWorld(this);
         setEnvMap(envMap);
     }
     else
     {
         std::cout << "Env map already set!" << std::endl;
-        _objects.push_back(envMap);
-        envMap->setWorld(this);
     }
+}
+
+void World::setEnvMap(unsigned int index)
+{
+    if (index < _envMaps.size()) _envMap = _envMaps[index];
 }
 
 void World::setEnvMap(EnvMap * envMap)
@@ -60,17 +65,16 @@ Shader * World::findShader(Object * obj)
 
 void World::draw()
 {
-    for(std::vector<Object *>::const_iterator object = _objects.begin() ;
-        object < _objects.end() ; object++)
+    for(auto object : _objects)
     {
-        auto shader = _shaderMap.find((*object)->getID());
+        auto shader = _shaderMap.find(object->getID());
         if (shader != _shaderMap.end())
         {
-            (*object)->draw(_shaderMap[(*object)->getID()]);
+            object->draw(_shaderMap[object->getID()]);
         }
         else
         {
-            (*object)->draw();
+            object->draw();
         }
     }
 }
@@ -93,6 +97,11 @@ void Object::draw()
 
 void Object::draw(Shader * shader)
 {
+    if (!_visible)
+    {
+        return;
+    }
+
     glPushMatrix();
     glTranslated(_tx, _ty, _tz);
     glRotated(_rotx,1,0,0);
@@ -142,6 +151,8 @@ int EnvMap::_readMap()
         return -1;
     }
 
+    std::cout << "Env map " << _filename << " has width: " << _width << " height: " << _height << std::endl;
+
     glGenTextures(1, &_textureID);
     glBindTexture(GL_TEXTURE_2D, _textureID);
 
@@ -149,6 +160,8 @@ int EnvMap::_readMap()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, _width, _height, 0, GL_RGB, GL_FLOAT, _data);
+
+    _mapReady = true;
 
     return _textureID;
 }
@@ -189,6 +202,152 @@ void EnvMap::doDraw()
 
     glDisable(GL_TEXTURE_2D);
     unbind();
+}
+
+void Sphere::doDraw()
+{
+    Shader * shader = _world->findShader(this);
+    EnvMap * envMap = _world->getEnvMap();
+
+    envMap->bind();
+
+    if (shader != nullptr)
+    {
+        GLint texLoc = glGetUniformLocation(shader->getProgram(), "envMap");
+        glUniform1i(texLoc, envMap->_getTextureID());
+    }
+
+    GlutDraw::drawSphere(_r,_n,_m);
+
+    envMap->unbind();
+}
+
+void ObjGeometry::doDraw()
+{
+    if (!_geomReady)
+    {
+        _readGeom();
+        _geomReady = true;
+    }
+
+    Shader * shader = _world->findShader(this);
+    EnvMap * envMap = _world->getEnvMap();
+
+    envMap->bind();
+
+    //TODO Move this to the shader.
+    if (shader != nullptr)
+    {
+        GLint texLoc = glGetUniformLocation(shader->getProgram(), "envMap");
+        glUniform1i(texLoc, envMap->_getTextureID());
+    }
+
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_NORMAL_ARRAY);
+
+    glVertexPointer(3, GL_FLOAT, 0, &_vertices[0]);
+    glNormalPointer(GL_FLOAT, 0, &_normals[0]);
+
+    check_gl_error();
+    glDrawArrays(GL_TRIANGLES, 0, _vertices.size());
+
+    envMap->unbind();
+    return;
+}
+
+// Adopted from http://www.opengl-tutorial.org/beginners-tutorials/tutorial-7-model-loading/
+int ObjGeometry::_readGeom()
+{
+    std::vector< unsigned int > vertexIndices, uvIndices, normalIndices;
+    std::vector< glm::vec3 > tempVertices;
+    std::vector< glm::vec2 > tempUVs;
+    std::vector< glm::vec3 > tempNormals;
+    int lineCount=0;
+    int faceCount=0;
+    int vertCount=0;
+
+    std::ifstream file;
+    file.open(_filename, std::ios::in);
+    if (!file.is_open())
+    {
+        std::cout << "Could not open " << _filename << std::endl;
+        return -1;
+    }
+
+    std::string line;
+    while (std::getline(file, line))
+    {
+        std::istringstream linestream(line);
+        std::string type;
+        if (line.find("v ") == 0)
+        {
+            glm::vec3 vertex;
+            linestream >> type >> vertex.x >> vertex.y >> vertex.z;
+            vertex.x = vertex.x;
+            vertex.y = vertex.y;
+            vertex.z = vertex.z;
+            tempVertices.push_back(vertex);
+            vertCount++;
+        }
+        else if (line.find("vn ") == 0)
+        {
+            glm::vec3 normal;
+            linestream >> type >> normal.x >> normal.y >> normal.z;
+            tempNormals.push_back(normal);
+        }
+        else if (line.find("vt ") == 0)
+        {
+            glm::vec2 uv;
+            linestream >> type >> uv.x >> uv.y;
+            tempUVs.push_back(uv);
+        }
+        else if (line.find("f ") == 0)
+        {
+            unsigned int vertexIndex[3], normalIndex[3], uvIndex[3];
+            char delim;
+            linestream >> type >>
+                vertexIndex[0] >> delim >> uvIndex[0] >> delim >> normalIndex[0] >>
+                vertexIndex[1] >> delim >> uvIndex[1] >> delim >> normalIndex[1] >>
+                vertexIndex[2] >> delim >> uvIndex[2] >> delim >> normalIndex[2];
+
+            for (int i = 0; i < 3; i++)
+            {
+                vertexIndices.push_back(vertexIndex[i]);
+                normalIndices.push_back(normalIndex[i]);
+                uvIndices.push_back(uvIndex[i]);
+            }
+            faceCount++;
+        }
+
+        lineCount++;
+        if (lineCount % 1000 == 0)
+        {
+        std::cout << "Parsing obj line: " << lineCount << "\r";
+    }
+    }
+    std::cout << "Parsed " << lineCount << " lines Verts: " << vertCount << " Triangles: " << faceCount << std::endl;
+    file.close();
+
+    for (unsigned int i = 0; i < vertexIndices.size(); i++)
+    {
+        unsigned int vertexIndex = vertexIndices[i];
+        glm::vec3 vertex = tempVertices[vertexIndex - 1];
+        _vertices.push_back(vertex);
+    }
+    for (unsigned int i = 0; i < normalIndices.size(); i++)
+    {
+        unsigned int normalIndex = normalIndices[i];
+        glm::vec3 normal = tempNormals[normalIndex - 1];
+        _normals.push_back(normal);
+    }
+    for (unsigned int i = 0; i < uvIndices.size(); i++)
+    {
+        unsigned int uvIndex = uvIndices[i];
+        glm::vec2 uv = tempUVs[uvIndex - 1];
+        _uvs.push_back(uv);
+    }
+
+    return lineCount;
 }
 
 std::tuple<float, float, float> EnvMap::map(const double theta, const double phi)
@@ -234,7 +393,6 @@ void EnvMap::bind()
     if (!_mapReady)
     {
         _readMap();
-        _mapReady = true;
     }
     glActiveTexture(GL_TEXTURE0 + _textureID);
     glBindTexture(GL_TEXTURE_2D, _textureID);
@@ -242,6 +400,7 @@ void EnvMap::bind()
 
 void EnvMap::unbind()
 {
+    //TODO
 }
 
 int PrecomputeMap::_readMap()
@@ -255,12 +414,12 @@ int PrecomputeMap::_readMap()
 
     if (read > 0)
     {
-        std::cout << "Read diffuse map cache from " << _filename << std::endl;
+        std::cout << "Read map cache from " << _filename << std::endl;
     }
     else
     {
         int integrationStart = glutGet(GLUT_ELAPSED_TIME);
-        std::cout << "Starting integration." << std::endl;
+        std::cout << "Starting integration " << _mapType() << std::endl;
         _precomputeMap();
 
         int integrationEnd = glutGet(GLUT_ELAPSED_TIME);
@@ -280,102 +439,12 @@ int PrecomputeMap::_readMap()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, _width, _height, 0, GL_RGB, GL_FLOAT, _data);
+
+    _mapReady = true;
+
     return 0;
 }
 
-void PhongEnvMap::_precomputeMap()
-{
-    _width = _envMap._getWidth();
-    _height = _envMap._getHeight();
-    _data = new float[3 * _width * (_height/2)];
-
-    int s = 5; // Phong exponent
-    int xStep = 1;
-    int yStep = xStep;
-    int xSkip = 256;
-    int ySkip = 64;
-    double a = (1+s) * M_PI / (double)(_width*_height) * (double)(xStep * yStep);
-    
-    for (int jj = 0; jj < _height-_height%ySkip+ySkip ; jj += ySkip)
-    {
-        int j = std::min(jj,_height-1);
-        std::cout << "Integration Progress: y " << j << "\r";
-        double phiN = M_PI*(double)j / (double)_height;
-        double yN = cos(phiN);
-        for (int i = 0; i < _width; i += xSkip)
-        {
-            double thetaN = M_PI*(2 * (double)i / (double)_width - 1);
-            double xN = sin(phiN)*sin(thetaN);
-            double zN = -sin(phiN)*cos(thetaN);
-            double Rsum = 0;
-            double Gsum = 0;
-            double Bsum = 0;
-            for (int l = 0; l < _height; l += yStep)
-            {
-                double phiE = M_PI*(double)l / (double)_height;
-                double yE = cos(phiE);
-                for (int k = 0; k < _width; k += xStep)
-                {
-                    double thetaE = M_PI*(2 * (double)k / (double)_width - 1);
-                    double xE = sin(phiE)*sin(thetaE);
-                    double zE = -sin(phiE)*cos(thetaE);
-                    double R = _envMap._getPixelR(k, l);
-                    double G = _envMap._getPixelG(k, l);
-                    double B = _envMap._getPixelB(k, l);
-                        double cosAng = pow(xE*xN + yE*yN + zE*zN,s);
-                    if (cosAng <= 0) continue;
-                    Rsum += R*cosAng*sin(phiE);
-                    Gsum += G*cosAng*sin(phiE);
-                    Bsum += B*cosAng*sin(phiE);
-                }
-            }
-            _setPixelR(i, j, a*Rsum);
-            _setPixelG(i, j, a*Gsum);
-            _setPixelB(i, j, a*Bsum);
-            // if we are at the poles, set row (top or bottom) to the same value, and skip to next row j
-            if (j == 0 || j == _height - 1)
-            {
-                for (int iPole = 1; iPole < _width; iPole++)
-                {
-                    _setPixelR(iPole, j, a*Rsum);
-                    _setPixelG(iPole, j, a*Gsum);
-                    _setPixelB(iPole, j, a*Bsum);
-                }
-                break;
-            }
-        }
-    }
-
-    // interpolate if integration was not done on that patch
-    for (int i = 0; i < _width; i++)
-    {
-        int i1 = i - i%xSkip;
-        int i2 = i1 + xSkip;
-        double dTheta1 = 2 * M_PI * (double)(i - i1) / _width;
-        double dTheta2 = 2 * M_PI * (double)(i2 - i) / _width;
-        i2 = i2%_width;
-        for (int j = 0; j < _height; j++)
-        {
-            int j1 = j - j%ySkip;
-            int j2 = std::min(j1 + ySkip, _height - 1);
-            double phi = M_PI*(double)j / _height;
-            double phi1 = M_PI*(double)j1 / _height;
-            double phi2 = M_PI*(double)j2 / _height;
-            double a11 = dTheta1*(cos(phi1) - cos(phi));
-            double a12 = dTheta1*(cos(phi) - cos(phi2));
-            double a21 = dTheta2*(cos(phi1) - cos(phi));
-            double a22 = dTheta2*(cos(phi) - cos(phi2));
-            if (j1 == j2) a11, a12, a21, a22 = 1;
-            double A = a11 + a12 + a21 + a22;
-            double R = (a22*_getPixelR(i1, j1) + a21*_getPixelR(i1, j2) + a12*_getPixelR(i2, j1) + a11*_getPixelR(i2, j2)) / A;
-            double G = (a22*_getPixelG(i1, j1) + a21*_getPixelG(i1, j2) + a12*_getPixelG(i2, j1) + a11*_getPixelG(i2, j2)) / A;
-            double B = (a22*_getPixelB(i1, j1) + a21*_getPixelB(i1, j2) + a12*_getPixelB(i2, j1) + a11*_getPixelB(i2, j2)) / A;
-            _setPixelR(i, j, R);
-            _setPixelG(i, j, G);
-            _setPixelB(i, j, B);
-        }
-    }
-}
 
 void DiffuseEnvMap::_precomputeMap()
 {
@@ -385,17 +454,15 @@ void DiffuseEnvMap::_precomputeMap()
 
     int xStep = 1;
     int yStep = xStep;
-    int xSkip = 1;
-    int ySkip = xSkip;
     double a = 2 * M_PI / (double)(_width*_height) * (double)(xStep * yStep);
     
-    for (int jj = 0; jj < _height-_height%ySkip+ySkip ; jj += ySkip)
+    for (int jj = 0; jj < _height-_height%_ySkip+_ySkip ; jj += _ySkip)
     {
         int j = std::min(jj,_height-1);
-        std::cout << "We're on y " << j << "\r";
+        std::cout << "We're on height " << j << "/" << _height << "\r";
         double phiN = M_PI*(double)j / (double)_height;
         double yN = cos(phiN);
-        for (int i = 0; i < _width; i += xSkip)
+        for (int i = 0; i < _width; i += _xSkip)
         {
             
             double thetaN = M_PI*(2 * (double)i / (double)_width - 1);
@@ -440,14 +507,14 @@ void DiffuseEnvMap::_precomputeMap()
 
     // interpolate if integration was not done on that patch
     for (int i = 0; i < _width; i++){
-        int i1 = i - i%xSkip;
-        int i2 = i1 + xSkip;
+        int i1 = i - i%_xSkip;
+        int i2 = i1 + _xSkip;
         double dTheta1 = 2 * M_PI * (double)(i - i1) / _width;
         double dTheta2 = 2 * M_PI * (double)(i2 - i) / _width;
         i2 = i2%_width;
         for (int j = 0; j < _height; j++){
-            int j1 = j - j%ySkip;
-            int j2 = std::min(j1 + ySkip, _height - 1);
+            int j1 = j - j%_ySkip;
+            int j2 = std::min(j1 + _ySkip, _height - 1);
             double phi = M_PI*(double)j / _height;
             double phi1 = M_PI*(double)j1 / _height;
             double phi2 = M_PI*(double)j2 / _height;
@@ -465,149 +532,105 @@ void DiffuseEnvMap::_precomputeMap()
             _setPixelB(i, j, B);;
         }
     }
-
 }
+
+
+void PhongEnvMap::_precomputeMap()
+{
+    _width = _envMap._getWidth();
+    _height = _envMap._getHeight();
+    _data = new float[3 * _width * _height];
+
+    int xStep = 1;
+    int yStep = xStep;
+    double a = (1+_s) * M_PI / (double)(_width*_height) * (double)(xStep * yStep);
+    
+    for (int jj = 0; jj < _height-_height%_ySkip+_ySkip ; jj += _ySkip)
+    {
+        int j = std::min(jj,_height-1);
+        std::cout << "Integration Progress: y " << j << "\r";
+        double phiN = M_PI*(double)j / (double)_height;
+        double yN = cos(phiN);
+        for (int i = 0; i < _width; i += _xSkip)
+        {
+            double thetaN = M_PI*(2 * (double)i / (double)_width - 1);
+            double xN = sin(phiN)*sin(thetaN);
+            double zN = -sin(phiN)*cos(thetaN);
+            double Rsum = 0;
+            double Gsum = 0;
+            double Bsum = 0;
+            for (int l = 0; l < _height; l += yStep)
+            {
+                double phiE = M_PI*(double)l / (double)_height;
+                double yE = cos(phiE);
+                for (int k = 0; k < _width; k += xStep)
+                {
+                    double thetaE = M_PI*(2 * (double)k / (double)_width - 1);
+                    double xE = sin(phiE)*sin(thetaE);
+                    double zE = -sin(phiE)*cos(thetaE);
+                    double R = _envMap._getPixelR(k, l);
+                    double G = _envMap._getPixelG(k, l);
+                    double B = _envMap._getPixelB(k, l);
+                    double cosAng = pow(xE*xN + yE*yN + zE*zN,_s);
+                    if (cosAng <= 0) continue;
+                    Rsum += R*cosAng*sin(phiE);
+                    Gsum += G*cosAng*sin(phiE);
+                    Bsum += B*cosAng*sin(phiE);
+                }
+            }
+            _setPixelR(i, j, a*Rsum);
+            _setPixelG(i, j, a*Gsum);
+            _setPixelB(i, j, a*Bsum);
+            // if we are at the poles, set row (top or bottom) to the same value, and skip to next row j
+            if (j == 0 || j == _height - 1)
+            {
+                for (int iPole = 1; iPole < _width; iPole++)
+                {
+                    _setPixelR(iPole, j, a*Rsum);
+                    _setPixelG(iPole, j, a*Gsum);
+                    _setPixelB(iPole, j, a*Bsum);
+                }
+                break;
+            }
+        }
+    }
+
+    // interpolate if integration was not done on that patch
+    for (int i = 0; i < _width; i++)
+    {
+        int i1 = i - i%_xSkip;
+        int i2 = i1 + _xSkip;
+        double dTheta1 = 2 * M_PI * (double)(i - i1) / _width;
+        double dTheta2 = 2 * M_PI * (double)(i2 - i) / _width;
+        i2 = i2%_width;
+        for (int j = 0; j < _height; j++)
+        {
+            int j1 = j - j%_ySkip;
+            int j2 = std::min(j1 + _ySkip, _height - 1);
+            double phi = M_PI*(double)j / _height;
+            double phi1 = M_PI*(double)j1 / _height;
+            double phi2 = M_PI*(double)j2 / _height;
+            double a11 = dTheta1*(cos(phi1) - cos(phi));
+            double a12 = dTheta1*(cos(phi) - cos(phi2));
+            double a21 = dTheta2*(cos(phi1) - cos(phi));
+            double a22 = dTheta2*(cos(phi) - cos(phi2));
+            if (j1 == j2) a11, a12, a21, a22 = 1;
+            double A = a11 + a12 + a21 + a22;
+            double R = (a22*_getPixelR(i1, j1) + a21*_getPixelR(i1, j2) + a12*_getPixelR(i2, j1) + a11*_getPixelR(i2, j2)) / A;
+            double G = (a22*_getPixelG(i1, j1) + a21*_getPixelG(i1, j2) + a12*_getPixelG(i2, j1) + a11*_getPixelG(i2, j2)) / A;
+            double B = (a22*_getPixelB(i1, j1) + a21*_getPixelB(i1, j2) + a12*_getPixelB(i2, j1) + a11*_getPixelB(i2, j2)) / A;
+            _setPixelR(i, j, R);
+            _setPixelG(i, j, G);
+            _setPixelB(i, j, B);
+        }
+    }
+}
+
 
 World & Scene::createWorld()
 {
     World * new_world = new World();
     return *new_world;
-}
-
-void Sphere::doDraw()
-{
-    Shader * shader = _world->findShader(this);
-    EnvMap * envMap = _world->getEnvMap();
-
-    envMap->bind();
-
-    GlutDraw::drawSphere(_r,_n,_m);
-
-//    Doesn't work yet.
-//    envMap->unbind();
-}
-
-void ObjGeometry::doDraw()
-{
-    if (!_geomReady)
-    {
-        _readGeom();
-        _geomReady = true;
-    }
-
-    Shader * shader = _world->findShader(this);
-    EnvMap * envMap = _world->getEnvMap();
-
-//    envMap->bind();
-    // Enable vertex arrays
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glEnableClientState(GL_NORMAL_ARRAY);
-
-    glVertexPointer(3, GL_FLOAT, 0, &_vertices[0]);
-    glNormalPointer(GL_FLOAT, 0, &_normals[0]);
-    //glTexCoordPointer(3, GL_FLOAT, sizeof(glm::vec3), &_uvs[0]);
-
-    check_gl_error();
-    glDrawArrays(GL_TRIANGLES, 0, _vertices.size());
-
-
-//    Doesn't work yet.
-//    envMap->unbind();
-    return;
-}
-
-// Adopted from http://www.opengl-tutorial.org/beginners-tutorials/tutorial-7-model-loading/
-int ObjGeometry::_readGeom()
-{
-    std::vector< unsigned int > vertexIndices, uvIndices, normalIndices;
-    std::vector< glm::vec3 > tempVertices;
-    std::vector< glm::vec2 > tempUVs;
-    std::vector< glm::vec3 > tempNormals;
-    int lineCount=0;
-
-    std::ifstream file;
-    file.open(_filename, std::ios::in);
-    if (!file.is_open())
-    {
-        std::cout << "Could not open " << _filename << std::endl;
-        return -1;
-    }
-
-    std::string line;
-    while (std::getline(file, line))
-    {
-        std::istringstream linestream(line);
-        std::string type;
-        if (line.find("v ") == 0)
-        {
-            glm::vec3 vertex;
-            linestream >> type >> vertex.x >> vertex.y >> vertex.z;
-            vertex.x = vertex.x;
-            vertex.y = vertex.y;
-            vertex.z = vertex.z;
-            tempVertices.push_back(vertex);
-        }
-        else if (line.find("vn ") == 0)
-        {
-            glm::vec3 normal;
-            linestream >> type >> normal.x >> normal.y >> normal.z;
-            tempNormals.push_back(normal);
-        }
-        else if (line.find("vt ") == 0)
-        {
-            glm::vec2 uv;
-            linestream >> type >> uv.x >> uv.y;
-            tempUVs.push_back(uv);
-        }
-        else if (line.find("f ") == 0)
-        {
-            unsigned int vertexIndex[3], normalIndex[3], uvIndex[3];
-            char delim;
-            linestream >> type >>
-                vertexIndex[0] >> delim >> uvIndex[0] >> delim >> normalIndex[0] >>
-                vertexIndex[1] >> delim >> uvIndex[1] >> delim >> normalIndex[1] >>
-                vertexIndex[2] >> delim >> uvIndex[2] >> delim >> normalIndex[2];
-
-            for (int i = 0; i < 3; i++)
-            {
-                vertexIndices.push_back(vertexIndex[i]);
-                normalIndices.push_back(normalIndex[i]);
-                uvIndices.push_back(uvIndex[i]);
-            }
-        }
-
-        lineCount++;
-        if (lineCount % 1000 == 0)
-        {
-        std::cout << "Parsing obj line: " << lineCount << "\r";
-    }
-    }
-    std::cout << "Parsing obj line: " << lineCount << std::endl;
-    file.close();
-
-    std::cout << "Organizing faces." << std::endl;
-    for (unsigned int i = 0; i < vertexIndices.size(); i++)
-    {
-        unsigned int vertexIndex = vertexIndices[i];
-        glm::vec3 vertex = tempVertices[vertexIndex - 1];
-        _vertices.push_back(vertex);
-    }
-    for (unsigned int i = 0; i < normalIndices.size(); i++)
-    {
-        unsigned int normalIndex = normalIndices[i];
-        glm::vec3 normal = tempNormals[normalIndex - 1];
-        _normals.push_back(normal);
-    }
-    /*
-    for (unsigned int i = 0; i < uvIndices.size(); i++)
-    {
-        unsigned int uvIndex = uvIndices[i];
-        glm::vec2 uv = tempUVs[uvIndex - 1];
-        _uvs.push_back(uv);
-    }
-    */
-
-    return lineCount;
 }
 
 void Shader::_initShaders()
@@ -628,7 +651,7 @@ void Shader::_initShaders()
     }
     else if (_initialized)
     {
-        std::cout << "Already initialized." << std::endl;
+        std::cout << "Shader has already initialized." << std::endl;
     }
     else
     {

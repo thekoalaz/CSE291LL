@@ -157,6 +157,7 @@ public:
     void draw();
 
     void setWorld(Scene::World * world) { _world = world; }
+    Scene::World * getWorld() { return _world; }
     void setCamera(Scene::Camera * camera) { _camera = camera; }
 
     Scene::Camera * getCamera() { return _camera; }
@@ -196,19 +197,20 @@ namespace Controls
     class Mouse
     {
     public:
-        //TODO replace with actual camera:
-        Mouse(Scene::Camera * camera) : _camera(camera) { init(); }
+        //TODO replace with actual camera?
+        Mouse(Panel * panel, Scene::Camera * camera) : _panel(panel), _camera(camera) { init(); }
         void init();
         void mouse(int button, int state, int x, int y);
         void motion(int x, int y);
-        //void mouseWheel(int, int, int, int);
         //TODO Mousewheel!
+        //void mouseWheel(int, int, int, int);
 
     private:
-        //TODO replace with actual camera:
+        Panel * _panel;
         Scene::Camera * _camera;
         int _lastx, _lasty;
         bool _buttons[3];
+
         static void mouseFuncWrapper(int button, int state, int x, int y);
         static void motionFuncWrapper(int x, int y);
     };
@@ -216,20 +218,19 @@ namespace Controls
     class Keyboard
     {
     public:
-        Keyboard() { init(); }
+        Keyboard(Panel * panel) : _panel(panel) { init(); }
         void init();
-        void keyDown(unsigned char key, int x, int y);
-        void keyUp(unsigned char key, int x, int y);
-        void specialDown(unsigned char key, int x, int y);
-        void specialUp(unsigned char key, int x, int y);
+        void keyPress(unsigned char, int, int);
+        void specialPress(int, int, int);
 
     private:
-        static void keyboardFuncWrapper(unsigned char key, int x, int y);
-        static void keyboardUpFuncWrapper(unsigned char key, int x, int y);
-        static void keyboardSpecialFuncWrapper(unsigned char key, int x, int y);
-        static void keyboardSpecialUpFuncWrapper(unsigned char key, int x, int y);
+        Panel * _panel;
+
+        static void keyboardFuncWrapper(unsigned char, int, int);
+//        static void keyboardUpFuncWrapper(unsigned char, int, int);
+        static void keyboardSpecialFuncWrapper(int, int, int);
+//        static void keyboardSpecialUpFuncWrapper(unsigned char, int, int);
     };
 }
 
 };
-

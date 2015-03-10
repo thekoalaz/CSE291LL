@@ -73,17 +73,15 @@
     <ClCompile Include="scene.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="diffuse.frag" />
-    <None Include="diffuse.vert" />
+    <None Include="diffuse_frag.glsl" />
+    <None Include="diffuse_vert.glsl" />
     <None Include="packages.config" />
-    <None Include="specSphere.frag" />
-    <None Include="specSphere.vert" />
-    <None Include="sphere.frag" />
-    <None Include="sphere.vert" />
-    <None Include="tonemap.frag" />
-    <None Include="tonemap.vert" />
-    <None Include="warp.frag" />
-    <None Include="warp.vert" />
+    <None Include="sphere_frag.glsl" />
+    <None Include="sphere_vert.glsl" />
+    <None Include="tonemap_frag.glsl" />
+    <None Include="tonemap_vert.glsl" />
+    <None Include="warp_frag.glsl" />
+    <None Include="warp_vert.glsl" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GlutDraw.h" />

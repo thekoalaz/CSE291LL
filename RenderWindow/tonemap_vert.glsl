@@ -6,12 +6,12 @@ void main()
 {
     gl_Position = gl_ModelViewProjectionMatrix*gl_Vertex;
     vec3 normal = vec3(gl_NormalMatrix*gl_Normal);
-    vec3 vertex = vec3(gl_Position);
-    
+    vec3 vertex = vec3(gl_ModelViewMatrix * gl_Vertex);
+
     vec3 refDir = normalize(inverse(gl_NormalMatrix)*normal);
     float theta = atan(refDir.x,-refDir.z);
     float phi = acos(refDir.y);
-    float x = (1+theta/M_PI)/4;
+    float x = (1+theta/M_PI)/2;
     float y = phi/M_PI;
     xy = vec2(x,y);
 }
