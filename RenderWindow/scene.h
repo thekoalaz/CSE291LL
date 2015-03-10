@@ -75,13 +75,13 @@ class Shader
 {
 public:
 /* Constructors */
-    Shader() : _vertfile(), _fragfile(), _initialized(false) { };
+    Shader() : _vertfile(), _fragfile(), _shaderReady(false) { };
     Shader(std::string vertfile, std::string fragfile)
-        : _vertfile(vertfile), _fragfile(fragfile), _initialized(false)
+        : _vertfile(vertfile), _fragfile(fragfile), _shaderReady(false)
         { _initShaders(); };
 
-    void link();
-    void unlink();
+    virtual void link();
+    virtual void unlink();
     GLuint getProgram() { return _program; };
 
 /* Destructors */
@@ -92,7 +92,7 @@ private:
     GLuint _program;
     GLuint _vertex;
     GLuint _frag;
-    bool _initialized;
+    bool _shaderReady;
 
     void _initShaders();
     int _checkShaderError(GLuint);
@@ -245,6 +245,19 @@ private:
     float _bilinearInterpolate(const float * _colors, const double x, const double y);
     static int NEXTTEXTUREID;
 };
+
+class EnvShader : public Shader
+{
+public:
+    EnvShader(EnvMap * envMap, std::string vertfile, std::string fragfile) :
+        Shader(vertfile, fragfile), _envMap(envMap) { };
+
+    void link();
+
+private:
+    EnvMap * _envMap;
+};
+
 
 class RadMap : public EnvMap
 {

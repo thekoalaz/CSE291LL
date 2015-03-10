@@ -200,10 +200,6 @@ namespace Controls
         //TODO replace with actual camera?
         Mouse(Panel * panel, Scene::Camera * camera) : _panel(panel), _camera(camera) { init(); }
         void init();
-        void mouse(int button, int state, int x, int y);
-        void motion(int x, int y);
-        //TODO Mousewheel!
-        //void mouseWheel(int, int, int, int);
 
     private:
         Panel * _panel;
@@ -211,8 +207,12 @@ namespace Controls
         int _lastx, _lasty;
         bool _buttons[3];
 
-        static void mouseFuncWrapper(int button, int state, int x, int y);
-        static void motionFuncWrapper(int x, int y);
+        void _mouse(int button, int state, int x, int y);
+        void _motion(int x, int y);
+        //TODO Mousewheel!
+        //void mouseWheel(int, int, int, int);
+        static void _mouseFuncWrapper(int button, int state, int x, int y);
+        static void _motionFuncWrapper(int x, int y);
     };
 
     class Keyboard
@@ -220,16 +220,21 @@ namespace Controls
     public:
         Keyboard(Panel * panel) : _panel(panel) { init(); }
         void init();
-        void keyPress(unsigned char, int, int);
-        void specialPress(int, int, int);
+
+        void register_hotkey(unsigned char, std::function<void (void)>);
+        void register_specialkey(int,  std::function<void (void)>);
 
     private:
         Panel * _panel;
+        std::unordered_map<unsigned char, std::function<void (void)>> hotkey_map;
+        std::unordered_map<int, std::function<void (void)>> specialkey_map;
 
-        static void keyboardFuncWrapper(unsigned char, int, int);
-//        static void keyboardUpFuncWrapper(unsigned char, int, int);
-        static void keyboardSpecialFuncWrapper(int, int, int);
-//        static void keyboardSpecialUpFuncWrapper(unsigned char, int, int);
+        void _keyPress(unsigned char, int, int);
+        void _specialPress(int, int, int);
+        static void _keyboardFuncWrapper(unsigned char, int, int);
+        static void _keyboardSpecialFuncWrapper(int, int, int);
+
+        static void exitFunc() { exit(0); }
     };
 }
 

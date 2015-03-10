@@ -265,12 +265,12 @@ void Button::draw()
 void Controls::Mouse::init()
 {
     mainMouse = this;
-    glutMouseFunc(Controls::Mouse::mouseFuncWrapper);
-    glutMotionFunc(Controls::Mouse::motionFuncWrapper);
+    glutMouseFunc(_mouseFuncWrapper);
+    glutMotionFunc(_motionFuncWrapper);
     //glutMouseWheelFunc(mouseWheel);
 }
 
-void Controls::Mouse::mouse(int button, int state, int x, int y)
+void Controls::Mouse::_mouse(int button, int state, int x, int y)
 {
     _lastx=x;
     _lasty=y;
@@ -298,7 +298,7 @@ void Controls::Mouse::mouse(int button, int state, int x, int y)
     glutPostRedisplay();
 }
 
-void Controls::Mouse::motion(int x, int y)
+void Controls::Mouse::_motion(int x, int y)
 {
     int diffx=x-_lastx;
     int diffy=y-_lasty;
@@ -322,67 +322,56 @@ void Controls::Mouse::motion(int x, int y)
     glutPostRedisplay();
 }
 
-void Controls::Mouse::mouseFuncWrapper(int button, int state, int x, int y)
+void Controls::Mouse::_mouseFuncWrapper(int button, int state, int x, int y)
 {
-    mainMouse->mouse(button, state, x, y);
+    mainMouse->_mouse(button, state, x, y);
 }
 
-void Controls::Mouse::motionFuncWrapper(int x, int y)
+void Controls::Mouse::_motionFuncWrapper(int x, int y)
 {
-    mainMouse->motion(x, y);
+    mainMouse->_motion(x, y);
 }
 
 //TODO Keyboard functions
 void Controls::Keyboard::init()
 {
     mainKeyboard = this;
-    glutKeyboardFunc(Controls::Keyboard::keyboardFuncWrapper);
-    glutSpecialFunc(Controls::Keyboard::keyboardSpecialFuncWrapper);
+    glutKeyboardFunc(Controls::Keyboard::_keyboardFuncWrapper);
+    glutSpecialFunc(Controls::Keyboard::_keyboardSpecialFuncWrapper);
+
+    hotkey_map['q'] = exitFunc;
 }
 
-void Controls::Keyboard::keyPress(unsigned char key, int x, int y)
+void Controls::Keyboard::register_hotkey(unsigned char key, std::function<void(void)> func)
 {
-    switch(key)
-    {
-    case 'q':
-        exit(0);
-        break;
-    case 'm':
-        std::cout << "Switching to mirror." << std::endl;
-        _panel->getWorld()->setEnvMap((unsigned int) 0);
-        break;
-    case 'd':
-        std::cout << "Switching to mirror." << std::endl;
-        _panel->getWorld()->setEnvMap((unsigned int) 1);
-        break;
-    case 'p':
-        std::cout << "Switching to phong." << std::endl;
-        _panel->getWorld()->setEnvMap((unsigned int) 2);
-        break;
+    hotkey_map[key] = func;
+}
+void Controls::Keyboard::register_specialkey(int key,  std::function<void (void)> func)
+{
+    specialkey_map[key] = func;
+}
 
-    default:
-        break;
-    }
+void Controls::Keyboard::_keyPress(unsigned char key, int x, int y)
+{
+    auto func = hotkey_map[key];
+    if (func != nullptr) func();
 
     glutPostRedisplay();
 }
 
-void Controls::Keyboard::specialPress(int key, int x, int y)
+void Controls::Keyboard::_specialPress(int key, int x, int y)
 {
-    switch(key)
-    {
-    default:
-        break;
-    }
+    auto func = specialkey_map[key];
+    if (func != nullptr) func();
 
     glutPostRedisplay();
 }
-void Controls::Keyboard::keyboardFuncWrapper(unsigned char key, int x, int y)
+void Controls::Keyboard::_keyboardFuncWrapper(unsigned char key, int x, int y)
 {
-    mainKeyboard->keyPress(key, x, y);
+    mainKeyboard->_keyPress(key, x, y);
 }
 
-void Controls::Keyboard::keyboardSpecialFuncWrapper(int key, int x, int y)
+void Controls::Keyboard::_keyboardSpecialFuncWrapper(int key, int x, int y)
 {
-    mainKeyboard->specialPress(key, x, y);
+    mainKeyboard->_specialPress(key, x, y);
 }

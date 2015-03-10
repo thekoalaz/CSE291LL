@@ -8,6 +8,7 @@ int EnvMap::NEXTTEXTUREID = 0;
 /* Utility Functions */
 char * textFileRead(const char * fn);
 
+/* Method Definitions */
 void World::addObject(Object * obj)
 {
     _objects.push_back(obj);
@@ -65,6 +66,8 @@ Shader * World::findShader(Object * obj)
 
 void World::draw()
 {
+    _envMap->bind();
+
     for(auto object : _objects)
     {
         auto shader = _shaderMap.find(object->getID());
@@ -77,6 +80,8 @@ void World::draw()
             object->draw();
         }
     }
+
+    _envMap->unbind();
 }
 
 void Object::draw()
@@ -91,7 +96,9 @@ void Object::draw()
     glRotated(_rotx,1,0,0);
     glRotated(_roty,0,1,0);
     glRotated(_rotz,0,0,1);
+
     doDraw();
+
     glPopMatrix();
 }
 
@@ -227,7 +234,6 @@ void ObjGeometry::doDraw()
     if (!_geomReady)
     {
         _readGeom();
-        _geomReady = true;
     }
 
     Shader * shader = _world->findShader(this);
@@ -235,7 +241,6 @@ void ObjGeometry::doDraw()
 
     envMap->bind();
 
-    //TODO Move this to the shader.
     if (shader != nullptr)
     {
         GLint texLoc = glGetUniformLocation(shader->getProgram(), "envMap");
@@ -248,7 +253,7 @@ void ObjGeometry::doDraw()
     glVertexPointer(3, GL_FLOAT, 0, &_vertices[0]);
     glNormalPointer(GL_FLOAT, 0, &_normals[0]);
 
-    check_gl_error();
+    //check_gl_error();
     glDrawArrays(GL_TRIANGLES, 0, _vertices.size());
 
     envMap->unbind();
@@ -346,6 +351,8 @@ int ObjGeometry::_readGeom()
         glm::vec2 uv = tempUVs[uvIndex - 1];
         _uvs.push_back(uv);
     }
+
+    _geomReady = true;
 
     return lineCount;
 }
@@ -626,7 +633,6 @@ void PhongEnvMap::_precomputeMap()
     }
 }
 
-
 World & Scene::createWorld()
 {
     World * new_world = new World();
@@ -635,27 +641,15 @@ World & Scene::createWorld()
 
 void Shader::_initShaders()
 {
-    bool no_shaders = false;
-    if (_vertfile == "")
-    {
-        no_shaders = true;
-    }
-    if (_fragfile == "")
-    {
-        no_shaders = true;
-    }
-    if (no_shaders)
+    if (_vertfile == "" || _fragfile == "")
     {
         std::cout << "No shaders! Initialization failing." << std::endl;
         return;
     }
-    else if (_initialized)
+    else if (_shaderReady)
     {
         std::cout << "Shader has already initialized." << std::endl;
-    }
-    else
-    {
-        _initialized = true;
+        return;
     }
 
     char *vs,*fs;
@@ -698,6 +692,9 @@ void Shader::_initShaders()
     glDetachShader(_program, _frag);
     glDeleteShader(_vertex);
     glDeleteShader(_frag);
+
+    _shaderReady = true;
+    return;
 }
 
 int Shader::_checkShaderError(GLuint shader)
@@ -726,25 +723,13 @@ void Shader::unlink()
     glUseProgram(0);
 }
 
-glm::mat3 R_alignAxes(glm::vec3 X1, glm::vec3 Y1, glm::vec3 Z1, glm::vec3 X2, glm::vec3 Y2, glm::vec3 Z2) {
-    glm::vec3 x1 = normalize(X1);
-    glm::vec3 y1 = normalize(Y1);
-    glm::vec3 z1 = normalize(Z1);
-    glm::vec3 x2 = normalize(X2);
-    glm::vec3 y2 = normalize(Y2);
-    glm::vec3 z2 = normalize(Z2);
-    glm::vec3 w = (float)M_PI*glm::normalize(z1 + z2);
-    glm::mat3 RalignZ = (float)(2 / M_PI / M_PI)*glm::outerProduct(w, w) - glm::mat3();
-    y1 = RalignZ*y1;
-    float theta = glm::dot(glm::cross(y2, y1), z2);
-    w = theta*z2;
-    glm::mat3 wCrossMat;
-    wCrossMat[0] = glm::vec3(0.0, w[2], -w[1]);
-    wCrossMat[1] = glm::vec3(-w[2], 0.0, w[0]);
-    wCrossMat[2] = glm::vec3(w[1], -w[0], 0.0);
-    glm::mat3 RalignY = (float)((1 - cos(theta)) / M_PI / M_PI)*glm::outerProduct(w,w) + cos(theta)*glm::mat3()+sin(theta)/theta*wCrossMat;
-    return RalignY*RalignZ;
+void EnvShader::link()
+{
+    GLint texLoc = glGetUniformLocation(getProgram(), "envMap");
+    glUniform1i(texLoc, _envMap->_getTextureID());
+    Shader::link();
 }
+
 
 // (x,y,z) is orientation of the patch normal (e.g. icosahedral directions) relative to the envMap
 // Compute the viewpoint for such a patch from every theta (polar), phi (azimuthal) relative to the normal
@@ -818,71 +803,6 @@ void CookTorranceMap::_precomputeMap()
         }
     }
 }
-/*
-void CookTorranceIcosMap::_precomputeMap()
-{
-    _width = _envMap._getWidth();
-    _height = _envMap._getHeight();
-    _data = new float[3 * _width * _height];
-    glm::mat3 R_alignEP;
-    glm::vec3 xAxP_E = Scene::ICOS_XAXES[_vertexIndex];
-    glm::vec3 yAxP_E = Scene::ICOS_YAXES[_vertexIndex];
-    glm::vec3 zAxP_E = Scene::ICOS_ZAXES[_vertexIndex];
-    glm::vec3 xAxE_E(1.0f, 0.0f, 0.0f); // x-axis of EnvMap in the frame of EnvMap
-    glm::vec3 yAxE_E(0.0f, 1.0f, 0.0f);
-    glm::vec3 zAxE_E(0.0f, 0.0f, 1.0f);
-    R_alignEP[0] = xAxP_E;
-    R_alignEP[1] = yAxP_E;
-    R_alignEP[2] = zAxP_E;
-    R_alignEP = glm::transpose(R_alignEP);
-    float a = 2 * M_PI*M_PI / (double)(_width*_height);
-    for (int i = 0; i < _width; i++){
-        std::cout << "We're on x " << i << "\r";
-        float thetaV_P = 2 * M_PI*((double)i / _width - 1);
-        for (int j = 0; j <= _height / 2; j++)
-        {
-            float phiV_P = M_PI*(double)j / _height;
-            glm::vec3 V_P(sin(phiV_P)*cos(thetaV_P), sin(phiV_P)*sin(thetaV_P), cos(phiV_P));
-            float NdotV = V_P.z;
-            double Rsum = 0;
-            double Gsum = 0;
-            double Bsum = 0;
-            //double sAng = 0;
-            for (int k = 0; k < _width; k++){
-                float thetaL_E = 2 * M_PI*((double)k / _width - 1);
-                for (int l = 0; l < _height; l++){
-                    float phiL_E = M_PI*(double)l / _height;
-                    glm::vec3 L_E(sin(phiL_E)*sin(thetaL_E), cos(phiL_E), -sin(phiL_E)*cos(thetaL_E));
-                    glm::vec3 L_P = R_alignEP*L_E;
-                    glm::vec3 H_P = glm::normalize(L_P + V_P);
-                    float NdotL = L_P.z;
-                    if (NdotL <= 0) continue;
-                    //sAng += a*sin(phiL_E);
-                    float NdotH = H_P.z;
-                    float VdotH = glm::dot(V_P, H_P);
-                    float LdotH = glm::dot(L_P, H_P);
-                    float G = std::min(2 * NdotH*NdotV / VdotH, 2 * NdotH*NdotL / LdotH);
-                    G = std::min((float)1.0, G);
-                    float D = exp((NdotH*NdotH - 1) / (_roughness*_roughness*NdotH*NdotH));
-                    D /= M_PI*_roughness*_roughness*pow(NdotH, 4);
-                    float F = _reflCoeff + (1 - _reflCoeff)*pow(1 - VdotH, 5);
-                    float brdf = F*D*G / (M_PI*NdotL*NdotV);
-                    // integrate
-                    double envR = _envMap._getPixelR(k, l);
-                    double envG = _envMap._getPixelG(k, l);
-                    double envB = _envMap._getPixelB(k, l);
-                    Rsum += envR*brdf*NdotL*sin(phiL_E);
-                    Gsum += envG*brdf*NdotL*sin(phiL_E);
-                    Bsum += envB*brdf*NdotL*sin(phiL_E);
-                }
-            }
-            _setPixelR(i, j, a*Rsum);
-            _setPixelG(i, j, a*Gsum);
-            _setPixelB(i, j, a*Bsum);
-        }
-    }
-}
-*/
 
 void CookTorranceIcosMap::_precomputeMap()
 {

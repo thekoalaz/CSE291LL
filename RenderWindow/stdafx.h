@@ -20,6 +20,7 @@
 #include <unordered_map>
 #include <string>
 #include <algorithm>
+#include <functional>
 
 #define _USE_MATH_DEFINES
 #include <math.h>
