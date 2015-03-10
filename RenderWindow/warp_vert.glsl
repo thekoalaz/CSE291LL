@@ -1,6 +1,7 @@
+#version 330 compatibility
 #define M_PI 3.1415926535897932384626433832795
 float GOLDEN_RATIO = (1 + sqrt(5)) / 2;
-vec3 ICOS_ZAXES[12] = {
+vec3 ICOS_ZAXES[12] = vec3[](
     normalize(vec3(0.0f ,  1.0f,  GOLDEN_RATIO)),
     normalize(vec3(0.0f , -1.0f,  GOLDEN_RATIO)),
     normalize(vec3(0.0f ,  1.0f, -GOLDEN_RATIO)),
@@ -13,8 +14,8 @@ vec3 ICOS_ZAXES[12] = {
     normalize(vec3(-GOLDEN_RATIO, 0.0,  1.0f)),
     normalize(vec3(GOLDEN_RATIO , 0.0, -1.0f)),
     normalize(vec3(-GOLDEN_RATIO, 0.0, -1.0f))
-};
-vec3 ICOS_YAXES[12] = {
+);
+vec3 ICOS_YAXES[12] = vec3[](
     vec3(1.0f, 0.0f, 0.0f),
     vec3(-1.0f, 0.0f, 0.0f),
     vec3(-1.0f, 0.0f, 0.0f),
@@ -27,8 +28,8 @@ vec3 ICOS_YAXES[12] = {
     vec3(0.0f, -1.0f, 0.0f),
     vec3(0.0f, -1.0f, 0.0f),
     vec3(0.0f, 1.0f, 0.0f)
-};
-vec3 ICOS_XAXES[12] = {
+);
+vec3 ICOS_XAXES[12] = vec3[](
     cross(ICOS_YAXES[0] , ICOS_ZAXES[0]),
     cross(ICOS_YAXES[1] , ICOS_ZAXES[1]),
     cross(ICOS_YAXES[2] , ICOS_ZAXES[2]),
@@ -41,11 +42,11 @@ vec3 ICOS_XAXES[12] = {
     cross(ICOS_YAXES[9] , ICOS_ZAXES[9]),
     cross(ICOS_YAXES[10], ICOS_ZAXES[10]),
     cross(ICOS_YAXES[11], ICOS_ZAXES[11])
-};
+);
 
-flat varying ivec3 V;
-varying float w[3];
-varying vec2 uv[3];
+flat out ivec3 V;
+out float w[3];
+out vec2 uv[3];
 
 ivec3 closestViews(float p0, float p1, float p2, float p3, float p4, float p5, float p6, float p7, float p8, float p9, float p10, float p11)
 {
@@ -72,7 +73,7 @@ ivec3 closestViews(float p0, float p1, float p2, float p3, float p4, float p5, f
     //}
     //return ivec3(index[0],index[1],index[2]);
     int views[3];
-    float prox[12] = {p0,p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11};
+    float prox[12] = float[](p0,p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11);
     float m = 0;
     for (int i=0; i<12; i++) {
         if (prox[i]<=m) continue;
@@ -115,9 +116,9 @@ void main()
                                 prox[6],prox[7],prox[8],prox[9],prox[10],prox[11]   );
     V = views;
     
-    vec3 x[3] = { ICOS_XAXES[V[0]], ICOS_XAXES[V[1]], ICOS_XAXES[V[2]] };
-    vec3 y[3] = { ICOS_YAXES[V[0]], ICOS_YAXES[V[1]], ICOS_YAXES[V[2]] };
-    vec3 z[3] = { ICOS_ZAXES[V[0]], ICOS_ZAXES[V[1]], ICOS_ZAXES[V[2]] };
+    vec3 x[3] = vec3[](ICOS_XAXES[V[0]], ICOS_XAXES[V[1]], ICOS_XAXES[V[2]]);
+    vec3 y[3] = vec3[](ICOS_YAXES[V[0]], ICOS_YAXES[V[1]], ICOS_YAXES[V[2]]);
+    vec3 z[3] = vec3[](ICOS_ZAXES[V[0]], ICOS_ZAXES[V[1]], ICOS_ZAXES[V[2]]);
     
     for (int i=0; i<3; i++)
     {

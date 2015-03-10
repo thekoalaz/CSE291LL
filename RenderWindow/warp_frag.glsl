@@ -1,3 +1,4 @@
+#version 330 compatibility
 uniform sampler2D envMap;
 uniform sampler2D radMap00;
 uniform sampler2D radMap01;
@@ -12,9 +13,9 @@ uniform sampler2D radMap09;
 uniform sampler2D radMap10;
 uniform sampler2D radMap11;
 
-flat varying ivec3 V;
-varying float w[3];
-varying vec2 uv[3];
+flat in ivec3 V;
+in float w[3];
+in vec2 uv[3];
 
 vec4 tonemap(vec4 x)
 {
