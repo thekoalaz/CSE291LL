@@ -68,7 +68,7 @@ int main(int argc, char* argv[])
     world.addObject(phongMap);
 
     Scene::ObjGeometry * kevin = new Scene::ObjGeometry("kevin.obj");
-    Scene::EnvShader * mirrorShader = new Scene::EnvShader(phongMap, "sphere_vert.glsl", "sphere_frag.glsl");
+    Scene::EnvShader * mirrorShader = new Scene::EnvShader(envMap, "sphere_vert.glsl", "sphere_frag.glsl");
     Scene::EnvShader * diffuseShader = new Scene::EnvShader(diffuseMap, "tonemap_vert.glsl", "tonemap_frag.glsl");
     Scene::EnvShader * phongShader = new Scene::EnvShader(phongMap, "sphere_vert.glsl", "sphere_frag.glsl");
     world.assignShader(kevin, mirrorShader);
@@ -104,11 +104,10 @@ int main(int argc, char* argv[])
     //std::ostringstream ctName;
     //for (int index = 0; index < 12; index++)
     //{
-    //    ctName << "ctIcos" << std::setfill('0') << std::setw(2) << index;
-    //    std::cout << ctName.str() << std::endl;
+    //    std::string ctName = Scene::CookTorranceIcosMap::getCtIcosMapName(index);
     //    Scene::CookTorranceIcosMap * ctMap = new Scene::CookTorranceIcosMap(*envMap, 0.3, 0.8, 0);
     //    ctMaps.push_back(ctMap);
-    //    ctMap->useCache(ctName.str() + ".hdr");
+    //    ctMap->useCache(ctName + ".hdr");
     //    world.addObject(ctMap);
     //    ctName.str("");
     //    ctName.clear();
@@ -117,36 +116,28 @@ int main(int argc, char* argv[])
 
 
     /* Cook Torrance Render */
-    //std::vector<Scene::RadMap *> radMaps;
-    //std::ostringstream radName;
-    //Scene::Shader * ctSphereShader = new Scene::Shader("warp_vert.glsl", "warp_frag.glsl");
-    //for (int index = 0; index < 12; index++)
-    //{
-    //    radName << "ctIcos" << std::setfill('0') << std::setw(2) << index;
-    //    std::cout << radName.str() << std::endl;
-    //    Scene::RadMap * radMap = new Scene::RadMap(radName.str() + ".hdr");
-    //    radMaps.push_back(radMap);
-    //    world.addObject(radMap);
-    //    GLint radMapLocation = glGetUniformLocation(ctSphereShader->getProgram(), radName.str().c_str());
-    //    glUniform1i(radMapLocation, radMap->_getTextureID());
-    //    radName.str("");
-    //    radName.clear();
-    //}
-    //std::setfill(' ');
+    std::vector<Scene::RadMap *> radMaps;
+    for (int index = 0; index < 12; index++)
+    {
+        std::string ctName = Scene::CookTorranceIcosMap::getCtIcosMapName(index);
+        Scene::RadMap * radMap = new Scene::RadMap(ctName + ".hdr");
+        radMaps.push_back(radMap);
+        world.addObject(radMap);
+    }
+    Scene::CtShader * ctSphereShader = new Scene::CtShader(radMaps, "warp_vert.glsl", "warp_frag.glsl");
 
-    //Scene::Sphere * ctSphere = new Scene::Sphere();
-    //world.assignShader(ctSphere, ctSphereShader);
-    //ctSphere->setTx(-5);
-    //world.addObject(ctSphere);
-
-    //Scene::ObjGeometry * kevin = new Scene::ObjGeometry("kevin.obj");
-    //world.assignShader(kevin, ctSphereShader);
-    //kevin->setTx(5);
-    //world.addObject(kevin);
+    Scene::Sphere * ctSphere = new Scene::Sphere();
+    world.assignShader(ctSphere, ctSphereShader);
+    ctSphere->setTx(-10);
+    world.addObject(ctSphere);
 
 
-    //auto clambda = [&]() { world.assignShader(kevin, ctSphereShader); world.setEnvMap(envMap); };
-    //keyboard.register_hotkey('c', clambda);
+    auto clambda = [&]()
+    {
+        world.assignShader(kevin, ctSphereShader);
+        world.setEnvMap(envMap);
+    };
+    keyboard.register_hotkey('c', clambda);
 
     MANAGER.drawElements();
 

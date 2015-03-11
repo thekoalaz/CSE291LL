@@ -41,7 +41,7 @@ void World::addObject(EnvMap * envMap)
     }
     else
     {
-        std::cout << "Env map already set!" << std::endl;
+        //std::cout << "Env map already set!" << std::endl;
     }
 }
 
@@ -68,7 +68,7 @@ void World::draw()
 {
     if (_envMap != nullptr) { _envMap->bind(); }
 
-    for(auto object : _objects)
+    for(auto &object : _objects)
     {
         auto shader = _shaderMap.find(object->getID());
         if (shader != _shaderMap.end())
@@ -700,17 +700,31 @@ void Shader::unlink()
 
 void EnvShader::link()
 {
+    Shader::link();
     _envMap->bind();
-    std::cout << "Binding " << _envMap->mapType() << std::endl;
     GLint texLoc = glGetUniformLocation(getProgram(), "envMap");
     glUniform1i(texLoc, _envMap->_getTextureID());
-    Shader::link();
 }
 
 void EnvShader::unlink()
 {
-    Shader::unlink();
     _envMap->unbind();
+    Shader::unlink();
+}
+
+//Consider doing this method for index: http://stackoverflow.com/questions/10962290/find-position-of-element-in-c11-range-based-for-loop
+void CtShader::link()
+{
+    Shader::link();
+    for(auto &radMap : _radMaps)
+    {
+        auto index = &radMap - &_radMaps[0];
+        std::string radName = RadMap::getRadMapName(index);
+        radMap->bind();
+        GLint radMapLocation = glGetUniformLocation(getProgram(), radName.c_str());
+        std::cout << radMap->_getTextureID() << std::endl;
+        glUniform1i(radMapLocation, radMap->_getTextureID());
+    }
 }
 
 
@@ -849,6 +863,17 @@ void CookTorranceIcosMap::_precomputeMap()
     }
 }
 
+std::string CookTorranceIcosMap::getCtIcosMapName(int index)
+{
+    return zero_padded_name("ctIcos", index, 2);
+}
+
+
+std::string RadMap::getRadMapName(int index)
+{
+    return zero_padded_name("radMap", index, 2);
+}
+
 /* Utility Functions */
 char * textFileRead(const char * fn)
 {
@@ -893,4 +918,13 @@ void _check_gl_error(const char *file, int line) {
                 std::cerr << "GL_" << error.c_str() <<" - "<<file<<":"<<line<<std::endl;
                 err=glGetError();
         }
+}
+
+std::string zero_padded_name(std::string prefix, int number, int pad)
+{
+    std::ostringstream name;
+    name << prefix << std::setfill('0') << std::setw(pad) << number;
+    std::setfill(' ');
+
+    return name.str();
 }

@@ -262,7 +262,6 @@ private:
     EnvMap * _envMap;
 };
 
-
 class RadMap : public EnvMap
 {
 public:
@@ -273,7 +272,22 @@ public:
         _mapReady = true;
         _visible = false;
     }
+
+    static std::string getRadMapName(int index);
 };
+
+class CtShader : public Shader
+{
+public:
+    CtShader(std::vector<Scene::RadMap *> & radMaps, std::string vertfile, std::string fragfile) :
+        Shader(vertfile, fragfile), _radMaps(radMaps) { };
+
+    void link();
+
+private:
+    std::vector<Scene::RadMap *> & _radMaps;
+};
+
 
 class PrecomputeMap : public EnvMap
 {
@@ -323,6 +337,8 @@ class CookTorranceIcosMap : public PrecomputeMap
 {
 public:
     CookTorranceIcosMap(EnvMap & envMap, float r1, float r2, int i) : _roughness(r1), _reflCoeff(r2), _vertexIndex(i), PrecomputeMap(envMap) {};
+
+    static std::string CookTorranceIcosMap::getCtIcosMapName(int);
 
     std::string mapType() { return "CookTorrance"; }
 
@@ -435,3 +451,5 @@ void _check_gl_error(const char *file, int line);
 #define check_gl_error() _check_gl_error(__FILE__,__LINE__)
  
 #endif // GLERROR_H
+
+std::string zero_padded_name(std::string, int, int);
