@@ -318,6 +318,8 @@ public:
         _ySkip = 1;
     };
 
+    std::string mapType() { return "CookTorrance"; }
+
     static std::string CookTorranceIcosMap::getCtIcosMapName(int);
 private:
     float _roughness;

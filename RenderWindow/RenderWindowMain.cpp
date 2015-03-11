@@ -77,19 +77,24 @@ int main(int argc, char* argv[])
 
 
     /* Cook Torrance Generation */
-    //std::vector<Scene::CookTorranceIcosMap *> ctMaps;
-    //std::ostringstream ctName;
-    //for (int index = 0; index < 12; index++)
-    //{
-    //    std::string ctName = Scene::CookTorranceIcosMap::getCtIcosMapName(index);
-    //    Scene::CookTorranceIcosMap * ctMap = new Scene::CookTorranceIcosMap(*envMap, 0.3, 0.8, 0);
-    //    ctMaps.push_back(ctMap);
-    //    ctMap->useCache(ctName + ".hdr");
-    //    world.addObject(ctMap);
-    //    ctName.str("");
-    //    ctName.clear();
-    //}
-    //std::setfill(' ');
+    envmapfile = "grace-half.hdr";
+    Scene::EnvMap * envMapSmall = new Scene::EnvMap(envmapfile);
+    world.addObject(envMapSmall);
+    world.assignShader(envMapSmall, envShader);
+
+    std::vector<Scene::CookTorranceIcosMap *> ctMaps;
+    std::ostringstream ctName;
+    for (int index = 0; index < 12; index++)
+    {
+        std::string ctName = Scene::CookTorranceIcosMap::getCtIcosMapName(index);
+        Scene::CookTorranceIcosMap * ctMap = new Scene::CookTorranceIcosMap(*envMapSmall, 0.01, 0.8, 0);
+        ctMap->setXSkip(64);
+        ctMap->setYSkip(8);
+        ctMaps.push_back(ctMap);
+        ctMap->useCache(ctName + ".hdr");
+        world.addObject(ctMap);
+    }
+    std::setfill(' ');
 
     /* Cook Torrance Render */
     std::vector<Scene::RadMap *> radMaps;
