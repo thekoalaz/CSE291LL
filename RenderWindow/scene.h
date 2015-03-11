@@ -10,21 +10,6 @@ namespace Scene
 {
 /** Global variables **/
 const float GOLDEN_RATIO = (1.0f + sqrt(5.0f)) / 2.0f;
-const float ICOSAHEDRON_VERTS[][3] = {
-    {  0,  1.0f,  GOLDEN_RATIO },
-    {  0, -1.0f,  GOLDEN_RATIO },
-    {  0,  1.0f, -GOLDEN_RATIO },
-    {  0, -1.0f, -GOLDEN_RATIO },
-    {  1.0f,  GOLDEN_RATIO,  0 },
-    { -1.0f,  GOLDEN_RATIO,  0 },
-    {  1.0f, -GOLDEN_RATIO,  0 },
-    { -1.0f, -GOLDEN_RATIO,  0 },
-    {  GOLDEN_RATIO,  0,  1.0f },
-    { -GOLDEN_RATIO,  0,  1.0f },
-    {  GOLDEN_RATIO,  0, -1.0f },
-    { -GOLDEN_RATIO,  0, -1.0f }
-};
-
 const glm::vec3 ICOS_ZAXES[] = {
     glm::normalize(glm::vec3(0, 1.0f, GOLDEN_RATIO)),
     glm::normalize(glm::vec3(0, -1.0f, GOLDEN_RATIO)),
@@ -34,10 +19,10 @@ const glm::vec3 ICOS_ZAXES[] = {
     glm::normalize(glm::vec3(-1.0f, GOLDEN_RATIO, 0)),
     glm::normalize(glm::vec3(1.0f, -GOLDEN_RATIO, 0)),
     glm::normalize(glm::vec3(-1.0f, -GOLDEN_RATIO, 0)),
-    glm::normalize(glm::vec3(1.0f, 0, GOLDEN_RATIO)),
-    glm::normalize(glm::vec3(-1.0f, 0, GOLDEN_RATIO)),
-    glm::normalize(glm::vec3(1.0f, 0, -GOLDEN_RATIO)),
-    glm::normalize(glm::vec3(-1.0f, 0, -GOLDEN_RATIO))
+    glm::normalize(glm::vec3(GOLDEN_RATIO, 0.0, 1.0f)),
+    glm::normalize(glm::vec3(-GOLDEN_RATIO, 0.0, 1.0f)),
+    glm::normalize(glm::vec3(GOLDEN_RATIO, 0.0, -1.0f)),
+    glm::normalize(glm::vec3(-GOLDEN_RATIO, 0.0, -1.0f))
 };
 const glm::vec3 ICOS_YAXES[] = {
     glm::vec3(1.0f, 0.0f, 0.0f),
@@ -313,35 +298,27 @@ protected:
     int _xSkip, _ySkip;
 };
 
-class CookTorranceMap : public PrecomputeMap
+class InterpolateMap : public PrecomputeMap
 {
 public:
-    CookTorranceMap(EnvMap & envMap, float r1, float r2, glm::vec3 v) :
-        _roughness(r1), _reflCoeff(r2), _zAxis(v), PrecomputeMap(envMap) {};
-    CookTorranceMap(EnvMap & envMap, float radius, int n, int m) : _roughness(0.3f), _reflCoeff(0.8f),
-        _zAxis(glm::vec3(Scene::ICOSAHEDRON_VERTS[1][0], Scene::ICOSAHEDRON_VERTS[1][1], Scene::ICOSAHEDRON_VERTS[1][2])),
-        PrecomputeMap(envMap, radius, n, m){};
-
+    InterpolateMap(EnvMap & envMap, int w, int h) : _newWidth(w), _newHeight(h), PrecomputeMap(envMap) {};
 private:
-    float _roughness;
-    float _reflCoeff;
-    glm::vec3 _xAxis;
-    glm::vec3 _yAxis;
-    glm::vec3 _zAxis; // in the coordinates of envMap
+    int _newWidth;
+    int _newHeight;
 protected:
     void _precomputeMap();
 };
 
-
 class CookTorranceIcosMap : public PrecomputeMap
 {
 public:
-    CookTorranceIcosMap(EnvMap & envMap, float r1, float r2, int i) : _roughness(r1), _reflCoeff(r2), _vertexIndex(i), PrecomputeMap(envMap) {};
+    CookTorranceIcosMap(EnvMap & envMap, float r1, float r2, int i) :_roughness(r1), _reflCoeff(r2), _vertexIndex(i), PrecomputeMap(envMap)
+    {
+        _xSkip = 1;
+        _ySkip = 1;
+    };
 
     static std::string CookTorranceIcosMap::getCtIcosMapName(int);
-
-    std::string mapType() { return "CookTorrance"; }
-
 private:
     float _roughness;
     float _reflCoeff;

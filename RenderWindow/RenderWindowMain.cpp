@@ -75,6 +75,39 @@ int main(int argc, char* argv[])
     world.assignShader(sphere, mirrorShader);
     world.addObject(kevin);
 
+
+    /* Cook Torrance Generation */
+    //std::vector<Scene::CookTorranceIcosMap *> ctMaps;
+    //std::ostringstream ctName;
+    //for (int index = 0; index < 12; index++)
+    //{
+    //    std::string ctName = Scene::CookTorranceIcosMap::getCtIcosMapName(index);
+    //    Scene::CookTorranceIcosMap * ctMap = new Scene::CookTorranceIcosMap(*envMap, 0.3, 0.8, 0);
+    //    ctMaps.push_back(ctMap);
+    //    ctMap->useCache(ctName + ".hdr");
+    //    world.addObject(ctMap);
+    //    ctName.str("");
+    //    ctName.clear();
+    //}
+    //std::setfill(' ');
+
+    /* Cook Torrance Render */
+    std::vector<Scene::RadMap *> radMaps;
+    for (int index = 0; index < 12; index++)
+    {
+        std::string ctName = Scene::CookTorranceIcosMap::getCtIcosMapName(index);
+        Scene::RadMap * radMap = new Scene::RadMap(ctName + ".hdr");
+        radMaps.push_back(radMap);
+        world.addObject(radMap);
+    }
+    Scene::CtShader * ctSphereShader = new Scene::CtShader(radMaps, "warp_vert.glsl", "warp_frag.glsl");
+
+    Scene::Sphere * ctSphere = new Scene::Sphere();
+    world.assignShader(ctSphere, ctSphereShader);
+    ctSphere->setTx(-10);
+    world.addObject(ctSphere);
+
+
     /* Keyboard hotkey assignments */
     auto mlambda = [&]()
     {
@@ -97,44 +130,9 @@ int main(int argc, char* argv[])
         world.assignShader(sphere, phongShader);
     };
     keyboard.register_hotkey('p', plambda);
-
-
-    /* Cook Torrance Generation */
-    //std::vector<Scene::CookTorranceIcosMap *> ctMaps;
-    //std::ostringstream ctName;
-    //for (int index = 0; index < 12; index++)
-    //{
-    //    std::string ctName = Scene::CookTorranceIcosMap::getCtIcosMapName(index);
-    //    Scene::CookTorranceIcosMap * ctMap = new Scene::CookTorranceIcosMap(*envMap, 0.3, 0.8, 0);
-    //    ctMaps.push_back(ctMap);
-    //    ctMap->useCache(ctName + ".hdr");
-    //    world.addObject(ctMap);
-    //    ctName.str("");
-    //    ctName.clear();
-    //}
-    //std::setfill(' ');
-
-
-    /* Cook Torrance Render */
-    std::vector<Scene::RadMap *> radMaps;
-    for (int index = 0; index < 12; index++)
-    {
-        std::string ctName = Scene::CookTorranceIcosMap::getCtIcosMapName(index);
-        Scene::RadMap * radMap = new Scene::RadMap(ctName + ".hdr");
-        radMaps.push_back(radMap);
-        world.addObject(radMap);
-    }
-    Scene::CtShader * ctSphereShader = new Scene::CtShader(radMaps, "warp_vert.glsl", "warp_frag.glsl");
-
-    Scene::Sphere * ctSphere = new Scene::Sphere();
-    world.assignShader(ctSphere, ctSphereShader);
-    ctSphere->setTx(-10);
-    world.addObject(ctSphere);
-
-
     auto clambda = [&]()
     {
-        world.assignShader(kevin, ctSphereShader);
+    world.assignShader(kevin, ctSphereShader);
         world.setEnvMap(envMap);
     };
     keyboard.register_hotkey('c', clambda);

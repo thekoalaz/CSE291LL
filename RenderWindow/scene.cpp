@@ -426,6 +426,20 @@ int PrecomputeMap::_readMap()
     return 0;
 }
 
+void InterpolateMap::_precomputeMap()
+{
+    _width = _newWidth;
+    _height = _newHeight;
+    _data = new float[3 * _width * _height];
+    int w0 = _envMap._getWidth();   // old dimensions
+    int h0 = _envMap._getHeight();
+    int w1 = _newWidth;             // new dimensions
+    int h1 = _newHeight;
+    float * x = new float[w0];
+    float * y = new float[h0];
+    for (int i = 0; i < w0; i++) x[i] = i*(float)(w1 - 1) / (w0 - 1);
+    for (int i = 0; i < h0; i++) y[i] = i*(float)(h1 - 1) / (h0 - 1);
+};
 
 void DiffuseEnvMap::_precomputeMap()
 {
@@ -727,80 +741,6 @@ void CtShader::link()
     }
 }
 
-
-// (x,y,z) is orientation of the patch normal (e.g. icosahedral directions) relative to the envMap
-// Compute the viewpoint for such a patch from every theta (polar), phi (azimuthal) relative to the normal
-void CookTorranceMap::_precomputeMap()
-{
-    _width = _envMap._getWidth();
-    _height = _envMap._getHeight();
-    _data = new float[3 * _width * _height];
-    glm::mat3 R_alignEP;
-    glm::vec3 xAxP_E, yAxP_E;
-    glm::vec3 xAxE_E(1.0f, 0.0f, 0.0f); // x-axis of EnvMap in the frame of EnvMap
-    glm::vec3 yAxE_E(0.0f, 1.0f, 0.0f);
-    glm::vec3 zAxE_E(0.0f, 0.0f, 1.0f);
-    glm::vec3 zAxP_E = glm::normalize(_zAxis);
-    if (_zAxis.x == 0 && _zAxis.y == 0){
-        yAxP_E = glm::vec3(0.0f, 1.0f, 0.0f);
-    }
-    else yAxP_E = glm::normalize(zAxE_E - glm::dot(zAxE_E, zAxP_E)*zAxP_E);
-    xAxP_E = glm::cross(yAxP_E, zAxP_E);
-    _xAxis = xAxP_E;
-    _yAxis = yAxP_E;
-    _zAxis = zAxP_E;
-    R_alignEP[0] = xAxP_E;
-    R_alignEP[1] = yAxP_E;
-    R_alignEP[2] = zAxP_E;
-    R_alignEP = glm::transpose(R_alignEP);
-    float a = 2 * M_PI*M_PI / (float)(_width*_height);
-    for (int i = 0; i < _width; i++){
-        std::cout << "We're on x " << i << "\r";
-        float thetaV_P = 2 * M_PI*((float)i / _width - 1);
-        for (int j = 0; j <= _height / 2; j++)
-        {
-            float phiV_P = M_PI*(float)j / _height;
-            glm::vec3 V_P(sin(phiV_P)*cos(thetaV_P), sin(phiV_P)*sin(thetaV_P), cos(phiV_P));
-            float NdotV = V_P.z;
-            float Rsum = 0;
-            float Gsum = 0;
-            float Bsum = 0;
-            //float sAng = 0;
-            for (int k = 0; k < _width; k++){
-                float thetaL_E = 2 * M_PI*((float)k / _width - 1);
-                for (int l = 0; l < _height; l++){
-                    float phiL_E = M_PI*(float)l / _height;
-                    glm::vec3 L_E(sin(phiL_E)*sin(thetaL_E), cos(phiL_E), -sin(phiL_E)*cos(thetaL_E));
-                    glm::vec3 L_P = R_alignEP*L_E;
-                    glm::vec3 H_P = glm::normalize(L_P + V_P);
-                    float NdotL = L_P.z;
-                    if (NdotL <= 0) continue;
-                    //sAng += a*sin(phiL_E);
-                    float NdotH = H_P.z;
-                    float VdotH = glm::dot(V_P, H_P);
-                    float LdotH = glm::dot(L_P, H_P);
-                    float G = std::min(2 * NdotH*NdotV / VdotH, 2 * NdotH*NdotL / LdotH);
-                    G = std::min((float)1.0f, G);
-                    float D = exp((NdotH*NdotH - 1) / (_roughness*_roughness*NdotH*NdotH));
-                    D /= M_PI*_roughness*_roughness*pow(NdotH, 4.0f);
-                    float F = _reflCoeff + (1 - _reflCoeff)*pow(1 - VdotH, 5.0f);
-                    float brdf = F*D*G / (M_PI*NdotL*NdotV);
-                    // integrate
-                    float envR = _envMap._getPixelR(k, l);
-                    float envG = _envMap._getPixelG(k, l);
-                    float envB = _envMap._getPixelB(k, l);
-                    Rsum += envR*brdf*NdotL*sin(phiL_E);
-                    Gsum += envG*brdf*NdotL*sin(phiL_E);
-                    Bsum += envB*brdf*NdotL*sin(phiL_E);
-                }
-            }
-            _setPixelR(i, j, a*Rsum);
-            _setPixelG(i, j, a*Gsum);
-            _setPixelB(i, j, a*Bsum);
-        }
-    }
-}
-
 void CookTorranceIcosMap::_precomputeMap()
 {
     _width = _envMap._getWidth();
@@ -818,13 +758,14 @@ void CookTorranceIcosMap::_precomputeMap()
     R_alignEV[2] = zAxV_E;
     R_alignEV = glm::transpose(R_alignEV);
     glm::vec3 V_V(0.0f, 0.0f, 1.0f);
+    int halfway = static_cast<int>(std::ceil(_height / 2.0f));
     float a = 2 * M_PI*M_PI / (float)(_width*_height);
-    for (int i = 0; i < _width; i++){
-        std::cout << "We're on x " << i << "\r";
-        float thetaN_V = 2 * M_PI*((float)i / _width - 1);
-        for (int j = 0; j <= _height / 2; j++)
-        {
-            float phiN_V = M_PI*(float)j / _height;
+    for (int jj = 0; jj < halfway - halfway % _ySkip + _ySkip; jj += _ySkip) {
+        int j = std::min(jj, halfway - 1);
+        float phiN_V = M_PI*(float)j / _height;
+        std::cout << "Integration Progress: y " << j << "\r";
+        for (int i = 0; i < _width; i += _xSkip){
+            float thetaN_V = 2 * M_PI*((float)i / _width - 1);
             glm::vec3 N_V(sin(phiN_V)*cos(thetaN_V), sin(phiN_V)*sin(thetaN_V), cos(phiN_V));
             float NdotV = N_V.z;
             float Rsum = 0;
@@ -859,6 +800,46 @@ void CookTorranceIcosMap::_precomputeMap()
             _setPixelR(i, j, a*Rsum);
             _setPixelG(i, j, a*Gsum);
             _setPixelB(i, j, a*Bsum);
+            if (j == 0)
+            {
+                for (int iPole = 1; iPole < _width; iPole++)
+                {
+                    _setPixelR(iPole, j, a*Rsum);
+                    _setPixelG(iPole, j, a*Gsum);
+                    _setPixelB(iPole, j, a*Bsum);
+                }
+                break;
+            }
+        }
+        if (_xSkip>1 || _ySkip > 1) {
+            for (int i = 0; i < _width; i++)
+            {
+                int i1 = i - i%_xSkip;
+                int i2 = i1 + _xSkip;
+                float dTheta1 = 2 * M_PI * (float)(i - i1) / _width;
+                float dTheta2 = 2 * M_PI * (float)(i2 - i) / _width;
+                i2 = i2%_width;
+                for (int j = 0; j < halfway; j++)
+                {
+                    int j1 = j - j%_ySkip;
+                    int j2 = std::min(j1 + _ySkip, halfway - 1);
+                    float phi = M_PI*(float)j / _height;
+                    float phi1 = M_PI*(float)j1 / _height;
+                    float phi2 = M_PI*(float)j2 / _height;
+                    float a11 = dTheta1*(cos(phi1) - cos(phi));
+                    float a12 = dTheta1*(cos(phi) - cos(phi2));
+                    float a21 = dTheta2*(cos(phi1) - cos(phi));
+                    float a22 = dTheta2*(cos(phi) - cos(phi2));
+                    if (j1 == j2) a11, a12, a21, a22 = 1;
+                    float A = a11 + a12 + a21 + a22;
+                    float R = (a22*_getPixelR(i1, j1) + a21*_getPixelR(i1, j2) + a12*_getPixelR(i2, j1) + a11*_getPixelR(i2, j2)) / A;
+                    float G = (a22*_getPixelG(i1, j1) + a21*_getPixelG(i1, j2) + a12*_getPixelG(i2, j1) + a11*_getPixelG(i2, j2)) / A;
+                    float B = (a22*_getPixelB(i1, j1) + a21*_getPixelB(i1, j2) + a12*_getPixelB(i2, j1) + a11*_getPixelB(i2, j2)) / A;
+                    _setPixelR(i, j, R);
+                    _setPixelG(i, j, G);
+                    _setPixelB(i, j, B);
+                }
+            }
         }
     }
 }
@@ -866,7 +847,7 @@ void CookTorranceIcosMap::_precomputeMap()
 std::string CookTorranceIcosMap::getCtIcosMapName(int index)
 {
     return zero_padded_name("ctIcos", index, 2);
-}
+    }
 
 
 std::string RadMap::getRadMapName(int index)
