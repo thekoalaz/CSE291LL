@@ -1,5 +1,5 @@
 #version 330 compatibility
-uniform sampler2D envMap;
+uniform sampler2D diffMap;
 uniform sampler2D radMap00;
 uniform sampler2D radMap01;
 uniform sampler2D radMap02;

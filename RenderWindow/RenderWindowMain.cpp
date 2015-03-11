@@ -35,13 +35,17 @@ int main(int argc, char* argv[])
 
     GlutUI::Controls::Keyboard keyboard(&mainPanel);
     GlutUI::Controls::Mouse mouse(&mainPanel, mainPanel.getCamera());
-
-    //std::string envmapfile = "grace-new.hdr";
-    //Scene::EnvMap * envMap = new Scene::EnvMap(envmapfile);
-    //Scene::EnvShader * envShader = new Scene::EnvShader(envMap, "tonemap_vert.glsl", "tonemap_frag.glsl");
-    //world.addObject(envMap);
-    //world.assignShader(envMap, envShader);
-
+    
+    std::string envmapfile = "grace-mini.hdr";
+    Scene::EnvMap * envMap = new Scene::EnvMap(envmapfile);
+    Scene::EnvShader * envShader = new Scene::EnvShader(envMap, "tonemap_vert.glsl", "tonemap_frag.glsl");
+    world.addObject(envMap);
+    world.assignShader(envMap, envShader);
+    
+    Scene::InterpolateMap* interpMap = new Scene::InterpolateMap(*envMap, 555,333);
+    interpMap->useCache("interpMap.hdr");
+    world.addObject(interpMap);
+    
     //Scene::EnvShader * sphereShader = new Scene::EnvShader(envMap, "sphere_vert.glsl", "sphere_frag.glsl");
     //Scene::Sphere * sphere = new Scene::Sphere();
     //sphere->setTx(10);
@@ -49,18 +53,18 @@ int main(int argc, char* argv[])
     //world.assignShader(sphere, sphereShader);
 
     /*
-    Scene::CookTorranceIcosMap * ctMap00 = new Scene::CookTorranceIcosMap(*envMap, 0.3, 0.8, 0);
-    Scene::CookTorranceIcosMap * ctMap01 = new Scene::CookTorranceIcosMap(*envMap, 0.3, 0.8, 1);
-    Scene::CookTorranceIcosMap * ctMap02 = new Scene::CookTorranceIcosMap(*envMap, 0.3, 0.8, 2);
-    Scene::CookTorranceIcosMap * ctMap03 = new Scene::CookTorranceIcosMap(*envMap, 0.3, 0.8, 3);
-    Scene::CookTorranceIcosMap * ctMap04 = new Scene::CookTorranceIcosMap(*envMap, 0.3, 0.8, 4);
-    Scene::CookTorranceIcosMap * ctMap05 = new Scene::CookTorranceIcosMap(*envMap, 0.3, 0.8, 5);
-    Scene::CookTorranceIcosMap * ctMap06 = new Scene::CookTorranceIcosMap(*envMap, 0.3, 0.8, 6);
-    Scene::CookTorranceIcosMap * ctMap07 = new Scene::CookTorranceIcosMap(*envMap, 0.3, 0.8, 7);
-    Scene::CookTorranceIcosMap * ctMap08 = new Scene::CookTorranceIcosMap(*envMap, 0.3, 0.8, 8);
-    Scene::CookTorranceIcosMap * ctMap09 = new Scene::CookTorranceIcosMap(*envMap, 0.3, 0.8, 9);
-    Scene::CookTorranceIcosMap * ctMap10 = new Scene::CookTorranceIcosMap(*envMap, 0.3, 0.8, 10);
-    Scene::CookTorranceIcosMap * ctMap11 = new Scene::CookTorranceIcosMap(*envMap, 0.3, 0.8, 11);
+    Scene::CookTorranceIcosMap * ctMap00 = new Scene::CookTorranceIcosMap(*envMap, 0.05, 0.8, 0);
+    Scene::CookTorranceIcosMap * ctMap01 = new Scene::CookTorranceIcosMap(*envMap, 0.05, 0.8, 1);
+    Scene::CookTorranceIcosMap * ctMap02 = new Scene::CookTorranceIcosMap(*envMap, 0.05, 0.8, 2);
+    Scene::CookTorranceIcosMap * ctMap03 = new Scene::CookTorranceIcosMap(*envMap, 0.05, 0.8, 3);
+    Scene::CookTorranceIcosMap * ctMap04 = new Scene::CookTorranceIcosMap(*envMap, 0.05, 0.8, 4);
+    Scene::CookTorranceIcosMap * ctMap05 = new Scene::CookTorranceIcosMap(*envMap, 0.05, 0.8, 5);
+    Scene::CookTorranceIcosMap * ctMap06 = new Scene::CookTorranceIcosMap(*envMap, 0.05, 0.8, 6);
+    Scene::CookTorranceIcosMap * ctMap07 = new Scene::CookTorranceIcosMap(*envMap, 0.05, 0.8, 7);
+    Scene::CookTorranceIcosMap * ctMap08 = new Scene::CookTorranceIcosMap(*envMap, 0.05, 0.8, 8);
+    Scene::CookTorranceIcosMap * ctMap09 = new Scene::CookTorranceIcosMap(*envMap, 0.05, 0.8, 9);
+    Scene::CookTorranceIcosMap * ctMap10 = new Scene::CookTorranceIcosMap(*envMap, 0.05, 0.8, 10);
+    Scene::CookTorranceIcosMap * ctMap11 = new Scene::CookTorranceIcosMap(*envMap, 0.05, 0.8, 11);
     ctMap00->useCache("ctIcos00.hdr");
     ctMap01->useCache("ctIcos01.hdr");
     ctMap02->useCache("ctIcos02.hdr");
@@ -190,12 +194,12 @@ int main(int argc, char* argv[])
     ctSphere->setTx(-5);
     world.addObject(ctSphere);
     ctSphere->setTx(0);
-
+    /*
     Scene::ObjGeometry * kevin = new Scene::ObjGeometry("kevin.obj");
     world.assignShader(kevin, ctSphereShader);
     kevin->setTx(5);
     world.addObject(kevin);
-
+    */
 
     /* Keyboard hotkey assignments */
     //auto mlambda = [&]() { world.assignShader(kevin, mirrorShader);

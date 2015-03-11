@@ -395,6 +395,39 @@ float EnvMap::_bilinearInterpolate(const float * _colors, const double x, const 
         + (p3 * fx2 * fy2) );
 }
 
+float EnvMap::_sphericalInterpolate(const float * _colors, const double x, const double y)
+{
+    int px1 = (int)x;
+    int py1 = (int)y;
+    int px2 = (px1 + 1)%_width;
+    int py2 = std::max(py1 + 1, _height - 1);
+
+    const float p11 = _colors[3 * (px1 + py1*_width)];
+    const float p21 = _colors[3 * (px2 + py1*_width)];
+    const float p12 = _colors[3 * (px1 + py2*_width)];
+    const float p22 = _colors[3 * (px2 + py2*_width)];
+
+    double dTheta1 = 2 * M_PI * (x - (double)px1) / _width;
+    double dTheta2 = 2 * M_PI * ((double)px2 - x) / _width;
+
+    double phi = M_PI*y / _height;
+    double phi1 = M_PI*(double)py1 / _height;
+    double phi2 = M_PI*(double)py2 / _height;
+
+    double d1 = cos(phi1) - cos(phi);
+    double d2 = cos(phi) - cos(phi2);
+    if (py1 == py2){
+        d1 = 1;
+        d2 = 1;
+    }
+    double a11 = dTheta1*d1;
+    double a12 = dTheta1*d2;
+    double a21 = dTheta2*d1;
+    double a22 = dTheta2*d2;
+    double A = a11 + a12 + a21 + a22;
+    return static_cast<float>((p11*a22 + p12*a21 + p21*a12 + p22*a11)/A);
+}
+
 void EnvMap::bind()
 {
     if (!_mapReady)
@@ -461,10 +494,17 @@ void InterpolateMap::_precomputeMap()
     int h0 = _envMap._getHeight();
     int w1 = _newWidth;             // new dimensions
     int h1 = _newHeight;
-    double * x = new double[w0];
-    double * y = new double[h0];
-    for (int i = 0; i < w0; i++) x[i] = i*(double)(w1 - 1) / (w0 - 1);
-    for (int i = 0; i < h0; i++) y[i] = i*(double)(h1 - 1) / (h0 - 1);
+    double wMag = (double)(w1 - 1) / (w0 - 1);
+    double hMag = (double)(h1 - 1) / (h0 - 1);
+    for (int i = 0; i < w1; i++){
+        double i0 = (double)i / wMag;
+        for (int j = 0; j < h1; j++){
+            double j0 = (double)j / hMag;
+            _setPixelR(i, j, _envMap._getPixelR(i0, j0));
+            _setPixelG(i, j, _envMap._getPixelG(i0, j0));
+            _setPixelB(i, j, _envMap._getPixelB(i0, j0));
+        }
+    }
 };
 
 void DiffuseEnvMap::_precomputeMap()
@@ -539,11 +579,16 @@ void DiffuseEnvMap::_precomputeMap()
             double phi = M_PI*(double)j / _height;
             double phi1 = M_PI*(double)j1 / _height;
             double phi2 = M_PI*(double)j2 / _height;
-            double a11 = dTheta1*(cos(phi1) - cos(phi));
-            double a12 = dTheta1*(cos(phi) - cos(phi2));
-            double a21 = dTheta2*(cos(phi1) - cos(phi));
-            double a22 = dTheta2*(cos(phi) - cos(phi2));
-            if (j1 == j2) a11, a12, a21, a22 = 1;
+            double d1 = cos(phi1) - cos(phi);
+            double d2 = cos(phi) - cos(phi2);
+            if (j1 == j2){
+                d1 = 1;
+                d2 = 1;
+            }
+            double a11 = dTheta1*d1;
+            double a12 = dTheta1*d2;
+            double a21 = dTheta2*d1;
+            double a22 = dTheta2*d2;
             double A = a11 + a12 + a21 + a22;
             double R = (a22*_getPixelR(i1, j1) + a21*_getPixelR(i1, j2) + a12*_getPixelR(i2, j1) + a11*_getPixelR(i2, j2)) / A;
             double G = (a22*_getPixelG(i1, j1) + a21*_getPixelG(i1, j2) + a12*_getPixelG(i2, j1) + a11*_getPixelG(i2, j2)) / A;
@@ -631,11 +676,16 @@ void PhongEnvMap::_precomputeMap()
             double phi = M_PI*(double)j / _height;
             double phi1 = M_PI*(double)j1 / _height;
             double phi2 = M_PI*(double)j2 / _height;
-            double a11 = dTheta1*(cos(phi1) - cos(phi));
-            double a12 = dTheta1*(cos(phi) - cos(phi2));
-            double a21 = dTheta2*(cos(phi1) - cos(phi));
-            double a22 = dTheta2*(cos(phi) - cos(phi2));
-            if (j1 == j2) a11, a12, a21, a22 = 1;
+            double d1 = cos(phi1) - cos(phi);
+            double d2 = cos(phi) - cos(phi2);
+            if (j1 == j2){
+                d1 = 1;
+                d2 = 1;
+            }
+            double a11 = dTheta1*d1;
+            double a12 = dTheta1*d2;
+            double a21 = dTheta2*d1;
+            double a22 = dTheta2*d2;
             double A = a11 + a12 + a21 + a22;
             double R = (a22*_getPixelR(i1, j1) + a21*_getPixelR(i1, j2) + a12*_getPixelR(i2, j1) + a11*_getPixelR(i2, j2)) / A;
             double G = (a22*_getPixelG(i1, j1) + a21*_getPixelG(i1, j2) + a12*_getPixelG(i2, j1) + a11*_getPixelG(i2, j2)) / A;
@@ -780,9 +830,9 @@ void CookTorranceIcosMap::_precomputeMap()
                     float phiL_E = M_PI*(double)l / _height;
                     glm::vec3 L_E(sin(phiL_E)*sin(thetaL_E), cos(phiL_E), -sin(phiL_E)*cos(thetaL_E));
                     glm::vec3 L_V = R_alignEV*L_E;
-                    glm::vec3 H_V = glm::normalize(L_V + V_V);
-                    float NdotL = glm::dot(N_V,L_V);
+                    float NdotL = glm::dot(N_V, L_V);
                     if (NdotL <= 0) continue;
+                    glm::vec3 H_V = glm::normalize(L_V + V_V);
                     float NdotH = glm::dot(N_V,H_V);
                     float VdotH = glm::dot(V_V,H_V);
                     float LdotH = glm::dot(L_V,H_V);
@@ -829,11 +879,16 @@ void CookTorranceIcosMap::_precomputeMap()
                     double phi = M_PI*(double)j / _height;
                     double phi1 = M_PI*(double)j1 / _height;
                     double phi2 = M_PI*(double)j2 / _height;
-                    double a11 = dTheta1*(cos(phi1) - cos(phi));
-                    double a12 = dTheta1*(cos(phi) - cos(phi2));
-                    double a21 = dTheta2*(cos(phi1) - cos(phi));
-                    double a22 = dTheta2*(cos(phi) - cos(phi2));
-                    if (j1 == j2) a11, a12, a21, a22 = 1;
+                    double d1 = cos(phi1) - cos(phi);
+                    double d2 = cos(phi) - cos(phi2);
+                    if (j1 == j2){
+                        d1 = 1;
+                        d2 = 1;
+                    }
+                    double a11 = dTheta1*d1;
+                    double a12 = dTheta1*d2;
+                    double a21 = dTheta2*d1;
+                    double a22 = dTheta2*d2;
                     double A = a11 + a12 + a21 + a22;
                     double R = (a22*_getPixelR(i1, j1) + a21*_getPixelR(i1, j2) + a12*_getPixelR(i2, j1) + a11*_getPixelR(i2, j2)) / A;
                     double G = (a22*_getPixelG(i1, j1) + a21*_getPixelG(i1, j2) + a12*_getPixelG(i2, j1) + a11*_getPixelG(i2, j2)) / A;
