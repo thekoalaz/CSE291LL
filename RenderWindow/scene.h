@@ -204,9 +204,9 @@ public:
     const float _getPixelR(int x, int y) { return _data[(x + y * _width)*3 + 0]; };
     const float _getPixelG(int x, int y) { return _data[(x + y * _width)*3 + 1]; };
     const float _getPixelB(int x, int y) { return _data[(x + y * _width)*3 + 2]; };
-    const float _getPixelR(float x, float y) { return _bilinearInterpolate(&_data[0], x, y); };
-    const float _getPixelG(float x, float y) { return _bilinearInterpolate(&_data[1], x, y); };
-    const float _getPixelB(float x, float y) { return _bilinearInterpolate(&_data[2], x, y); };
+    const float _getPixelR(double x, double y) { return _sphericalInterpolate(&_data[0], x, y); };
+    const float _getPixelG(double x, double y) { return _sphericalInterpolate(&_data[1], x, y); };
+    const float _getPixelB(double x, double y) { return _sphericalInterpolate(&_data[2], x, y); };
     const int _getWidth() { return _width; };
     const int _getHeight() { return _height; };
     const int _getTextureID() { return _textureID; };
@@ -230,7 +230,8 @@ protected:
     std::string _filename;
     
 private:
-    float _bilinearInterpolate(const float * _colors, const float x, const float y);
+    float _bilinearInterpolate(const float * _colors, const double x, const double y);
+    float _sphericalInterpolate(const float * _colors, const double x, const double y);
     static int NEXTTEXTUREID;
 };
 

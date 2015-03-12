@@ -42,6 +42,15 @@ int main(int argc, char* argv[])
     world.addObject(envMap);
     world.assignShader(envMap, envShader);
 
+    Scene::InterpolateMap* interpMap = new Scene::InterpolateMap(*envMap, 555,333);
+    interpMap->useCache("interpMap.hdr");
+    world.addObject(interpMap);
+    
+    //Scene::EnvShader * sphereShader = new Scene::EnvShader(envMap, "sphere_vert.glsl", "sphere_frag.glsl");
+    //Scene::Sphere * sphere = new Scene::Sphere();
+    //sphere->setTx(10);
+    //world.addObject(sphere);
+    //world.assignShader(sphere, sphereShader);
     Scene::EnvShader * sphereShader = new Scene::EnvShader(envMap, "sphere_vert.glsl", "sphere_frag.glsl");
     Scene::Sphere * sphere = new Scene::Sphere();
     sphere->setTx(10);
@@ -56,7 +65,7 @@ int main(int argc, char* argv[])
     diffuseMap->setYSkip(4);
     diffuseMap->setVisible(false);
     world.addObject(diffuseMap);
-
+    
     Scene::PhongEnvMap * phongMap = new Scene::PhongEnvMap(*envMap, 5, 50, 50);
     phongMap->setSpecCoeffecient(80);
     phongMap->useCache("test_phong.hdr");
@@ -66,7 +75,7 @@ int main(int argc, char* argv[])
     phongMap->setRotx(90);
     phongMap->setVisible(false);
     world.addObject(phongMap);
-
+    
     Scene::ObjGeometry * kevin = new Scene::ObjGeometry("kevin.obj");
     Scene::EnvShader * mirrorShader = new Scene::EnvShader(envMap, "sphere_vert.glsl", "sphere_frag.glsl");
     Scene::EnvShader * diffuseShader = new Scene::EnvShader(diffuseMap, "tonemap_vert.glsl", "tonemap_frag.glsl");
