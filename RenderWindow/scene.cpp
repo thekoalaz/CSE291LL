@@ -543,7 +543,7 @@ void PhongEnvMap::_precomputeMap()
     for (int jj = 0; jj < _height-_height%_ySkip+_ySkip ; jj += _ySkip)
     {
         int j = std::min(jj,_height-1);
-        std::cout << "Integration Progress: y " << j << "\r";
+        std::cout << "We're on height " << j << "/" << _height << "\r";
         float phiN = M_PI*(float)j / (float)_height;
         float yN = cos(phiN);
         for (int i = 0; i < _width; i += _xSkip)
@@ -736,7 +736,6 @@ void CtShader::link()
         std::string radName = RadMap::getRadMapName(index);
         radMap->bind();
         GLint radMapLocation = glGetUniformLocation(getProgram(), radName.c_str());
-        std::cout << radMap->_getTextureID() << std::endl;
         glUniform1i(radMapLocation, radMap->_getTextureID());
     }
 }
