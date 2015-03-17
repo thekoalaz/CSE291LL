@@ -1,5 +1,5 @@
 #version 330 compatibility
-uniform sampler2D diffMap;
+uniform sampler2D envMap;
 uniform sampler2D radMap00;
 uniform sampler2D radMap01;
 uniform sampler2D radMap02;
@@ -18,7 +18,7 @@ flat in ivec3 V;
 in float w[3];
 in vec2 uv[3];
 
-varying vec2 uvD;
+in vec2 uvD;
 
 vec4 tonemap(vec4 x)
 {

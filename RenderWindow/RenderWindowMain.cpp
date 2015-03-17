@@ -36,15 +36,15 @@ int main(int argc, char* argv[])
     GlutUI::Controls::Keyboard keyboard(&mainPanel);
     GlutUI::Controls::Mouse mouse(&mainPanel, mainPanel.getCamera());
 
-    std::string envmapfile = "grace-half.hdr";
+    std::string envmapfile = "grace-new.hdr";
     Scene::EnvMap * envMap = new Scene::EnvMap(envmapfile);
     Scene::EnvShader * envShader = new Scene::EnvShader(envMap, "tonemap_vert.glsl", "tonemap_frag.glsl");
     world.addObject(envMap);
     world.assignShader(envMap, envShader);
 
-    Scene::InterpolateMap* interpMap = new Scene::InterpolateMap(*envMap, 555,333);
-    interpMap->useCache("interpMap.hdr");
-    world.addObject(interpMap);
+    //Scene::InterpolateMap* interpMap = new Scene::InterpolateMap(*envMap, 768,384);
+    //interpMap->useCache("interpMap.hdr");
+    //world.addObject(interpMap);
     
     //Scene::EnvShader * sphereShader = new Scene::EnvShader(envMap, "sphere_vert.glsl", "sphere_frag.glsl");
     //Scene::Sphere * sphere = new Scene::Sphere();
@@ -96,9 +96,9 @@ int main(int argc, char* argv[])
     for (int index = 0; index < 12; index++)
     {
         std::string ctName = Scene::CookTorranceIcosMap::getCtIcosMapName(index);
-        Scene::CookTorranceIcosMap * ctMap = new Scene::CookTorranceIcosMap(*envMapSmall, 0.01, 0.8, 0);
-        ctMap->setXSkip(1);
-        ctMap->setYSkip(1);
+        Scene::CookTorranceIcosMap * ctMap = new Scene::CookTorranceIcosMap(*envMapSmall, 0.01f, 0.8f, 0);
+        ctMap->setXSkip(32);
+        ctMap->setYSkip(4);
         ctMaps.push_back(ctMap);
         ctMap->useCache(ctName + ".hdr");
         world.addObject(ctMap);

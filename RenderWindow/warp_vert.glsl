@@ -48,7 +48,7 @@ flat out ivec3 V;
 out float w[3];
 out vec2 uv[3];
 
-varying vec2 uvD;
+out vec2 uvD;
 
 ivec3 closestViews(float p0, float p1, float p2, float p3, float p4, float p5, float p6, float p7, float p8, float p9, float p10, float p11)
 {
@@ -109,7 +109,8 @@ void main()
     vec3 viewDir = normalize(vertexPosition);
     vec3 r = normalize(reflect(viewDir,n)); // INDEX INTO REFLECTED DIRECTION
     r = inverse(gl_NormalMatrix)*r;
-    vec3 vd = inverse(gl_NormalMatrix)*vec3(0.0f,0.0f,1.0f);
+    //vec3 vd = inverse(gl_NormalMatrix)*vec3(0.0f,0.0f,1.0f);
+    vec3 vd = viewDir;
     
     float prox[12];
     for (int i=0; i<12; i++) prox[i] = dot(vd,ICOS_ZAXES[i]);
