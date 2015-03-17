@@ -265,17 +265,21 @@ public:
     static std::string getRadMapName(int index);
 };
 
+class DiffuseEnvMap;
 class CtShader : public Shader
 {
 public:
-    CtShader(std::vector<Scene::RadMap *> & radMaps, std::string vertfile, std::string fragfile) :
-        Shader(vertfile, fragfile), _radMaps(radMaps) { };
+    CtShader(std::vector<RadMap *> & radMaps, DiffuseEnvMap & diffMap,
+        std::string vertfile, std::string fragfile) :
+        Shader(vertfile, fragfile), _radMaps(radMaps), _diffMap(diffMap) { };
 
     void link();
 
 private:
-    std::vector<Scene::RadMap *> & _radMaps;
+    std::vector<RadMap *> & _radMaps;
+    DiffuseEnvMap & _diffMap;
 };
+
 
 
 class PrecomputeMap : public EnvMap

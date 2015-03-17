@@ -788,6 +788,9 @@ void CtShader::link()
         GLint radMapLocation = glGetUniformLocation(getProgram(), radName.c_str());
         glUniform1i(radMapLocation, radMap->_getTextureID());
     }
+    GLint diffMapLocation = glGetUniformLocation(getProgram(), "diffMap");
+    _diffMap.bind();
+    glUniform1i(diffMapLocation, _diffMap._getTextureID());
 }
 
 void CookTorranceIcosMap::_precomputeMap()

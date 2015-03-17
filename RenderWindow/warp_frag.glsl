@@ -72,7 +72,8 @@ void main()
     c[3] = 1;
 
     vec4 cD = texture2D(diffMap,uvD);
-    gl_FragColor = tonemap(c+0*cD);
+//    gl_FragColor = tonemap(cD);
+    gl_FragColor = tonemap(c+cD);
     
     //float soccer;
     //soccer = exp((V[0]-5.5)/2)+exp((V[1]-5.5)/2)+exp((V[2]-5.5)/2);
