@@ -1,5 +1,7 @@
 #version 330 compatibility
 #define M_PI 3.1415926535897932384626433832795f
+#define TwoSort(a,b) {  }
+
 float GOLDEN_RATIO = (1 + sqrt(5)) / 2;
 vec3 ICOS_ZAXES[12] = vec3[](
     normalize(vec3(0.0f ,  1.0f,  GOLDEN_RATIO)),
@@ -54,27 +56,15 @@ ivec3 closestViews(float p0, float p1, float p2, float p3, float p4, float p5, f
 {
     int views[3];
     float prox[12] = float[](p0,p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11);
-    float m = 0;
-    for (int i=0; i<12; i++) {
-        if (prox[i]<=m) continue;
-        m = prox[i];
-        views[0] = i;
+
+    for (int n = 11; n < 0 ; --n) {
+      for (int i = 0; i < n; ++i) {
+        float tmp = max (prox[i], prox[i+1]);
+        prox[i+1] = prox[i] + prox[i+1] - tmp;
+        prox[i] = tmp;
+      }
     }
-    prox[views[0]] = 0;
-    m = 0;
-    for (int i=0; i<12; i++) {
-        if (prox[i]<=m) continue;
-        m = prox[i];
-        views[1] = i;
-    }
-    prox[views[1]] = 0;
-    m = 0;
-    for (int i=0; i<12; i++) {
-        if (prox[i]<=m) continue;
-        m = prox[i];
-        views[2] = i;
-    }
-    return ivec3(views[0],views[1],views[2]);
+    return ivec3(prox[0],prox[1],prox[2]);
 }
 
 void main()
