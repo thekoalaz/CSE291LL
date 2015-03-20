@@ -41,7 +41,7 @@ void World::addObject(EnvMap * envMap)
     }
     else
     {
-        //std::cout << "Env map already set!" << std::endl;
+        std::cout << "Env map already set!" << std::endl;
     }
 }
 
@@ -66,9 +66,9 @@ Shader * World::findShader(Object * obj)
 
 void World::draw()
 {
-    if (_envMap != nullptr) { _envMap->bind(); }
+    _envMap->bind();
 
-    for(auto &object : _objects)
+    for(auto object : _objects)
     {
         auto shader = _shaderMap.find(object->getID());
         if (shader != _shaderMap.end())
@@ -81,7 +81,7 @@ void World::draw()
         }
     }
 
-    if (_envMap != nullptr) { _envMap->unbind(); }
+    _envMap->unbind();
 }
 
 void Object::draw()
@@ -130,13 +130,13 @@ void Grid::doDraw()
 {
     for(int r = -(_rows/2); r <= (_rows/2); r++)
     {
-        GlutDraw::drawLine(-(_cols/2.0f)*_gap, 0, r*_gap,
-            (_cols/2.0f)*_gap, 0, r*_gap);
+        GlutDraw::drawLine(-(_cols/2.)*_gap, 0, r*_gap,
+            (_cols/2.)*_gap, 0, r*_gap);
     }
     for(int c = -(_cols/2); c <= (_cols/2); c++)
     {
-        GlutDraw::drawLine(c*_gap, 0, -(_rows/2.0f)*_gap,
-            c*_gap, 0, (_rows/2.0f)*_gap);
+        GlutDraw::drawLine(c*_gap, 0, -(_rows/2.)*_gap,
+            c*_gap, 0, (_rows/2.)*_gap);
     }
 }
 
@@ -213,7 +213,20 @@ void EnvMap::doDraw()
 
 void Sphere::doDraw()
 {
+    Shader * shader = _world->findShader(this);
+    EnvMap * envMap = _world->getEnvMap();
+
+    envMap->bind();
+
+    if (shader != nullptr)
+    {
+        GLint texLoc = glGetUniformLocation(shader->getProgram(), "envMap");
+        glUniform1i(texLoc, envMap->_getTextureID());
+    }
+
     GlutDraw::drawSphere(_r,_n,_m);
+
+    envMap->unbind();
 }
 
 void ObjGeometry::doDraw()
@@ -222,6 +235,18 @@ void ObjGeometry::doDraw()
     {
         _readGeom();
     }
+
+    Shader * shader = _world->findShader(this);
+    EnvMap * envMap = _world->getEnvMap();
+
+    envMap->bind();
+
+    if (shader != nullptr)
+    {
+        GLint texLoc = glGetUniformLocation(shader->getProgram(), "envMap");
+        glUniform1i(texLoc, envMap->_getTextureID());
+    }
+
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_NORMAL_ARRAY);
 
@@ -231,6 +256,7 @@ void ObjGeometry::doDraw()
     //check_gl_error();
     glDrawArrays(GL_TRIANGLES, 0, _vertices.size());
 
+    envMap->unbind();
     return;
 }
 
@@ -299,10 +325,10 @@ int ObjGeometry::_readGeom()
         }
 
         lineCount++;
-        //if (lineCount % 1000 == 0)
-        //{
-        //    std::cout << "Parsing obj line: " << lineCount << "\r";
-        //}
+        if (lineCount % 1000 == 0)
+        {
+        std::cout << "Parsing obj line: " << lineCount << "\r";
+    }
     }
     std::cout << "Parsed " << lineCount << " lines Verts: " << vertCount << " Triangles: " << faceCount << std::endl;
     file.close();
@@ -331,15 +357,15 @@ int ObjGeometry::_readGeom()
     return lineCount;
 }
 
-std::tuple<float, float, float> EnvMap::map(const float theta, const float phi)
+std::tuple<float, float, float> EnvMap::map(const double theta, const double phi)
 {
-    const float x = theta / M_PI + _width;
-    const float y = phi / M_PI;
+    const double x = theta / M_PI + _width;
+    const double y = phi / M_PI;
 
     return getColor(x, y);
 }
 
-std::tuple<float, float, float> EnvMap::getColor(const float x, const float y)
+std::tuple<float, float, float> EnvMap::getColor(const double x, const double y)
 {
     float red = _bilinearInterpolate(&_data[0], x, y);
     float green = _bilinearInterpolate(&_data[1], x, y);
@@ -348,7 +374,7 @@ std::tuple<float, float, float> EnvMap::getColor(const float x, const float y)
     return std::tuple<float, float, float>(red, green, blue);
 }
 
-float EnvMap::_bilinearInterpolate(const float * _colors, const float x, const float y)
+float EnvMap::_bilinearInterpolate(const float * _colors, const double x, const double y)
 {
     int px = (int) x;
     int py = (int) y;
@@ -358,49 +384,15 @@ float EnvMap::_bilinearInterpolate(const float * _colors, const float x, const f
     const float p2 = _colors[3*(px + (py+1)*_width)];
     const float p3 = _colors[3*((px+1)+ (py+1) *_width)];
 
-    float fx1 = x + 1 - px;
-    float fy1 = y + 1 - py;
-    float fx2 = x - px;
-    float fy2 = y - py;
+    double fx1 = x + 1 - px;
+    double fy1 = y + 1 - py;
+    double fx2 = x - px;
+    double fy2 = y - py;
 
-    return (p0 * fx1 * fy1)
+    return static_cast<float>( (p0 * fx1 * fy1)
         + (p1 * fx2 * fy1)
         + (p2 * fx1 * fy2)
-        + (p3 * fx2 * fy2);
-}
-
-float EnvMap::_sphericalInterpolate(const float * _colors, const float x, const float y)
-{
-    int px1 = (int)x;
-    int py1 = (int)y;
-    int px2 = (px1 + 1) % _width;
-    int py2 = std::max(py1 + 1, _height - 1);
-
-    const float p11 = _colors[3 * (px1 + py1*_width)];
-    const float p21 = _colors[3 * (px2 + py1*_width)];
-    const float p12 = _colors[3 * (px1 + py2*_width)];
-    const float p22 = _colors[3 * (px2 + py2*_width)];
-
-    float dTheta1 = 2 * M_PI * (x - (float)px1) / _width;
-    float dTheta2 = 2 * M_PI * ((float)px2 - x) / _width;
-
-    float phi = M_PI*y / _height;
-    float phi1 = M_PI*(float)py1 / _height;
-    float phi2 = M_PI*(float)py2 / _height;
-
-    float d1 = cos(phi1) - cos(phi);
-    float d2 = cos(phi) - cos(phi2);
-    if (py1 == py2){
-        d1 = 1;
-        d2 = 1;
-    }
-    float a11 = dTheta1*d1;
-    float a12 = dTheta1*d2;
-    float a21 = dTheta2*d1;
-    float a22 = dTheta2*d2;
-    float A = a11 + a12 + a21 + a22;
-
-    return (p11*a22 + p12*a21 + p21*a12 + p22*a11)/A;
+        + (p3 * fx2 * fy2) );
 }
 
 void EnvMap::bind()
@@ -434,12 +426,12 @@ int PrecomputeMap::_readMap()
     else
     {
         int integrationStart = glutGet(GLUT_ELAPSED_TIME);
-        std::cout << "Starting integration " << mapType() << std::endl;
+        std::cout << "Starting integration " << _mapType() << std::endl;
         _precomputeMap();
 
         int integrationEnd = glutGet(GLUT_ELAPSED_TIME);
         std::cout << std::endl
-            << "Integration took " << ((integrationEnd - integrationStart) / 1000.0f) << "s" << std::endl;
+            << "Integration took " << ((integrationEnd - integrationStart) / 1000.0) << "s" << std::endl;
     }
 
     if (_cached)
@@ -460,26 +452,6 @@ int PrecomputeMap::_readMap()
     return 0;
 }
 
-void InterpolateMap::_precomputeMap()
-{
-    _width = _newWidth;
-    _height = _newHeight;
-    _data = new float[3 * _width * _height];
-    int w0 = _envMap._getWidth();   // old dimensions
-    int h0 = _envMap._getHeight();
-    std::cout << _newWidth << ", " << _newHeight << std::endl;
-    float wMag = (float)(_newWidth - 1) / (w0 - 1);
-    float hMag = (float)(_newHeight - 1) / (h0 - 1);
-    for (int i = 0; i < _newWidth; i++){
-        float i0 = (float)i / wMag;
-        for (int j = 0; j < _newHeight; j++){
-            float j0 = (float)j / hMag;
-            _setPixelR(i, j, _envMap._getPixelR(i0, j0));
-            _setPixelG(i, j, _envMap._getPixelG(i0, j0));
-            _setPixelB(i, j, _envMap._getPixelB(i0, j0));
-        }
-    }
-};
 
 void DiffuseEnvMap::_precomputeMap()
 {
@@ -489,36 +461,36 @@ void DiffuseEnvMap::_precomputeMap()
 
     int xStep = 1;
     int yStep = xStep;
-    float a = 2 * M_PI / (float)(_width*_height) * (float)(xStep * yStep);
+    double a = 2 * M_PI / (double)(_width*_height) * (double)(xStep * yStep);
     
     for (int jj = 0; jj < _height-_height%_ySkip+_ySkip ; jj += _ySkip)
     {
         int j = std::min(jj,_height-1);
         std::cout << "We're on height " << j << "/" << _height << "\r";
-        float phiN = M_PI*(float)j / (float)_height;
-        float yN = cos(phiN);
+        double phiN = M_PI*(double)j / (double)_height;
+        double yN = cos(phiN);
         for (int i = 0; i < _width; i += _xSkip)
         {
             
-            float thetaN = M_PI*(2 * (float)i / (float)_width - 1);
-            float xN = sin(phiN)*sin(thetaN);
-            float zN = -sin(phiN)*cos(thetaN);
-            float Rsum = 0;
-            float Gsum = 0;
-            float Bsum = 0;
+            double thetaN = M_PI*(2 * (double)i / (double)_width - 1);
+            double xN = sin(phiN)*sin(thetaN);
+            double zN = -sin(phiN)*cos(thetaN);
+            double Rsum = 0;
+            double Gsum = 0;
+            double Bsum = 0;
             for (int l = 0; l < _height; l += yStep)
             {
-                float phiE = M_PI*(float)l / (float)_height;
-                float yE = cos(phiE);
+                double phiE = M_PI*(double)l / (double)_height;
+                double yE = cos(phiE);
                 for (int k = 0; k < _width; k += xStep)
                 {
-                    float thetaE = M_PI*(2 * (float)k / (float)_width - 1);
-                    float xE = sin(phiE)*sin(thetaE);
-                    float zE = -sin(phiE)*cos(thetaE);
-                    float R = _envMap._getPixelR(k, l);
-                    float G = _envMap._getPixelG(k, l);
-                    float B = _envMap._getPixelB(k, l);
-                    float cosAng = xE*xN + yE*yN + zE*zN;
+                    double thetaE = M_PI*(2 * (double)k / (double)_width - 1);
+                    double xE = sin(phiE)*sin(thetaE);
+                    double zE = -sin(phiE)*cos(thetaE);
+                    double R = _envMap._getPixelR(k, l);
+                    double G = _envMap._getPixelG(k, l);
+                    double B = _envMap._getPixelB(k, l);
+                    double cosAng = xE*xN + yE*yN + zE*zN;
                     if (cosAng <= 0) continue;
                     Rsum += R*cosAng*sin(phiE);
                     Gsum += G*cosAng*sin(phiE);
@@ -544,29 +516,24 @@ void DiffuseEnvMap::_precomputeMap()
     for (int i = 0; i < _width; i++){
         int i1 = i - i%_xSkip;
         int i2 = i1 + _xSkip;
-        float dTheta1 = 2 * M_PI * (float)(i - i1) / _width;
-        float dTheta2 = 2 * M_PI * (float)(i2 - i) / _width;
+        double dTheta1 = 2 * M_PI * (double)(i - i1) / _width;
+        double dTheta2 = 2 * M_PI * (double)(i2 - i) / _width;
         i2 = i2%_width;
         for (int j = 0; j < _height; j++){
             int j1 = j - j%_ySkip;
             int j2 = std::min(j1 + _ySkip, _height - 1);
-            float phi = M_PI*(float)j / _height;
-            float phi1 = M_PI*(float)j1 / _height;
-            float phi2 = M_PI*(float)j2 / _height;
-            float d1 = cos(phi1) - cos(phi);
-            float d2 = cos(phi) - cos(phi2);
-            if (j1 == j2){
-                d1 = 1;
-                d2 = 1;
-            }
-            float a11 = dTheta1*d1;
-            float a12 = dTheta1*d2;
-            float a21 = dTheta2*d1;
-            float a22 = dTheta2*d2;
-            float A = a11 + a12 + a21 + a22;
-            float R = (a22*_getPixelR(i1, j1) + a21*_getPixelR(i1, j2) + a12*_getPixelR(i2, j1) + a11*_getPixelR(i2, j2)) / A;
-            float G = (a22*_getPixelG(i1, j1) + a21*_getPixelG(i1, j2) + a12*_getPixelG(i2, j1) + a11*_getPixelG(i2, j2)) / A;
-            float B = (a22*_getPixelB(i1, j1) + a21*_getPixelB(i1, j2) + a12*_getPixelB(i2, j1) + a11*_getPixelB(i2, j2)) / A;
+            double phi = M_PI*(double)j / _height;
+            double phi1 = M_PI*(double)j1 / _height;
+            double phi2 = M_PI*(double)j2 / _height;
+            double a11 = dTheta1*(cos(phi1) - cos(phi));
+            double a12 = dTheta1*(cos(phi) - cos(phi2));
+            double a21 = dTheta2*(cos(phi1) - cos(phi));
+            double a22 = dTheta2*(cos(phi) - cos(phi2));
+            if (j1 == j2) a11, a12, a21, a22 = 1;
+            double A = a11 + a12 + a21 + a22;
+            double R = (a22*_getPixelR(i1, j1) + a21*_getPixelR(i1, j2) + a12*_getPixelR(i2, j1) + a11*_getPixelR(i2, j2)) / A;
+            double G = (a22*_getPixelG(i1, j1) + a21*_getPixelG(i1, j2) + a12*_getPixelG(i2, j1) + a11*_getPixelG(i2, j2)) / A;
+            double B = (a22*_getPixelB(i1, j1) + a21*_getPixelB(i1, j2) + a12*_getPixelB(i2, j1) + a11*_getPixelB(i2, j2)) / A;
             _setPixelR(i, j, R);
             _setPixelG(i, j, G);
             _setPixelB(i, j, B);;
@@ -583,35 +550,35 @@ void PhongEnvMap::_precomputeMap()
 
     int xStep = 1;
     int yStep = xStep;
-    float a = (1+_s) * M_PI / (float)(_width*_height) * (float)(xStep * yStep);
+    double a = (1+_s) * M_PI / (double)(_width*_height) * (double)(xStep * yStep);
     
     for (int jj = 0; jj < _height-_height%_ySkip+_ySkip ; jj += _ySkip)
     {
         int j = std::min(jj,_height-1);
-        std::cout << "We're on height " << j << "/" << _height << "\r";
-        float phiN = M_PI*(float)j / (float)_height;
-        float yN = cos(phiN);
+        std::cout << "Integration Progress: y " << j << "\r";
+        double phiN = M_PI*(double)j / (double)_height;
+        double yN = cos(phiN);
         for (int i = 0; i < _width; i += _xSkip)
         {
-            float thetaN = M_PI*(2 * (float)i / (float)_width - 1);
-            float xN = sin(phiN)*sin(thetaN);
-            float zN = -sin(phiN)*cos(thetaN);
-            float Rsum = 0;
-            float Gsum = 0;
-            float Bsum = 0;
+            double thetaN = M_PI*(2 * (double)i / (double)_width - 1);
+            double xN = sin(phiN)*sin(thetaN);
+            double zN = -sin(phiN)*cos(thetaN);
+            double Rsum = 0;
+            double Gsum = 0;
+            double Bsum = 0;
             for (int l = 0; l < _height; l += yStep)
             {
-                float phiE = M_PI*(float)l / (float)_height;
-                float yE = cos(phiE);
+                double phiE = M_PI*(double)l / (double)_height;
+                double yE = cos(phiE);
                 for (int k = 0; k < _width; k += xStep)
                 {
-                    float thetaE = M_PI*(2 * (float)k / (float)_width - 1);
-                    float xE = sin(phiE)*sin(thetaE);
-                    float zE = -sin(phiE)*cos(thetaE);
-                    float R = _envMap._getPixelR(k, l);
-                    float G = _envMap._getPixelG(k, l);
-                    float B = _envMap._getPixelB(k, l);
-                    float cosAng = pow(xE*xN + yE*yN + zE*zN,_s);
+                    double thetaE = M_PI*(2 * (double)k / (double)_width - 1);
+                    double xE = sin(phiE)*sin(thetaE);
+                    double zE = -sin(phiE)*cos(thetaE);
+                    double R = _envMap._getPixelR(k, l);
+                    double G = _envMap._getPixelG(k, l);
+                    double B = _envMap._getPixelB(k, l);
+                    double cosAng = pow(xE*xN + yE*yN + zE*zN,_s);
                     if (cosAng <= 0) continue;
                     Rsum += R*cosAng*sin(phiE);
                     Gsum += G*cosAng*sin(phiE);
@@ -640,30 +607,25 @@ void PhongEnvMap::_precomputeMap()
     {
         int i1 = i - i%_xSkip;
         int i2 = i1 + _xSkip;
-        float dTheta1 = 2 * M_PI * (float)(i - i1) / _width;
-        float dTheta2 = 2 * M_PI * (float)(i2 - i) / _width;
+        double dTheta1 = 2 * M_PI * (double)(i - i1) / _width;
+        double dTheta2 = 2 * M_PI * (double)(i2 - i) / _width;
         i2 = i2%_width;
         for (int j = 0; j < _height; j++)
         {
             int j1 = j - j%_ySkip;
             int j2 = std::min(j1 + _ySkip, _height - 1);
-            float phi = M_PI*(float)j / _height;
-            float phi1 = M_PI*(float)j1 / _height;
-            float phi2 = M_PI*(float)j2 / _height;
-            float d1 = cos(phi1) - cos(phi);
-            float d2 = cos(phi) - cos(phi2);
-            if (j1 == j2){
-                d1 = 1;
-                d2 = 1;
-            }
-            float a11 = dTheta1*d1;
-            float a12 = dTheta1*d2;
-            float a21 = dTheta2*d1;
-            float a22 = dTheta2*d2;
-            float A = a11 + a12 + a21 + a22;
-            float R = (a22*_getPixelR(i1, j1) + a21*_getPixelR(i1, j2) + a12*_getPixelR(i2, j1) + a11*_getPixelR(i2, j2)) / A;
-            float G = (a22*_getPixelG(i1, j1) + a21*_getPixelG(i1, j2) + a12*_getPixelG(i2, j1) + a11*_getPixelG(i2, j2)) / A;
-            float B = (a22*_getPixelB(i1, j1) + a21*_getPixelB(i1, j2) + a12*_getPixelB(i2, j1) + a11*_getPixelB(i2, j2)) / A;
+            double phi = M_PI*(double)j / _height;
+            double phi1 = M_PI*(double)j1 / _height;
+            double phi2 = M_PI*(double)j2 / _height;
+            double a11 = dTheta1*(cos(phi1) - cos(phi));
+            double a12 = dTheta1*(cos(phi) - cos(phi2));
+            double a21 = dTheta2*(cos(phi1) - cos(phi));
+            double a22 = dTheta2*(cos(phi) - cos(phi2));
+            if (j1 == j2) a11, a12, a21, a22 = 1;
+            double A = a11 + a12 + a21 + a22;
+            double R = (a22*_getPixelR(i1, j1) + a21*_getPixelR(i1, j2) + a12*_getPixelR(i2, j1) + a11*_getPixelR(i2, j2)) / A;
+            double G = (a22*_getPixelG(i1, j1) + a21*_getPixelG(i1, j2) + a12*_getPixelG(i2, j1) + a11*_getPixelG(i2, j2)) / A;
+            double B = (a22*_getPixelB(i1, j1) + a21*_getPixelB(i1, j2) + a12*_getPixelB(i2, j1) + a11*_getPixelB(i2, j2)) / A;
             _setPixelR(i, j, R);
             _setPixelG(i, j, G);
             _setPixelB(i, j, B);
@@ -703,7 +665,7 @@ void Shader::_initShaders()
         glShaderSource(_vertex, 1, &vv,NULL);
         free(vs);
         glCompileShader(_vertex);
-        if (_checkShaderError(_vertex))
+        if (_checkShaderError(_vertex) == 0)
         {
             std::cout << _vertfile << " compiled successfully." << std::endl;
             glAttachShader(_program,_vertex);
@@ -717,7 +679,7 @@ void Shader::_initShaders()
         glShaderSource(_frag, 1, &ff, NULL);
         free(fs);
         glCompileShader(_frag);
-        if (_checkShaderError(_frag))
+        if (_checkShaderError(_frag) == 0)
         {
             std::cout << _fragfile << " compiled successfully." << std::endl;
             glAttachShader(_program, _frag);
@@ -735,12 +697,12 @@ void Shader::_initShaders()
     return;
 }
 
-bool Shader::_checkShaderError(GLuint shader)
+int Shader::_checkShaderError(GLuint shader)
 {
     GLint result = 0;
     glGetShaderiv(shader, GL_COMPILE_STATUS, &result);
 
-    if (result == GL_TRUE) return true;
+    if (result == GL_TRUE) return 0;
 
     GLint logsize = 0;
     char * log;
@@ -749,7 +711,6 @@ bool Shader::_checkShaderError(GLuint shader)
     glGetShaderInfoLog(shader, logsize, &result, log);
 
     std::cout << log << std::endl;
-    return false;
 }
 
 void Shader::link()
@@ -764,29 +725,82 @@ void Shader::unlink()
 
 void EnvShader::link()
 {
-    Shader::link();
-    _envMap->bind();
     GLint texLoc = glGetUniformLocation(getProgram(), "envMap");
     glUniform1i(texLoc, _envMap->_getTextureID());
-}
-
-void EnvShader::unlink()
-{
-    _envMap->unbind();
-    Shader::unlink();
-}
-
-//Consider doing this method for index: http://stackoverflow.com/questions/10962290/find-position-of-element-in-c11-range-based-for-loop
-void CtShader::link()
-{
     Shader::link();
-    for(auto &radMap : _radMaps)
-    {
-        auto index = &radMap - &_radMaps[0];
-        std::string radName = RadMap::getRadMapName(index);
-        radMap->bind();
-        GLint radMapLocation = glGetUniformLocation(getProgram(), radName.c_str());
-        glUniform1i(radMapLocation, radMap->_getTextureID());
+}
+
+
+// (x,y,z) is orientation of the patch normal (e.g. icosahedral directions) relative to the envMap
+// Compute the viewpoint for such a patch from every theta (polar), phi (azimuthal) relative to the normal
+void CookTorranceMap::_precomputeMap()
+{
+    _width = _envMap._getWidth();
+    _height = _envMap._getHeight();
+    _data = new float[3 * _width * _height];
+    glm::mat3 R_alignEP;
+    glm::vec3 xAxP_E, yAxP_E;
+    glm::vec3 xAxE_E(1.0f, 0.0f, 0.0f); // x-axis of EnvMap in the frame of EnvMap
+    glm::vec3 yAxE_E(0.0f, 1.0f, 0.0f);
+    glm::vec3 zAxE_E(0.0f, 0.0f, 1.0f);
+    glm::vec3 zAxP_E = glm::normalize(_zAxis);
+    if (_zAxis.x == 0 && _zAxis.y == 0){
+        yAxP_E = glm::vec3(0.0f, 1.0f, 0.0f);
+    }
+    else yAxP_E = glm::normalize(zAxE_E - glm::dot(zAxE_E, zAxP_E)*zAxP_E);
+    xAxP_E = glm::cross(yAxP_E, zAxP_E);
+    _xAxis = xAxP_E;
+    _yAxis = yAxP_E;
+    _zAxis = zAxP_E;
+    R_alignEP[0] = xAxP_E;
+    R_alignEP[1] = yAxP_E;
+    R_alignEP[2] = zAxP_E;
+    R_alignEP = glm::transpose(R_alignEP);
+    float a = 2 * M_PI*M_PI / (double)(_width*_height);
+    for (int i = 0; i < _width; i++){
+        std::cout << "We're on x " << i << "\r";
+        float thetaV_P = 2 * M_PI*((double)i / _width - 1);
+        for (int j = 0; j <= _height / 2; j++)
+        {
+            float phiV_P = M_PI*(double)j / _height;
+            glm::vec3 V_P(sin(phiV_P)*cos(thetaV_P), sin(phiV_P)*sin(thetaV_P), cos(phiV_P));
+            float NdotV = V_P.z;
+            double Rsum = 0;
+            double Gsum = 0;
+            double Bsum = 0;
+            //double sAng = 0;
+            for (int k = 0; k < _width; k++){
+                float thetaL_E = 2 * M_PI*((double)k / _width - 1);
+                for (int l = 0; l < _height; l++){
+                    float phiL_E = M_PI*(double)l / _height;
+                    glm::vec3 L_E(sin(phiL_E)*sin(thetaL_E), cos(phiL_E), -sin(phiL_E)*cos(thetaL_E));
+                    glm::vec3 L_P = R_alignEP*L_E;
+                    glm::vec3 H_P = glm::normalize(L_P + V_P);
+                    float NdotL = L_P.z;
+                    if (NdotL <= 0) continue;
+                    //sAng += a*sin(phiL_E);
+                    float NdotH = H_P.z;
+                    float VdotH = glm::dot(V_P, H_P);
+                    float LdotH = glm::dot(L_P, H_P);
+                    float G = std::min(2 * NdotH*NdotV / VdotH, 2 * NdotH*NdotL / LdotH);
+                    G = std::min((float)1.0, G);
+                    float D = exp((NdotH*NdotH - 1) / (_roughness*_roughness*NdotH*NdotH));
+                    D /= M_PI*_roughness*_roughness*pow(NdotH, 4);
+                    float F = _reflCoeff + (1 - _reflCoeff)*pow(1 - VdotH, 5);
+                    float brdf = F*D*G / (M_PI*NdotL*NdotV);
+                    // integrate
+                    double envR = _envMap._getPixelR(k, l);
+                    double envG = _envMap._getPixelG(k, l);
+                    double envB = _envMap._getPixelB(k, l);
+                    Rsum += envR*brdf*NdotL*sin(phiL_E);
+                    Gsum += envG*brdf*NdotL*sin(phiL_E);
+                    Bsum += envB*brdf*NdotL*sin(phiL_E);
+                }
+            }
+            _setPixelR(i, j, a*Rsum);
+            _setPixelG(i, j, a*Gsum);
+            _setPixelB(i, j, a*Bsum);
+        }
     }
 }
 
@@ -807,40 +821,39 @@ void CookTorranceIcosMap::_precomputeMap()
     R_alignEV[2] = zAxV_E;
     R_alignEV = glm::transpose(R_alignEV);
     glm::vec3 V_V(0.0f, 0.0f, 1.0f);
-    int halfway = static_cast<int>(std::ceil(_height / 2.0f));
-    float a = 2 * M_PI*M_PI / (float)(_width*_height);
-    for (int jj = 0; jj < halfway - halfway % _ySkip + _ySkip; jj += _ySkip) {
-        int j = std::min(jj, halfway - 1);
-        float phiN_V = M_PI*(float)j / _height;
-        std::cout << "Integration Progress: y " << j << "\r";
-        for (int i = 0; i < _width; i += _xSkip){
-            float thetaN_V = 2 * M_PI*((float)i / _width - 1);
+    float a = 2 * M_PI*M_PI / (double)(_width*_height);
+    for (int i = 0; i < _width; i++){
+        std::cout << "We're on x " << i << "\r";
+        float thetaN_V = 2 * M_PI*((double)i / _width - 1);
+        for (int j = 0; j <= _height / 2; j++)
+        {
+            float phiN_V = M_PI*(double)j / _height;
             glm::vec3 N_V(sin(phiN_V)*cos(thetaN_V), sin(phiN_V)*sin(thetaN_V), cos(phiN_V));
             float NdotV = N_V.z;
-            float Rsum = 0;
-            float Gsum = 0;
-            float Bsum = 0;
+            double Rsum = 0;
+            double Gsum = 0;
+            double Bsum = 0;
             for (int k = 0; k < _width; k++){
-                float thetaL_E = 2 * M_PI*((float)k / _width - 1);
+                float thetaL_E = 2 * M_PI*((double)k / _width - 1);
                 for (int l = 0; l < _height; l++){
-                    float phiL_E = M_PI*(float)l / _height;
+                    float phiL_E = M_PI*(double)l / _height;
                     glm::vec3 L_E(sin(phiL_E)*sin(thetaL_E), cos(phiL_E), -sin(phiL_E)*cos(thetaL_E));
                     glm::vec3 L_V = R_alignEV*L_E;
-                    float NdotL = glm::dot(N_V, L_V);
-                    if (NdotL <= 0) continue;
                     glm::vec3 H_V = glm::normalize(L_V + V_V);
+                    float NdotL = glm::dot(N_V,L_V);
+                    if (NdotL <= 0) continue;
                     float NdotH = glm::dot(N_V,H_V);
                     float VdotH = glm::dot(V_V,H_V);
                     float LdotH = glm::dot(L_V,H_V);
                     float G = std::min(2 * NdotH*NdotV / VdotH, 2 * NdotH*NdotL / LdotH);
-                    G = std::min((float)1.0f, G);
+                    G = std::min((float)1.0, G);
                     float D = exp((NdotH*NdotH - 1) / (_roughness*_roughness*NdotH*NdotH));
-                    D /= M_PI*_roughness*_roughness*pow(NdotH, 4.0f);
-                    float F = _reflCoeff + (1 - _reflCoeff)*pow(1 - VdotH, 5.0f);
+                    D /= M_PI*_roughness*_roughness*pow(NdotH, 4);
+                    float F = _reflCoeff + (1 - _reflCoeff)*pow(1 - VdotH, 5);
                     float brdf = F*D*G / (M_PI*NdotL*NdotV);
-                    float envR = _envMap._getPixelR(k, l);
-                    float envG = _envMap._getPixelG(k, l);
-                    float envB = _envMap._getPixelB(k, l);
+                    double envR = _envMap._getPixelR(k, l);
+                    double envG = _envMap._getPixelG(k, l);
+                    double envB = _envMap._getPixelB(k, l);
                     Rsum += envR*brdf*NdotL*sin(phiL_E);
                     Gsum += envG*brdf*NdotL*sin(phiL_E);
                     Bsum += envB*brdf*NdotL*sin(phiL_E);
@@ -849,64 +862,8 @@ void CookTorranceIcosMap::_precomputeMap()
             _setPixelR(i, j, a*Rsum);
             _setPixelG(i, j, a*Gsum);
             _setPixelB(i, j, a*Bsum);
-            if (j == 0)
-            {
-                for (int iPole = 1; iPole < _width; iPole++)
-                {
-                    _setPixelR(iPole, j, a*Rsum);
-                    _setPixelG(iPole, j, a*Gsum);
-                    _setPixelB(iPole, j, a*Bsum);
-                }
-                break;
-            }
-        }
-        if (_xSkip>1 || _ySkip > 1) {
-            for (int i = 0; i < _width; i++)
-            {
-                int i1 = i - i%_xSkip;
-                int i2 = i1 + _xSkip;
-                float dTheta1 = 2 * M_PI * (float)(i - i1) / _width;
-                float dTheta2 = 2 * M_PI * (float)(i2 - i) / _width;
-                i2 = i2%_width;
-                for (int j = 0; j < halfway; j++)
-                {
-                    int j1 = j - j%_ySkip;
-                    int j2 = std::min(j1 + _ySkip, halfway - 1);
-                    float phi = M_PI*(float)j / _height;
-                    float phi1 = M_PI*(float)j1 / _height;
-                    float phi2 = M_PI*(float)j2 / _height;
-                    float d1 = cos(phi1) - cos(phi);
-                    float d2 = cos(phi) - cos(phi2);
-                    if (j1 == j2){
-                        d1 = 1;
-                        d2 = 1;
-                    }
-                    float a11 = dTheta1*d1;
-                    float a12 = dTheta1*d2;
-                    float a21 = dTheta2*d1;
-                    float a22 = dTheta2*d2;
-                    float A = a11 + a12 + a21 + a22;
-                    float R = (a22*_getPixelR(i1, j1) + a21*_getPixelR(i1, j2) + a12*_getPixelR(i2, j1) + a11*_getPixelR(i2, j2)) / A;
-                    float G = (a22*_getPixelG(i1, j1) + a21*_getPixelG(i1, j2) + a12*_getPixelG(i2, j1) + a11*_getPixelG(i2, j2)) / A;
-                    float B = (a22*_getPixelB(i1, j1) + a21*_getPixelB(i1, j2) + a12*_getPixelB(i2, j1) + a11*_getPixelB(i2, j2)) / A;
-                    _setPixelR(i, j, R);
-                    _setPixelG(i, j, G);
-                    _setPixelB(i, j, B);
-                }
-            }
         }
     }
-}
-
-std::string CookTorranceIcosMap::getCtIcosMapName(int index)
-{
-    return zero_padded_name("ctIcos", index, 2);
-    }
-
-
-std::string RadMap::getRadMapName(int index)
-{
-    return zero_padded_name("radMap", index, 2);
 }
 
 /* Utility Functions */
@@ -953,13 +910,4 @@ void _check_gl_error(const char *file, int line) {
                 std::cerr << "GL_" << error.c_str() <<" - "<<file<<":"<<line<<std::endl;
                 err=glGetError();
         }
-}
-
-std::string zero_padded_name(std::string prefix, int number, int pad)
-{
-    std::ostringstream name;
-    name << prefix << std::setfill('0') << std::setw(pad) << number;
-    std::setfill(' ');
-
-    return name.str();
 }
