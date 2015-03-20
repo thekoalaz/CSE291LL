@@ -87,7 +87,7 @@ private:
 
 World & createWorld();
 
-/* Base class for vert/frag shader. */
+    /* Base class for vert/frag shader. */
 class Shader
 {
 public:
@@ -95,7 +95,9 @@ public:
     Shader() : _vertfile(), _fragfile(), _shaderReady(false) { };
     Shader(std::string vertfile, std::string fragfile)
         : _vertfile(vertfile), _fragfile(fragfile), _shaderReady(false)
-        { _initShaders(); };
+        {
+            _initShaders();
+        };
 
     virtual void link();
     virtual void unlink();
@@ -120,10 +122,14 @@ class Object
 public:
 /* Constructors */
     Object() : _tx(0), _ty(0), _tz(0), _rotx(0), _roty(0), _rotz(0), _visible(true)
-        { _objectID = nextID(); }
+        {
+            _objectID = nextID();
+        }
     Object(float tx, float ty, float tz, float rotx, float roty, float rotz) : _tx(tx), _ty(ty), _tz(tz),
         _rotx(rotx), _roty(roty), _rotz(rotz), _visible(true)
-        { _objectID = nextID(); }
+        {
+            _objectID = nextID();
+        }
     void draw();
     void draw(Shader *);
     virtual void doDraw() = 0;
@@ -250,16 +256,16 @@ public:
     int nextTextureID() { return NEXTTEXTUREID++; };
 
 /* Destructors */
-    ~EnvMap() { if(_data != nullptr) delete _data; }
+        ~EnvMap() { if (_data != nullptr) delete _data; }
 
 protected:
     bool _mapReady;
     virtual int _readMap();
     int _writeMap();
     int _writeMap(std::string filename);
-    void _setPixelR(int x, int y, float c) { _data[(x + y * _width)*3 + 0] = c; };
-    void _setPixelG(int x, int y, float c) { _data[(x + y * _width)*3 + 1] = c; };
-    void _setPixelB(int x, int y, float c) { _data[(x + y * _width)*3 + 2] = c; };
+        void _setPixelR(int x, int y, float c) { _data[(x + y * _width) * 3 + 0] = c; };
+        void _setPixelG(int x, int y, float c) { _data[(x + y * _width) * 3 + 1] = c; };
+        void _setPixelB(int x, int y, float c) { _data[(x + y * _width) * 3 + 2] = c; };
 
     float * _data;
     int _width, _height;

@@ -73,7 +73,7 @@ void World::draw()
 {
     if (_envMap != nullptr) { _envMap->bind(); }
 
-    for(auto &object : _objects)
+    for (auto &object : _objects)
     {
         auto shader = _shaderMap.find(object->getID());
         if (shader != _shaderMap.end())
@@ -98,9 +98,9 @@ void Object::draw()
 
     glPushMatrix();
     glTranslated(_tx, _ty, _tz);
-    glRotated(_rotx,1,0,0);
-    glRotated(_roty,0,1,0);
-    glRotated(_rotz,0,0,1);
+    glRotated(_rotx, 1, 0, 0);
+    glRotated(_roty, 0, 1, 0);
+    glRotated(_rotz, 0, 0, 1);
 
     doDraw();
 
@@ -116,9 +116,9 @@ void Object::draw(Shader * shader)
 
     glPushMatrix();
     glTranslated(_tx, _ty, _tz);
-    glRotated(_rotx,1,0,0);
-    glRotated(_roty,0,1,0);
-    glRotated(_rotz,0,0,1);
+    glRotated(_rotx, 1, 0, 0);
+    glRotated(_roty, 0, 1, 0);
+    glRotated(_rotz, 0, 0, 1);
 
     shader->link();
     doDraw();
@@ -133,15 +133,15 @@ void Camera::doDraw()
 
 void Grid::doDraw()
 {
-    for(int r = -(_rows/2); r <= (_rows/2); r++)
+    for (int r = -(_rows / 2); r <= (_rows / 2); r++)
     {
-        GlutDraw::drawLine(-(_cols/2.0f)*_gap, 0, r*_gap,
-            (_cols/2.0f)*_gap, 0, r*_gap);
+        GlutDraw::drawLine(-(_cols / 2.0f)*_gap, 0, r*_gap,
+            (_cols / 2.0f)*_gap, 0, r*_gap);
     }
-    for(int c = -(_cols/2); c <= (_cols/2); c++)
+    for (int c = -(_cols / 2); c <= (_cols / 2); c++)
     {
-        GlutDraw::drawLine(c*_gap, 0, -(_rows/2.0f)*_gap,
-            c*_gap, 0, (_rows/2.0f)*_gap);
+        GlutDraw::drawLine(c*_gap, 0, -(_rows / 2.0f)*_gap,
+            c*_gap, 0, (_rows / 2.0f)*_gap);
     }
 }
 
@@ -207,11 +207,11 @@ void EnvMap::doDraw()
 {
     bind();
     glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D , _textureID);
+    glBindTexture(GL_TEXTURE_2D, _textureID);
     GLUquadric* quad = gluNewQuadric(); 
-    gluQuadricTexture(quad,GL_TRUE); 
+    gluQuadricTexture(quad, GL_TRUE);
 
-    gluSphere(quad,_r,_n,_m);
+    gluSphere(quad, _r, _n, _m);
 
     glDisable(GL_TEXTURE_2D);
     unbind();
@@ -219,7 +219,7 @@ void EnvMap::doDraw()
 
 void Sphere::doDraw()
 {
-    GlutDraw::drawSphere(_r,_n,_m);
+    GlutDraw::drawSphere(_r, _n, _m);
 }
 
 void ObjGeometry::doDraw()
@@ -246,9 +246,9 @@ int ObjGeometry::_readGeom()
     std::vector< glm::vec3 > tempVertices;
     std::vector< glm::vec2 > tempUVs;
     std::vector< glm::vec3 > tempNormals;
-    int lineCount=0;
-    int faceCount=0;
-    int vertCount=0;
+    int lineCount = 0;
+    int faceCount = 0;
+    int vertCount = 0;
 
     std::ifstream file;
     file.open(_filename, std::ios::in);
@@ -355,13 +355,13 @@ std::tuple<float, float, float> EnvMap::getColor(const float x, const float y)
 
 float EnvMap::_bilinearInterpolate(const float * _colors, const float x, const float y)
 {
-    int px = (int) x;
-    int py = (int) y;
+    int px = (int)x;
+    int py = (int)y;
 
-    const float p0 = _colors[3*(px + py*_width)];
-    const float p1 = _colors[3*((px+1) + py*_width)];
-    const float p2 = _colors[3*(px + (py+1)*_width)];
-    const float p3 = _colors[3*((px+1)+ (py+1) *_width)];
+    const float p0 = _colors[3 * (px + py*_width)];
+    const float p1 = _colors[3 * ((px + 1) + py*_width)];
+    const float p2 = _colors[3 * (px + (py + 1)*_width)];
+    const float p3 = _colors[3 * ((px + 1) + (py + 1) *_width)];
 
     float fx1 = x + 1 - px;
     float fy1 = y + 1 - py;
@@ -405,7 +405,7 @@ float EnvMap::_sphericalInterpolate(const float * _colors, const float x, const 
     float a22 = dTheta2*d2;
     float A = a11 + a12 + a21 + a22;
 
-    return (p11*a22 + p12*a21 + p21*a12 + p22*a11)/A;
+    return (p11*a22 + p12*a21 + p21*a12 + p22*a11) / A;
 }
 
 void EnvMap::bind()
@@ -495,9 +495,9 @@ void DiffuseEnvMap::_precomputeMap()
     int yStep = xStep;
     float a = 2 * M_PI / (float)(_width*_height) * (float)(xStep * yStep);
     
-    for (int jj = 0; jj < _height-_height%_ySkip+_ySkip ; jj += _ySkip)
+    for (int jj = 0; jj < _height - _height%_ySkip + _ySkip; jj += _ySkip)
     {
-        int j = std::min(jj,_height-1);
+        int j = std::min(jj, _height - 1);
         std::cout << "We're on height " << j << "/" << _height << "\r";
         float phiN = M_PI*(float)j / (float)_height;
         float yN = cos(phiN);
@@ -587,11 +587,11 @@ void PhongEnvMap::_precomputeMap()
 
     int xStep = 1;
     int yStep = xStep;
-    float a = (1+_s) * M_PI / (float)(_width*_height) * (float)(xStep * yStep);
+    float a = (1 + _s) * M_PI / (float)(_width*_height) * (float)(xStep * yStep);
     
-    for (int jj = 0; jj < _height-_height%_ySkip+_ySkip ; jj += _ySkip)
+    for (int jj = 0; jj < _height - _height%_ySkip + _ySkip; jj += _ySkip)
     {
-        int j = std::min(jj,_height-1);
+        int j = std::min(jj, _height - 1);
         std::cout << "We're on height " << j << "/" << _height << "\r";
         float phiN = M_PI*(float)j / (float)_height;
         float yN = cos(phiN);
@@ -694,9 +694,9 @@ void Shader::_initShaders()
         return;
     }
 
-    char *vs,*fs;
+    char *vs, *fs;
 
-    if (_vertfile == "" && _fragfile == ""){ return;  }
+    if (_vertfile == "" && _fragfile == ""){ return; }
     _program = glCreateProgram();
 
     if (_vertfile != "")
@@ -704,13 +704,13 @@ void Shader::_initShaders()
         _vertex = glCreateShader(GL_VERTEX_SHADER);
         vs = textFileRead(_vertfile.c_str());
         const char * vv = vs;
-        glShaderSource(_vertex, 1, &vv,NULL);
+        glShaderSource(_vertex, 1, &vv, NULL);
         free(vs);
         glCompileShader(_vertex);
         if (_checkShaderError(_vertex))
         {
             std::cout << _vertfile << " compiled successfully." << std::endl;
-            glAttachShader(_program,_vertex);
+            glAttachShader(_program, _vertex);
         }
     }
     if (_fragfile != "")
@@ -749,7 +749,7 @@ bool Shader::_checkShaderError(GLuint shader)
     GLint logsize = 0;
     char * log;
     glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &logsize);
-    log = (char *) malloc(logsize + 1);
+    log = (char *)malloc(logsize + 1);
     glGetShaderInfoLog(shader, logsize, &result, log);
 
     std::cout << log << std::endl;
@@ -784,7 +784,7 @@ void EnvShader::unlink()
 void CtShader::link()
 {
     Shader::link();
-    for(auto &radMap : _radMaps)
+    for (auto &radMap : _radMaps)
     {
         auto index = &radMap - &_radMaps[0];
         std::string radName = RadMap::getRadMapName(index);
@@ -798,7 +798,7 @@ void CtShader::link()
         _diffuseMap->bind();
         GLint diffMapLocation = glGetUniformLocation(getProgram(), "diffMap");
         glUniform1i(diffMapLocation, _diffuseMap->getTextureID());
-    }
+}
 }
 
 void CookTorranceIcosMap::_precomputeMap()
@@ -840,9 +840,9 @@ void CookTorranceIcosMap::_precomputeMap()
                     float NdotL = glm::dot(N_V, L_V);
                     if (NdotL <= 0) continue;
                     glm::vec3 H_V = glm::normalize(L_V + V_V);
-                    float NdotH = glm::dot(N_V,H_V);
-                    float VdotH = glm::dot(V_V,H_V);
-                    float LdotH = glm::dot(L_V,H_V);
+                    float NdotH = glm::dot(N_V, H_V);
+                    float VdotH = glm::dot(V_V, H_V);
+                    float LdotH = glm::dot(L_V, H_V);
                     float G = std::min(2 * NdotH*NdotV / VdotH, 2 * NdotH*NdotL / LdotH);
                     G = std::min((float)1.0f, G);
                     float D = exp((NdotH*NdotH - 1) / (_roughness*_roughness*NdotH*NdotH));
