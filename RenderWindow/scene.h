@@ -1,9 +1,5 @@
 #include "stdafx.h"
 #include "GlutDraw.h"
-extern "C" {
-    #include "rgbe.h"
-}
-
 #define DEFAULT_ENV_MAP "./grace-new.hdr"
 
 namespace Scene
@@ -31,7 +27,6 @@ const glm::vec3 ICOS_YAXES[] = {
     glm::vec3(1.0f, 0.0f, 0.0f),
     glm::vec3(0.0f, 0.0f, 1.0f),
     glm::vec3(0.0f, 0.0f, -1.0f),
-    glm::vec3(0.0f, 0.0f, -1.0f),
     glm::vec3(0.0f, 0.0f, 1.0f),
     glm::vec3(0.0f, 1.0f, 0.0f),
     glm::vec3(0.0f, -1.0f, 0.0f),
@@ -54,10 +49,46 @@ const glm::vec3 ICOS_XAXES[] = {
 };
 
 
-class World;
+class Object;
+class Shader;
+class Camera;
+class EnvMap;
 
+class World
+{
+public:
+    World() : _cam(nullptr), _envMap(nullptr) { }
+
+    void addObject(Object *);
+    void addObject(Camera *);
+    void addObject(EnvMap *);
+    void removeObject(Object *);
+    void assignShader(Object *, Shader *);
+    Shader * findShader(Object *);
+
+    //void removeObject(Object & obj) {  }
+
+    Camera * getCam() { return _cam; }
+    EnvMap * getEnvMap() { return _envMap; }
+    void setEnvMap(unsigned int);
+    void setEnvMap(EnvMap *);
+
+    void draw();
+
+    ~World() {};
+private:
+    std::vector<Object *> _objects;
+    std::unordered_map<int, Shader *> _shaderMap;
+    std::vector<EnvMap *> _envMaps;
+
+    Camera * _cam;
+    EnvMap * _envMap;
+};
+
+World & createWorld();
+
+/* Base class for vert/frag shader. */
 class Shader
-    /* Base class for vert/frag shader. */
 {
 public:
 /* Constructors */
@@ -121,6 +152,8 @@ public:
     /* Single line functions */
     int nextID() { return NEXTID++; }
 
+    ~Object() { _world->removeObject(this); }
+
 protected:
     World * _world;
     int _objectID;
@@ -178,19 +211,19 @@ public:
 /* Constructors */
     EnvMap() :
         Sphere(1000.0f, 20, 20), _filename(DEFAULT_ENV_MAP), _mapReady(false) {
-        //_textureID = nextTextureID();
+        _textureID = nextTextureID();
     }
     EnvMap(std::string  filename) :
         Sphere(1000.0f, 20, 20), _filename(filename), _mapReady(false) {
-        //_textureID = nextTextureID();
+        _textureID = nextTextureID();
     }
     EnvMap(float radius, int n, int m) :
         Sphere(radius, n, m), _filename(DEFAULT_ENV_MAP), _mapReady(false) {
-        //_textureID = nextTextureID();
+        _textureID = nextTextureID();
     }
     EnvMap(std::string  filename, float radius, int n, int m) :
         Sphere(radius, n, m), _filename(filename), _mapReady(false) {
-        //_textureID = nextTextureID();
+        _textureID = nextTextureID();
     }
 
     virtual void doDraw();
@@ -201,18 +234,19 @@ public:
 
     virtual std::string mapType() { return "Env"; }
 
-    const float _getPixelR(int x, int y) { return _data[(x + y * _width)*3 + 0]; };
-    const float _getPixelG(int x, int y) { return _data[(x + y * _width)*3 + 1]; };
-    const float _getPixelB(int x, int y) { return _data[(x + y * _width)*3 + 2]; };
-    //const float _getPixelR(float x, float y) { return _bilinearInterpolate(&_data[0], x, y); };
-    //const float _getPixelG(float x, float y) { return _bilinearInterpolate(&_data[1], x, y); };
-    //const float _getPixelB(float x, float y) { return _bilinearInterpolate(&_data[2], x, y); };
-    const float _getPixelR(float x, float y) { return _sphericalInterpolate(&_data[0], x, y); };
-    const float _getPixelG(float x, float y) { return _sphericalInterpolate(&_data[1], x, y); };
-    const float _getPixelB(float x, float y) { return _sphericalInterpolate(&_data[2], x, y); };
-    const int _getWidth() { return _width; };
-    const int _getHeight() { return _height; };
-    const int _getTextureID() { return _textureID; };
+    const float getPixelR(int x, int y) { return _data[(x + y * _width)*3 + 0]; };
+    const float getPixelG(int x, int y) { return _data[(x + y * _width)*3 + 1]; };
+    const float getPixelB(int x, int y) { return _data[(x + y * _width)*3 + 2]; };
+    //const float getPixelR(float x, float y) { return _bilinearInterpolate(&_data[0], x, y); };
+    //const float getPixelG(float x, float y) { return _bilinearInterpolate(&_data[1], x, y); };
+    //const float getPixelB(float x, float y) { return _bilinearInterpolate(&_data[2], x, y); };
+    const float getPixelR(float x, float y) { return _sphericalInterpolate(&_data[0], x, y); };
+    const float getPixelG(float x, float y) { return _sphericalInterpolate(&_data[1], x, y); };
+    const float getPixelB(float x, float y) { return _sphericalInterpolate(&_data[2], x, y); };
+    const int getWidth() { return _width; };
+    const int getHeight() { return _height; };
+    const int getTextureID() { return _textureID; };
+
     int nextTextureID() { return NEXTTEXTUREID++; };
 
 /* Destructors */
@@ -265,16 +299,27 @@ public:
     static std::string getRadMapName(int index);
 };
 
+class DiffuseEnvMap;
+
 class CtShader : public Shader
 {
 public:
-    CtShader(std::vector<Scene::RadMap *> & radMaps, std::string vertfile, std::string fragfile) :
-        Shader(vertfile, fragfile), _radMaps(radMaps) { };
+    CtShader(std::vector<Scene::RadMap *> & radMaps,
+        std::string vertfile, std::string fragfile) :
+        Shader(vertfile, fragfile),
+        _radMaps(radMaps), _diffuseMap(nullptr) { };
+
+    CtShader(std::vector<Scene::RadMap *> & radMaps,
+        DiffuseEnvMap * diffuseMap,
+        std::string vertfile, std::string fragfile) :
+        Shader(vertfile, fragfile),
+        _radMaps(radMaps), _diffuseMap(diffuseMap) { };
 
     void link();
 
 private:
     std::vector<Scene::RadMap *> & _radMaps;
+    DiffuseEnvMap * _diffuseMap;
 };
 
 
@@ -388,54 +433,5 @@ private:
     GLuint _vertexArrayID;
 };
 
-class World
-{
-public:
-    World() : _cam(nullptr), _envMap(nullptr) { }
-
-    void addObject(Object *);
-    void addObject(Camera *);
-    void addObject(EnvMap *);
-    void assignShader(Object *, Shader *);
-    Shader * findShader(Object *);
-
-    //void removeObject(Object & obj) {  }
-
-    Camera * getCam() { return _cam; }
-    EnvMap * getEnvMap() { return _envMap; }
-    void setEnvMap(unsigned int);
-    void setEnvMap(EnvMap *);
-
-    void draw();
-private:
-    std::vector<Object *> _objects;
-    std::unordered_map<int, Shader *> _shaderMap;
-    std::vector<EnvMap *> _envMaps;
-
-    Camera * _cam;
-    EnvMap * _envMap;
-};
-
-World & createWorld();
 
 };
-
-// Utility functions
-char * textFileRead(const char);
-
-// From http://blog.nobel-joergensen.com/2013/01/29/debugging-opengl-using-glgeterror/
-#ifndef GLERROR_H
-#define GLERROR_H
- 
-void _check_gl_error(const char *file, int line);
- 
-///
-/// Usage
-/// [... some opengl calls]
-/// glCheckError();
-///
-#define check_gl_error() _check_gl_error(__FILE__,__LINE__)
- 
-#endif // GLERROR_H
-
-std::string zero_padded_name(std::string, int, int);

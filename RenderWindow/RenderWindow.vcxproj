@@ -66,11 +66,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="color.cpp" />
     <ClCompile Include="GlutDraw.cpp" />
     <ClCompile Include="GlutUI.cpp" />
     <ClCompile Include="RenderWindowMain.cpp" />
     <ClCompile Include="rgbe.c" />
     <ClCompile Include="scene.cpp" />
+    <ClCompile Include="utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="diffuse_frag.glsl" />
@@ -84,12 +86,14 @@
     <None Include="warp_vert.glsl" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="color.h" />
     <ClInclude Include="GlutDraw.h" />
     <ClInclude Include="GlutUI.h" />
     <ClInclude Include="rgbe.h" />
     <ClInclude Include="scene.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="utils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

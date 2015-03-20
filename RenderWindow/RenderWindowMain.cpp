@@ -42,15 +42,6 @@ int main(int argc, char* argv[])
     world.addObject(envMap);
     world.assignShader(envMap, envShader);
 
-    //Scene::InterpolateMap* interpMap = new Scene::InterpolateMap(*envMap, 768,384);
-    //interpMap->useCache("interpMap.hdr");
-    //world.addObject(interpMap);
-    
-    //Scene::EnvShader * sphereShader = new Scene::EnvShader(envMap, "sphere_vert.glsl", "sphere_frag.glsl");
-    //Scene::Sphere * sphere = new Scene::Sphere();
-    //sphere->setTx(10);
-    //world.addObject(sphere);
-    //world.assignShader(sphere, sphereShader);
     Scene::EnvShader * sphereShader = new Scene::EnvShader(envMap, "sphere_vert.glsl", "sphere_frag.glsl");
     Scene::Sphere * sphere = new Scene::Sphere();
     sphere->setTx(10);
@@ -96,12 +87,13 @@ int main(int argc, char* argv[])
     for (int index = 0; index < 12; index++)
     {
         std::string ctName = Scene::CookTorranceIcosMap::getCtIcosMapName(index);
-        Scene::CookTorranceIcosMap * ctMap = new Scene::CookTorranceIcosMap(*envMapSmall, 0.01f, 0.8f, 0);
+        Scene::CookTorranceIcosMap * ctMap = new Scene::CookTorranceIcosMap(*envMapSmall, 0.01f, 0.8f, index);
         ctMap->setXSkip(32);
         ctMap->setYSkip(4);
         ctMaps.push_back(ctMap);
         ctMap->useCache(ctName + ".hdr");
         world.addObject(ctMap);
+        delete ctMap;
     }
     std::setfill(' ');
 
@@ -114,7 +106,7 @@ int main(int argc, char* argv[])
         radMaps.push_back(radMap);
         world.addObject(radMap);
     }
-    Scene::CtShader * ctSphereShader = new Scene::CtShader(radMaps, "warp_vert.glsl", "warp_frag.glsl");
+    Scene::CtShader * ctSphereShader = new Scene::CtShader(radMaps, diffuseMap, "warp_vert.glsl", "warp_frag.glsl");
 
     Scene::Sphere * ctSphere = new Scene::Sphere();
     world.assignShader(ctSphere, ctSphereShader);
