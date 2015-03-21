@@ -1,9 +1,5 @@
 #include "stdafx.h"
 #include "GlutDraw.h"
-extern "C" {
-    #include "rgbe.h"
-}
-
 #define DEFAULT_ENV_MAP "./grace-new.hdr"
 
 namespace Scene
@@ -31,7 +27,6 @@ const glm::vec3 ICOS_YAXES[] = {
     glm::vec3(1.0f, 0.0f, 0.0f),
     glm::vec3(0.0f, 0.0f, 1.0f),
     glm::vec3(0.0f, 0.0f, -1.0f),
-    glm::vec3(0.0f, 0.0f, -1.0f),
     glm::vec3(0.0f, 0.0f, 1.0f),
     glm::vec3(0.0f, 1.0f, 0.0f),
     glm::vec3(0.0f, -1.0f, 0.0f),
@@ -54,17 +49,55 @@ const glm::vec3 ICOS_XAXES[] = {
 };
 
 
-class World;
+class Object;
+class Shader;
+class Camera;
+class EnvMap;
 
-class Shader
+class World
+{
+public:
+    World() : _cam(nullptr), _envMap(nullptr) { }
+
+    void addObject(Object *);
+    void addObject(Camera *);
+    void addObject(EnvMap *);
+    void removeObject(Object *);
+    void assignShader(Object *, Shader *);
+    Shader * findShader(Object *);
+
+    //void removeObject(Object & obj) {  }
+
+    Camera * getCam() { return _cam; }
+    EnvMap * getEnvMap() { return _envMap; }
+    void setEnvMap(unsigned int);
+    void setEnvMap(EnvMap *);
+
+    void draw();
+
+    ~World() {};
+private:
+    std::vector<Object *> _objects;
+    std::unordered_map<int, Shader *> _shaderMap;
+    std::vector<EnvMap *> _envMaps;
+
+    Camera * _cam;
+    EnvMap * _envMap;
+};
+
+World & createWorld();
+
     /* Base class for vert/frag shader. */
+class Shader
 {
 public:
 /* Constructors */
     Shader() : _vertfile(), _fragfile(), _shaderReady(false) { };
     Shader(std::string vertfile, std::string fragfile)
         : _vertfile(vertfile), _fragfile(fragfile), _shaderReady(false)
-        { _initShaders(); };
+        {
+            _initShaders();
+        };
 
     virtual void link();
     virtual void unlink();
@@ -89,10 +122,14 @@ class Object
 public:
 /* Constructors */
     Object() : _tx(0), _ty(0), _tz(0), _rotx(0), _roty(0), _rotz(0), _visible(true)
-        { _objectID = nextID(); }
+        {
+            _objectID = nextID();
+        }
     Object(float tx, float ty, float tz, float rotx, float roty, float rotz) : _tx(tx), _ty(ty), _tz(tz),
         _rotx(rotx), _roty(roty), _rotz(rotz), _visible(true)
-        { _objectID = nextID(); }
+        {
+            _objectID = nextID();
+        }
     void draw();
     void draw(Shader *);
     virtual void doDraw() = 0;
@@ -120,6 +157,8 @@ public:
 
     /* Single line functions */
     int nextID() { return NEXTID++; }
+
+    ~Object() { _world->removeObject(this); }
 
 protected:
     World * _world;
@@ -177,20 +216,24 @@ class EnvMap : public Sphere
 public:
 /* Constructors */
     EnvMap() :
-        Sphere(1000.0f, 20, 20), _filename(DEFAULT_ENV_MAP), _mapReady(false) {
-        //_textureID = nextTextureID();
+        Sphere(1000.0f, 20, 20), _filename(DEFAULT_ENV_MAP), _mapReady(false), _delayBind(false)
+    {
+        _textureID = nextTextureID();
     }
     EnvMap(std::string  filename) :
-        Sphere(1000.0f, 20, 20), _filename(filename), _mapReady(false) {
-        //_textureID = nextTextureID();
+        Sphere(1000.0f, 20, 20), _filename(filename), _mapReady(false), _delayBind(false)
+    {
+        _textureID = nextTextureID();
     }
     EnvMap(float radius, int n, int m) :
-        Sphere(radius, n, m), _filename(DEFAULT_ENV_MAP), _mapReady(false) {
-        //_textureID = nextTextureID();
+        Sphere(radius, n, m), _filename(DEFAULT_ENV_MAP), _mapReady(false), _delayBind(false)
+    {
+        _textureID = nextTextureID();
     }
     EnvMap(std::string  filename, float radius, int n, int m) :
-        Sphere(radius, n, m), _filename(filename), _mapReady(false) {
-        //_textureID = nextTextureID();
+        Sphere(radius, n, m), _filename(filename), _mapReady(false), _delayBind(false)
+    {
+        _textureID = nextTextureID();
     }
 
     virtual void doDraw();
@@ -201,32 +244,33 @@ public:
 
     virtual std::string mapType() { return "Env"; }
 
-    const float _getPixelR(int x, int y) { return _data[(x + y * _width)*3 + 0]; };
-    const float _getPixelG(int x, int y) { return _data[(x + y * _width)*3 + 1]; };
-    const float _getPixelB(int x, int y) { return _data[(x + y * _width)*3 + 2]; };
-    //const float _getPixelR(float x, float y) { return _bilinearInterpolate(&_data[0], x, y); };
-    //const float _getPixelG(float x, float y) { return _bilinearInterpolate(&_data[1], x, y); };
-    //const float _getPixelB(float x, float y) { return _bilinearInterpolate(&_data[2], x, y); };
-    const float _getPixelR(float x, float y) { return _sphericalInterpolate(&_data[0], x, y); };
-    const float _getPixelG(float x, float y) { return _sphericalInterpolate(&_data[1], x, y); };
-    const float _getPixelB(float x, float y) { return _sphericalInterpolate(&_data[2], x, y); };
-    const int _getWidth() { return _width; };
-    const int _getHeight() { return _height; };
-    const int _getTextureID() { return _textureID; };
+    const float getPixelR(int x, int y) { return _data[(x + y * _width)*3 + 0]; };
+    const float getPixelG(int x, int y) { return _data[(x + y * _width)*3 + 1]; };
+    const float getPixelB(int x, int y) { return _data[(x + y * _width)*3 + 2]; };
+    //const float getPixelR(float x, float y) { return _bilinearInterpolate(&_data[0], x, y); };
+    //const float getPixelG(float x, float y) { return _bilinearInterpolate(&_data[1], x, y); };
+    //const float getPixelB(float x, float y) { return _bilinearInterpolate(&_data[2], x, y); };
+    const float getPixelR(float x, float y) { return _sphericalInterpolate(&_data[0], x, y); };
+    const float getPixelG(float x, float y) { return _sphericalInterpolate(&_data[1], x, y); };
+    const float getPixelB(float x, float y) { return _sphericalInterpolate(&_data[2], x, y); };
+    const int getWidth() { return _width; };
+    const int getHeight() { return _height; };
+    const int getTextureID() { return _textureID; };
+
     int nextTextureID() { return NEXTTEXTUREID++; };
 
 /* Destructors */
-    ~EnvMap() { if(_data != nullptr) delete _data; }
+        ~EnvMap() { if (_data != nullptr) delete _data; }
 
 protected:
-    bool _mapReady;
     virtual int _readMap();
     int _writeMap();
     int _writeMap(std::string filename);
-    void _setPixelR(int x, int y, float c) { _data[(x + y * _width)*3 + 0] = c; };
-    void _setPixelG(int x, int y, float c) { _data[(x + y * _width)*3 + 1] = c; };
-    void _setPixelB(int x, int y, float c) { _data[(x + y * _width)*3 + 2] = c; };
+        void _setPixelR(int x, int y, float c) { _data[(x + y * _width) * 3 + 0] = c; };
+        void _setPixelG(int x, int y, float c) { _data[(x + y * _width) * 3 + 1] = c; };
+        void _setPixelB(int x, int y, float c) { _data[(x + y * _width) * 3 + 2] = c; };
 
+    bool _mapReady, _delayBind;
     float * _data;
     int _width, _height;
     GLuint _textureID;
@@ -266,18 +310,26 @@ public:
 };
 
 class DiffuseEnvMap;
+
 class CtShader : public Shader
 {
 public:
-    CtShader(std::vector<RadMap *> & radMaps, DiffuseEnvMap & diffMap,
+    CtShader(std::vector<Scene::RadMap *> & radMaps,
         std::string vertfile, std::string fragfile) :
-        Shader(vertfile, fragfile), _radMaps(radMaps), _diffMap(diffMap) { };
+        Shader(vertfile, fragfile),
+        _radMaps(radMaps), _diffuseMap(nullptr) { };
+
+    CtShader(std::vector<Scene::RadMap *> & radMaps,
+        DiffuseEnvMap * diffuseMap,
+        std::string vertfile, std::string fragfile) :
+        Shader(vertfile, fragfile),
+        _radMaps(radMaps), _diffuseMap(diffuseMap) { };
 
     void link();
 
 private:
-    std::vector<RadMap *> & _radMaps;
-    DiffuseEnvMap & _diffMap;
+    std::vector<Scene::RadMap *> & _radMaps;
+    DiffuseEnvMap * _diffuseMap;
 };
 
 
@@ -285,9 +337,15 @@ private:
 class PrecomputeMap : public EnvMap
 {
 public:
-    PrecomputeMap(EnvMap & envMap) : EnvMap(), _envMap(envMap), _xSkip(256), _ySkip(64) {};
+    PrecomputeMap(EnvMap & envMap) : EnvMap(), _envMap(envMap), _xSkip(256), _ySkip(64)
+        {
+            _delayBind = true;
+        };
     PrecomputeMap(EnvMap & envMap, float radius, int n, int m) :
-        EnvMap(radius, n, m), _envMap(envMap), _xSkip(256), _ySkip(64) {};
+        EnvMap(radius, n, m), _envMap(envMap), _xSkip(256), _ySkip(64)
+        {
+            _delayBind = true;
+        };
 
     void useCache(std::string filename) { _cached = true; _filename = filename; }
     void disableCache() { _cached = false; }
@@ -323,10 +381,13 @@ protected:
 class CookTorranceIcosMap : public PrecomputeMap
 {
 public:
-    CookTorranceIcosMap(EnvMap & envMap, float r1, float r2, int i) :_roughness(r1), _reflCoeff(r2), _vertexIndex(i), PrecomputeMap(envMap)
+    CookTorranceIcosMap(EnvMap & envMap,
+        float r1, float r2, int i, std::string filename) :
+        _roughness(r1), _reflCoeff(r2), _vertexIndex(i), PrecomputeMap(envMap)
     {
-        _xSkip = 1;
-        _ySkip = 1;
+        useCache(filename);
+        setXSkip(1);
+        setYSkip(1);
     };
 
     std::string mapType() { return "CookTorrance"; }
@@ -392,54 +453,5 @@ private:
     GLuint _vertexArrayID;
 };
 
-class World
-{
-public:
-    World() : _cam(nullptr), _envMap(nullptr) { }
-
-    void addObject(Object *);
-    void addObject(Camera *);
-    void addObject(EnvMap *);
-    void assignShader(Object *, Shader *);
-    Shader * findShader(Object *);
-
-    //void removeObject(Object & obj) {  }
-
-    Camera * getCam() { return _cam; }
-    EnvMap * getEnvMap() { return _envMap; }
-    void setEnvMap(unsigned int);
-    void setEnvMap(EnvMap *);
-
-    void draw();
-private:
-    std::vector<Object *> _objects;
-    std::unordered_map<int, Shader *> _shaderMap;
-    std::vector<EnvMap *> _envMaps;
-
-    Camera * _cam;
-    EnvMap * _envMap;
-};
-
-World & createWorld();
 
 };
-
-// Utility functions
-char * textFileRead(const char);
-
-// From http://blog.nobel-joergensen.com/2013/01/29/debugging-opengl-using-glgeterror/
-#ifndef GLERROR_H
-#define GLERROR_H
- 
-void _check_gl_error(const char *file, int line);
- 
-///
-/// Usage
-/// [... some opengl calls]
-/// glCheckError();
-///
-#define check_gl_error() _check_gl_error(__FILE__,__LINE__)
- 
-#endif // GLERROR_H
-
-std::string zero_padded_name(std::string, int, int);

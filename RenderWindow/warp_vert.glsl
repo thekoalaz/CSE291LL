@@ -1,5 +1,7 @@
 #version 330 compatibility
 #define M_PI 3.1415926535897932384626433832795f
+#define TwoSort(a,b) {  }
+
 float GOLDEN_RATIO = (1 + sqrt(5)) / 2;
 vec3 ICOS_ZAXES[12] = vec3[](
     normalize(vec3(0.0f ,  1.0f,  GOLDEN_RATIO)),
@@ -52,56 +54,21 @@ out vec2 uvD;
 
 ivec3 closestViews(float p0, float p1, float p2, float p3, float p4, float p5, float p6, float p7, float p8, float p9, float p10, float p11)
 {
-    //float prox[12] = {p0,p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11};
-    //int index[12] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
-
-    //for (int cur = 0; cur < 12; cur++)
-    //{
-    //    int cur_max = cur;
-    //    for (int compare = cur; compare < 12; compare++)
-    //    {
-    //        if (prox[cur_max] < prox[compare])
-    //        {
-    //            cur_max = compare;
-    //        }
-    //    }
-    //    float prox_temp = prox[cur];
-    //    prox[cur] = prox[cur_max];
-    //    prox[cur_max] = prox_temp;
-
-    //    int index_temp = index[cur];
-    //    index[cur] = index[cur_max];
-    //    index[cur_max] = index_temp;
-    //}
-    //return ivec3(index[0],index[1],index[2]);
     int views[3];
     float prox[12] = float[](p0,p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11);
-    float m = 0;
-    for (int i=0; i<12; i++) {
-        if (prox[i]<=m) continue;
-        m = prox[i];
-        views[0] = i;
+
+    for (int n = 11; n < 0 ; --n) {
+      for (int i = 0; i < n; ++i) {
+        float tmp = max (prox[i], prox[i+1]);
+        prox[i+1] = prox[i] + prox[i+1] - tmp;
+        prox[i] = tmp;
+      }
     }
-    prox[views[0]] = 0;
-    m = 0;
-    for (int i=0; i<12; i++) {
-        if (prox[i]<=m) continue;
-        m = prox[i];
-        views[1] = i;
-    }
-    prox[views[1]] = 0;
-    m = 0;
-    for (int i=0; i<12; i++) {
-        if (prox[i]<=m) continue;
-        m = prox[i];
-        views[2] = i;
-    }
-    return ivec3(views[0],views[1],views[2]);
+    return ivec3(prox[0],prox[1],prox[2]);
 }
 
 void main()
 {
-
     gl_Position = gl_ModelViewProjectionMatrix*gl_Vertex;
     
     vec3 n = normalize(gl_NormalMatrix*gl_Normal);
@@ -109,7 +76,6 @@ void main()
     vec3 viewDir = normalize(vertexPosition);
     vec3 r = normalize(reflect(viewDir,n)); // INDEX INTO REFLECTED DIRECTION
     r = inverse(gl_NormalMatrix)*r;
-    //vec3 vd = inverse(gl_NormalMatrix)*vec3(0.0f,0.0f,1.0f);
     vec3 vd = viewDir;
     
     float prox[12];
@@ -127,16 +93,11 @@ void main()
     {
         int im1 = (i+2)%3; // i-1 MOD 3
         int ip1 = (i+1)%3;
-        //int ip1 = i+1;
-        //int im1 = i-1;
-        //if (ip1>2) ip1 = 0;
-        //if (im1<0) im1 = 2;
         float alpha = acos(dot(normalize(cross(vd,z[im1])),normalize(cross(z[ip1],z[im1])))); // DIHEDRAL ANGLES
         float beta  = acos(dot(normalize(cross(z[ip1],vd)),normalize(cross(z[ip1],z[im1]))));
         float gamma = acos(dot(normalize(cross(z[ip1],vd)),normalize(cross(z[im1],vd))));
         w[i] = alpha + beta + gamma - M_PI;
-        vec3 h = normalize(r+z[i]);
-        //vec3 h = r;
+        vec3 h = normalize(mat3(x[i], y[i], z[i]) * r + z[i]);
         float phi = acos(dot(h,z[i]));
         float theta = atan(dot(h,y[i]),dot(h,x[i]));
         uv[i] = vec2((1+theta/M_PI)/2,phi/M_PI); // U,V COORDINATES ON RADIANCE MAP
