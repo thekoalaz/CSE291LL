@@ -10,8 +10,10 @@ int main(int argc, char* argv[])
 {
     MANAGER.init(argc, argv);
 
-    GlutUI::Window & mainWindow = MANAGER.createWindow(640, 480, "Render Window");
-    GlutUI::Panel & mainPanel = MANAGER.createPanel(mainWindow, 640, 480, "Render Panel");
+    int windowWidth = 960;
+    int windowHeight = 540;
+    GlutUI::Window & mainWindow = MANAGER.createWindow(windowWidth, windowHeight, "Render Window");
+    GlutUI::Panel & mainPanel = MANAGER.createPanel(mainWindow, windowWidth, windowHeight, "Render Panel");
     Scene::World world = Scene::createWorld();
     std::cout << std::string((char *)glGetString(GL_VENDOR)) << std::endl;
     std::cout << std::string((char *)glGetString(GL_RENDERER)) << std::endl;
@@ -39,12 +41,13 @@ int main(int argc, char* argv[])
     std::string envmapfile = "grace-new.hdr";
     Scene::EnvMap * envMap = new Scene::EnvMap(envmapfile);
     Scene::EnvShader * envShader = new Scene::EnvShader(envMap, "tonemap_vert.glsl", "tonemap_frag.glsl");
+    envMap->bind();
     world.addObject(envMap);
     world.assignShader(envMap, envShader);
 
     Scene::EnvShader * sphereShader = new Scene::EnvShader(envMap, "sphere_vert.glsl", "sphere_frag.glsl");
     Scene::Sphere * sphere = new Scene::Sphere();
-    sphere->setTx(10);
+    sphere->setTx(7.5);
     world.addObject(sphere);
     world.assignShader(sphere, sphereShader);
 
@@ -63,7 +66,6 @@ int main(int argc, char* argv[])
     world.assignShader(phongMap, envShader);
     phongMap->setXSkip(32);
     phongMap->setYSkip(4);
-    phongMap->setRotx(90);
     phongMap->setVisible(false);
     world.addObject(phongMap);
     
@@ -74,24 +76,18 @@ int main(int argc, char* argv[])
     world.assignShader(kevin, mirrorShader);
     world.assignShader(sphere, mirrorShader);
     world.addObject(kevin);
-
+    kevin->setTx(-2.5);
 
     /* Cook Torrance Generation */
-    envmapfile = "grace-half.hdr";
+    envmapfile = "grace-mini.hdr";
     Scene::EnvMap * envMapSmall = new Scene::EnvMap(envmapfile);
     world.addObject(envMapSmall);
     world.assignShader(envMapSmall, envShader);
 
-    std::vector<Scene::CookTorranceIcosMap *> ctMaps;
-    std::ostringstream ctName;
     for (int index = 0; index < 12; index++)
     {
         std::string ctName = Scene::CookTorranceIcosMap::getCtIcosMapName(index);
-        Scene::CookTorranceIcosMap * ctMap = new Scene::CookTorranceIcosMap(*envMapSmall, 0.01f, 0.8f, index);
-        ctMap->setXSkip(32);
-        ctMap->setYSkip(4);
-        ctMaps.push_back(ctMap);
-        ctMap->useCache(ctName + ".hdr");
+        Scene::CookTorranceIcosMap * ctMap = new Scene::CookTorranceIcosMap(*envMapSmall, 0.1f, 0.8f, index, ctName + ".hdr");
         world.addObject(ctMap);
         delete ctMap;
     }
@@ -106,12 +102,15 @@ int main(int argc, char* argv[])
         radMaps.push_back(radMap);
         world.addObject(radMap);
     }
+    //Scene::CtShader * ctSphereShader = new Scene::CtShader(radMaps, "warp_vert.glsl", "warp_frag.glsl");
     Scene::CtShader * ctSphereShader = new Scene::CtShader(radMaps, diffuseMap, "warp_vert.glsl", "warp_frag.glsl");
 
-    Scene::Sphere * ctSphere = new Scene::Sphere();
-    world.assignShader(ctSphere, ctSphereShader);
-    ctSphere->setTx(-10);
-    world.addObject(ctSphere);
+//    Scene::Sphere * ctSphere = new Scene::Sphere();
+//    world.assignShader(ctSphere, ctSphereShader);
+//    ctSphere->setTx(-10);
+//    ctSphere->setRotz(90);
+//    //ctSphere->setRoty(90);
+//    world.addObject(ctSphere);
 
 
     /* Keyboard hotkey assignments */
@@ -138,8 +137,9 @@ int main(int argc, char* argv[])
     keyboard.register_hotkey('p', plambda);
     auto clambda = [&]()
     {
-    world.assignShader(kevin, ctSphereShader);
         world.setEnvMap(envMap);
+        world.assignShader(kevin, ctSphereShader);
+        world.assignShader(sphere, ctSphereShader);
     };
     keyboard.register_hotkey('c', clambda);
 

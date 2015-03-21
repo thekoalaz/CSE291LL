@@ -216,19 +216,23 @@ class EnvMap : public Sphere
 public:
 /* Constructors */
     EnvMap() :
-        Sphere(1000.0f, 20, 20), _filename(DEFAULT_ENV_MAP), _mapReady(false) {
+        Sphere(1000.0f, 20, 20), _filename(DEFAULT_ENV_MAP), _mapReady(false), _delayBind(false)
+    {
         _textureID = nextTextureID();
     }
     EnvMap(std::string  filename) :
-        Sphere(1000.0f, 20, 20), _filename(filename), _mapReady(false) {
+        Sphere(1000.0f, 20, 20), _filename(filename), _mapReady(false), _delayBind(false)
+    {
         _textureID = nextTextureID();
     }
     EnvMap(float radius, int n, int m) :
-        Sphere(radius, n, m), _filename(DEFAULT_ENV_MAP), _mapReady(false) {
+        Sphere(radius, n, m), _filename(DEFAULT_ENV_MAP), _mapReady(false), _delayBind(false)
+    {
         _textureID = nextTextureID();
     }
     EnvMap(std::string  filename, float radius, int n, int m) :
-        Sphere(radius, n, m), _filename(filename), _mapReady(false) {
+        Sphere(radius, n, m), _filename(filename), _mapReady(false), _delayBind(false)
+    {
         _textureID = nextTextureID();
     }
 
@@ -259,7 +263,6 @@ public:
         ~EnvMap() { if (_data != nullptr) delete _data; }
 
 protected:
-    bool _mapReady;
     virtual int _readMap();
     int _writeMap();
     int _writeMap(std::string filename);
@@ -267,11 +270,12 @@ protected:
         void _setPixelG(int x, int y, float c) { _data[(x + y * _width) * 3 + 1] = c; };
         void _setPixelB(int x, int y, float c) { _data[(x + y * _width) * 3 + 2] = c; };
 
+    bool _mapReady, _delayBind;
     float * _data;
     int _width, _height;
     GLuint _textureID;
     std::string _filename;
-    
+
 private:
     float _bilinearInterpolate(const float * _colors, const float x, const float y);
     float _sphericalInterpolate(const float * _colors, const float x, const float y);
@@ -332,9 +336,15 @@ private:
 class PrecomputeMap : public EnvMap
 {
 public:
-    PrecomputeMap(EnvMap & envMap) : EnvMap(), _envMap(envMap), _xSkip(256), _ySkip(64) {};
+    PrecomputeMap(EnvMap & envMap) : EnvMap(), _envMap(envMap), _xSkip(256), _ySkip(64)
+        {
+            _delayBind = true;
+        };
     PrecomputeMap(EnvMap & envMap, float radius, int n, int m) :
-        EnvMap(radius, n, m), _envMap(envMap), _xSkip(256), _ySkip(64) {};
+        EnvMap(radius, n, m), _envMap(envMap), _xSkip(256), _ySkip(64)
+        {
+            _delayBind = true;
+        };
 
     void useCache(std::string filename) { _cached = true; _filename = filename; }
     void disableCache() { _cached = false; }
@@ -370,10 +380,13 @@ protected:
 class CookTorranceIcosMap : public PrecomputeMap
 {
 public:
-    CookTorranceIcosMap(EnvMap & envMap, float r1, float r2, int i) :_roughness(r1), _reflCoeff(r2), _vertexIndex(i), PrecomputeMap(envMap)
+    CookTorranceIcosMap(EnvMap & envMap,
+        float r1, float r2, int i, std::string filename) :
+        _roughness(r1), _reflCoeff(r2), _vertexIndex(i), PrecomputeMap(envMap)
     {
-        _xSkip = 1;
-        _ySkip = 1;
+        useCache(filename);
+        setXSkip(1);
+        setYSkip(1);
     };
 
     std::string mapType() { return "CookTorrance"; }

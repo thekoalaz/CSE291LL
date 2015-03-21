@@ -116,9 +116,9 @@ void Object::draw(Shader * shader)
 
     glPushMatrix();
     glTranslated(_tx, _ty, _tz);
-    glRotated(_rotx, 1, 0, 0);
-    glRotated(_roty, 0, 1, 0);
-    glRotated(_rotz, 0, 0, 1);
+    glRotatef(_rotx, 1, 0, 0);
+    glRotatef(_roty, 0, 1, 0);
+    glRotatef(_rotz, 0, 0, 1);
 
     shader->link();
     doDraw();
@@ -157,7 +157,6 @@ int EnvMap::_readMap()
         _data = new float[3 * _width * _height];
         RGBE_ReadPixels_RLE(hdrfile, _data, _width, _height);
         fclose(hdrfile);
-
     }
     else
     {
@@ -352,6 +351,7 @@ std::tuple<float, float, float> EnvMap::getColor(const float x, const float y)
 
     return std::tuple<float, float, float>(red, green, blue);
 }
+
 
 float EnvMap::_bilinearInterpolate(const float * _colors, const float x, const float y)
 {
@@ -798,7 +798,12 @@ void CtShader::link()
         _diffuseMap->bind();
         GLint diffMapLocation = glGetUniformLocation(getProgram(), "diffMap");
         glUniform1i(diffMapLocation, _diffuseMap->getTextureID());
-}
+    }
+    else
+    {
+        GLint diffMapLocation = glGetUniformLocation(getProgram(), "diffMap");
+        glUniform1i(diffMapLocation, 15);
+    }
 }
 
 void CookTorranceIcosMap::_precomputeMap()
@@ -820,10 +825,11 @@ void CookTorranceIcosMap::_precomputeMap()
     glm::vec3 V_V(0.0f, 0.0f, 1.0f);
     int halfway = static_cast<int>(std::ceil(_height / 2.0f));
     float a = 2 * M_PI*M_PI / (float)(_width*_height);
+
     for (int jj = 0; jj < halfway - halfway % _ySkip + _ySkip; jj += _ySkip) {
         int j = std::min(jj, halfway - 1);
         float phiN_V = M_PI*(float)j / _height;
-        std::cout << "Integration Progress: y " << j << "\r";
+        std::cout << "We're on height " << j << "/" << _height << "\r";
         for (int i = 0; i < _width; i += _xSkip){
             float thetaN_V = 2 * M_PI*((float)i / _width - 1);
             glm::vec3 N_V(sin(phiN_V)*cos(thetaN_V), sin(phiN_V)*sin(thetaN_V), cos(phiN_V));
@@ -871,39 +877,40 @@ void CookTorranceIcosMap::_precomputeMap()
                 break;
             }
         }
-        if (_xSkip>1 || _ySkip > 1) {
-            for (int i = 0; i < _width; i++)
+    }
+
+    if (_xSkip>1 || _ySkip > 1) {
+        for (int i = 0; i < _width; i++)
+        {
+            int i1 = i - i%_xSkip;
+            int i2 = i1 + _xSkip;
+            float dTheta1 = 2 * M_PI * (float)(i - i1) / _width;
+            float dTheta2 = 2 * M_PI * (float)(i2 - i) / _width;
+            i2 = i2%_width;
+            for (int j = 0; j < halfway; j++)
             {
-                int i1 = i - i%_xSkip;
-                int i2 = i1 + _xSkip;
-                float dTheta1 = 2 * M_PI * (float)(i - i1) / _width;
-                float dTheta2 = 2 * M_PI * (float)(i2 - i) / _width;
-                i2 = i2%_width;
-                for (int j = 0; j < halfway; j++)
-                {
-                    int j1 = j - j%_ySkip;
-                    int j2 = std::min(j1 + _ySkip, halfway - 1);
-                    float phi = M_PI*(float)j / _height;
-                    float phi1 = M_PI*(float)j1 / _height;
-                    float phi2 = M_PI*(float)j2 / _height;
-                    float d1 = cos(phi1) - cos(phi);
-                    float d2 = cos(phi) - cos(phi2);
-                    if (j1 == j2){
-                        d1 = 1;
-                        d2 = 1;
-                    }
-                    float a11 = dTheta1*d1;
-                    float a12 = dTheta1*d2;
-                    float a21 = dTheta2*d1;
-                    float a22 = dTheta2*d2;
-                    float A = a11 + a12 + a21 + a22;
-                    float R = (a22*getPixelR(i1, j1) + a21*getPixelR(i1, j2) + a12*getPixelR(i2, j1) + a11*getPixelR(i2, j2)) / A;
-                    float G = (a22*getPixelG(i1, j1) + a21*getPixelG(i1, j2) + a12*getPixelG(i2, j1) + a11*getPixelG(i2, j2)) / A;
-                    float B = (a22*getPixelB(i1, j1) + a21*getPixelB(i1, j2) + a12*getPixelB(i2, j1) + a11*getPixelB(i2, j2)) / A;
-                    _setPixelR(i, j, R);
-                    _setPixelG(i, j, G);
-                    _setPixelB(i, j, B);
+                int j1 = j - j%_ySkip;
+                int j2 = std::min(j1 + _ySkip, halfway - 1);
+                float phi = M_PI*(float)j / _height;
+                float phi1 = M_PI*(float)j1 / _height;
+                float phi2 = M_PI*(float)j2 / _height;
+                float d1 = cos(phi1) - cos(phi);
+                float d2 = cos(phi) - cos(phi2);
+                if (j1 == j2){
+                    d1 = 1;
+                    d2 = 1;
                 }
+                float a11 = dTheta1*d1;
+                float a12 = dTheta1*d2;
+                float a21 = dTheta2*d1;
+                float a22 = dTheta2*d2;
+                float A = a11 + a12 + a21 + a22;
+                float R = (a22*getPixelR(i1, j1) + a21*getPixelR(i1, j2) + a12*getPixelR(i2, j1) + a11*getPixelR(i2, j2)) / A;
+                float G = (a22*getPixelG(i1, j1) + a21*getPixelG(i1, j2) + a12*getPixelG(i2, j1) + a11*getPixelG(i2, j2)) / A;
+                float B = (a22*getPixelB(i1, j1) + a21*getPixelB(i1, j2) + a12*getPixelB(i2, j1) + a11*getPixelB(i2, j2)) / A;
+                _setPixelR(i, j, R);
+                _setPixelG(i, j, G);
+                _setPixelB(i, j, B);
             }
         }
     }
