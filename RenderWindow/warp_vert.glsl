@@ -81,9 +81,8 @@ void main()
     float prox[12];
     for (int i=0; i<12; i++) prox[i] = dot(vd,ICOS_ZAXES[i]);
 
-    ivec3 views = closestViews(  prox[0],prox[1],prox[2],prox[3],prox[4],prox[5],
+    V = closestViews(  prox[0],prox[1],prox[2],prox[3],prox[4],prox[5],
                                 prox[6],prox[7],prox[8],prox[9],prox[10],prox[11]   );
-    V = views;
     
     vec3 x[3] = vec3[](ICOS_XAXES[V[0]], ICOS_XAXES[V[1]], ICOS_XAXES[V[2]]);
     vec3 y[3] = vec3[](ICOS_YAXES[V[0]], ICOS_YAXES[V[1]], ICOS_YAXES[V[2]]);
