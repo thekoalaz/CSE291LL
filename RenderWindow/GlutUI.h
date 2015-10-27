@@ -1,4 +1,5 @@
-/** Display.h
+#pragma once
+/** GlutUI.h
  * This header defines with the main functionality of windows and displays.
  *
  * 
@@ -12,8 +13,6 @@ namespace GlutUI
 #define DEFAULT_XPOS 10
 #define DEFAULT_YPOS 10
 #define DEFAULT_WINDOWNAME "A Window"
-
-//TODO Come up with a relative coordinate scheme
 
 /** Global variables **/
 
@@ -197,7 +196,6 @@ namespace Controls
     class Mouse
     {
     public:
-        //TODO replace with actual camera?
         Mouse(Panel * panel, Scene::Camera * camera) : _panel(panel), _camera(camera) { init(); }
         void init();
 

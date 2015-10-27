@@ -9,7 +9,6 @@ void GlutDraw::drawLine(float x1, float y1, float z1,
     glEnd();
 }
 
-//TODO PRIO: drawRectangle so that we can do buttons.
 void GlutDraw::drawRectangle(float x, float y,
         float width, float height)
 {

@@ -3,6 +3,7 @@
 
 #include "stdafx.h"
 #include "GlutUI.h"
+#include "EnvShader.h"
 
 GlutUI::Manager MANAGER;
 
@@ -38,7 +39,7 @@ int main(int argc, char* argv[])
     GlutUI::Controls::Keyboard keyboard(&mainPanel);
     GlutUI::Controls::Mouse mouse(&mainPanel, mainPanel.getCamera());
 
-    std::string envmapfile = "grace-new.hdr";
+    std::string envmapfile = "grace-half.hdr";
     Scene::EnvMap * envMap = new Scene::EnvMap(envmapfile);
     Scene::EnvShader * envShader = new Scene::EnvShader(envMap, "tonemap_vert.glsl", "tonemap_frag.glsl");
     envMap->bind();
@@ -102,16 +103,7 @@ int main(int argc, char* argv[])
         radMaps.push_back(radMap);
         world.addObject(radMap);
     }
-    //Scene::CtShader * ctSphereShader = new Scene::CtShader(radMaps, "warp_vert.glsl", "warp_frag.glsl");
     Scene::CtShader * ctSphereShader = new Scene::CtShader(radMaps, diffuseMap, "warp_vert.glsl", "warp_frag.glsl");
-
-//    Scene::Sphere * ctSphere = new Scene::Sphere();
-//    world.assignShader(ctSphere, ctSphereShader);
-//    ctSphere->setTx(-10);
-//    ctSphere->setRotz(90);
-//    //ctSphere->setRoty(90);
-//    world.addObject(ctSphere);
-
 
     /* Keyboard hotkey assignments */
     auto mlambda = [&]()
@@ -138,7 +130,7 @@ int main(int argc, char* argv[])
     auto clambda = [&]()
     {
         world.setEnvMap(envMap);
-    world.assignShader(kevin, ctSphereShader);
+        world.assignShader(kevin, ctSphereShader);
         world.assignShader(sphere, ctSphereShader);
     };
     keyboard.register_hotkey('c', clambda);
